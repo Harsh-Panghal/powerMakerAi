@@ -63,28 +63,24 @@ export function PowerMakerSidebar() {
               Recent
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+                <SidebarMenu>
                 {recentChats.map((chat, index) => (
                   <SidebarMenuItem key={index}>
                     <div
-                      className="flex items-center justify-between px-4 py-2 hover:bg-sidebar-accent group transition-all duration-200 ease-in-out"
-                      onMouseEnter={() => setHoveredChat(index)}
-                      onMouseLeave={() => setHoveredChat(null)}
+                      className="flex items-center justify-between px-4 py-2 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out"
                     >
                       <SidebarMenuButton className="flex-1 justify-start p-0 h-auto">
                         <span className="text-sm text-sidebar-foreground truncate">
                           {chat}
                         </span>
                       </SidebarMenuButton>
-                      {hoveredChat === index && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
                     </div>
                   </SidebarMenuItem>
                 ))}
