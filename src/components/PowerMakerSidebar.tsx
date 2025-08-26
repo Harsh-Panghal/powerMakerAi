@@ -68,6 +68,8 @@ export function PowerMakerSidebar() {
                   <SidebarMenuItem key={index}>
                     <div
                       className="flex items-center justify-between px-4 py-2 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out"
+                      onMouseEnter={() => setHoveredChat(index)}
+                      onMouseLeave={() => setHoveredChat(null)}
                     >
                       <SidebarMenuButton className="flex-1 justify-start p-0 h-auto">
                         <span className="text-sm text-sidebar-foreground truncate">
@@ -77,7 +79,9 @@ export function PowerMakerSidebar() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out"
+                        className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
+                          hoveredChat === index ? 'opacity-100' : 'opacity-0'
+                        }`}
                       >
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
