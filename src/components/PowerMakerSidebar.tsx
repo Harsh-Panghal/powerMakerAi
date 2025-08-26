@@ -29,8 +29,8 @@ export function PowerMakerSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="bg-layout-sidebar border-r border-border">
-      <SidebarHeader className="p-4 border-b border-border">
+    <Sidebar collapsible="icon" className="bg-layout-sidebar border-r border-border/30">
+      <SidebarHeader className="p-4">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">P</span>
