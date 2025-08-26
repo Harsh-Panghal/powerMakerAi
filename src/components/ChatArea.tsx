@@ -111,14 +111,16 @@ export function ChatArea() {
             {/* Top Right Controls - Model Selector */}
             <div className="absolute right-3 top-3">
               <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger className="w-40 h-8 text-xs border-border">
-                  <SelectValue placeholder="Select Model" />
+                <SelectTrigger className="w-40 h-8 text-xs border-border focus:ring-0 focus:ring-offset-0">
+                  <SelectValue>
+                    {modelOptions.find(option => option.value === selectedModel)?.title || "Model 0.1"}
+                  </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="focus:ring-0">
                   {modelOptions.map((option) => {
                     const IconComponent = option.icon;
                     return (
-                      <SelectItem key={option.value} value={option.value} className="text-xs">
+                      <SelectItem key={option.value} value={option.value} className="text-xs focus:bg-muted focus:text-foreground">
                         <div className="flex items-center gap-2">
                           <IconComponent className="w-4 h-4 text-muted-foreground" />
                           <div className="flex flex-col">
