@@ -56,8 +56,8 @@
     --ring: 215 58% 55%;              /* brand-light */
     --radius: 0.5rem;
 
-    /* Sidebar tokens - More opaque */
-    --sidebar-background: 60 80% 96%;
+    /* Sidebar tokens - Match main layout */
+    --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 209 75% 28%;
     --sidebar-primary: 209 75% 28%;
     --sidebar-primary-foreground: 0 0% 98%;
