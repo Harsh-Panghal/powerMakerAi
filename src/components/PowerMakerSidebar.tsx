@@ -48,7 +48,7 @@ export function PowerMakerSidebar() {
         {/* New Chat Button */}
         <div className="p-4">
           <Button 
-            className="w-full justify-start bg-transparent border border-border hover:bg-sidebar-accent text-brand"
+            className="w-full justify-center bg-transparent border border-border hover:bg-sidebar-accent text-brand"
             variant="outline"
           >
             <Plus className="w-4 h-4" />
@@ -67,7 +67,7 @@ export function PowerMakerSidebar() {
                 {recentChats.map((chat, index) => (
                   <SidebarMenuItem key={index}>
                     <div
-                      className="flex items-center justify-between px-4 py-2 hover:bg-sidebar-accent group"
+                      className="flex items-center justify-between px-4 py-2 hover:bg-sidebar-accent group transition-all duration-200 ease-in-out"
                       onMouseEnter={() => setHoveredChat(index)}
                       onMouseLeave={() => setHoveredChat(null)}
                     >
@@ -80,7 +80,7 @@ export function PowerMakerSidebar() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-6 h-6 p-0 opacity-0 group-hover:opacity-100"
+                          className="w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out"
                         >
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>

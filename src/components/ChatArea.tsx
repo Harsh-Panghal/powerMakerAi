@@ -83,7 +83,7 @@ export function ChatArea() {
       </div>
 
       {/* Input Area */}
-      <div className="p-6 border-t border-border bg-background">
+      <div className="p-6 bg-background">
         <div className="max-w-4xl mx-auto">
           <div className="relative">
             {/* Textarea */}
