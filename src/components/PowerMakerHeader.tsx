@@ -207,14 +207,14 @@ export function PowerMakerHeader() {
 
       {/* Profile Dialog */}
       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-center">Profile</DialogTitle>
+            <DialogTitle className="text-center text-lg">Profile</DialogTitle>
             <div className="flex justify-end">
               <div className="flex items-center text-sm text-muted-foreground">
                 <span>Tokens</span>
                 <span className="ml-2 flex items-center">
-                  <span className="w-2 h-2 bg-yellow-500 rounded-full mr-1"></span>
+                  <span className="w-2 h-2 bg-warning rounded-full mr-1"></span>
                   569
                 </span>
               </div>
@@ -302,16 +302,7 @@ export function PowerMakerHeader() {
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle>Invite people</DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowInviteDialog(false)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
+            <DialogTitle>Invite people</DialogTitle>
             <DialogDescription>
               Lorem Ipsum is simply dummy text of the printing
             </DialogDescription>
@@ -348,16 +339,7 @@ export function PowerMakerHeader() {
       <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle>Are you sure?</DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowLogoutDialog(false)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
+            <DialogTitle>Are you sure?</DialogTitle>
             <DialogDescription>
               Are you sure you want to Log Out?
             </DialogDescription>
@@ -384,16 +366,7 @@ export function PowerMakerHeader() {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle>Are you sure?</DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDeleteDialog(false)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
+            <DialogTitle>Are you sure?</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete your account?
             </DialogDescription>
