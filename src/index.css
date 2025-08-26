@@ -2,57 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Power Maker AI Design System - All colors MUST be HSL */
 
 @layer base {
   :root {
+    /* Brand Colors */
+    --brand-dark: 209 85% 15%;        /* #0A2342 */
+    --brand: 209 75% 28%;             /* #123C66 */
+    --brand-medium: 225 77% 43%;      /* #1E4DBF */
+    --brand-accent: 218 64% 44%;      /* #2964B8 */
+    --brand-light: 215 58% 55%;       /* #3A7CCF */
+
+    /* Status Colors */
+    --error: 354 70% 54%;             /* #E63946 */
+    --error-light: 323 91% 52%;       /* #F80D7A - tooltip bg */
+    --error-dark: 0 66% 41%;          /* #B71C1C - tooltip text */
+
+    --warning: 38 89% 67%;            /* #F4A261 */
+    --warning-light: 59 100% 52%;     /* #FFFC0D - tooltip bg */
+    --warning-dark: 14 77% 62%;       /* #E76F51 - tooltip text */
+
+    --success: 174 42% 41%;           /* #2A9D8F */
+    --success-light: 138 76% 90%;     /* #D1FAE5 - tooltip bg */
+    --success-dark: 174 51% 28%;      /* #1B7A6D - tooltip text */
+
+    --info: 215 58% 55%;              /* #3A7CCF */
+    --info-light: 214 100% 93%;       /* #E7F1FF - tooltip bg */
+    --info-dark: 209 75% 28%;         /* #123C66 - tooltip text */
+
+    /* Layout Colors */
+    --layout-sidebar: 60 80% 96% / 0.3;   /* #fffeee4c semi-transparent cream */
+    --layout-main: 60 80% 96% / 0.22;     /* #fffeee37 semi-transparent off-white */
+
+    /* Base Colors for compatibility */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --foreground: 209 75% 28%;        /* brand */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 209 75% 28%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
+    --popover-foreground: 209 75% 28%;
+    --primary: 209 75% 28%;           /* brand */
     --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
+    --secondary: 214 100% 93%;        /* info-light */
+    --secondary-foreground: 209 75% 28%;
+    --muted: 214 100% 93%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 214 100% 93%;
+    --accent-foreground: 209 75% 28%;
+    --destructive: 354 70% 54%;       /* error */
     --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 215 58% 55%;              /* brand-light */
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
+    /* Sidebar tokens */
+    --sidebar-background: 60 80% 96% / 0.3;
+    --sidebar-foreground: 209 75% 28%;
+    --sidebar-primary: 209 75% 28%;
     --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 214 100% 93%;
+    --sidebar-accent-foreground: 209 75% 28%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 215 58% 55%;
   }
 
   .dark {

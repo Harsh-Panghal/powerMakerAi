@@ -19,6 +19,44 @@ export default {
 		},
 		extend: {
 			colors: {
+				/* Brand Colors */
+				brand: {
+					dark: 'hsl(var(--brand-dark))',
+					DEFAULT: 'hsl(var(--brand))',
+					medium: 'hsl(var(--brand-medium))',
+					accent: 'hsl(var(--brand-accent))',
+					light: 'hsl(var(--brand-light))'
+				},
+				
+				/* Status Colors */
+				error: {
+					DEFAULT: 'hsl(var(--error))',
+					light: 'hsl(var(--error-light))',
+					dark: 'hsl(var(--error-dark))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					light: 'hsl(var(--warning-light))',
+					dark: 'hsl(var(--warning-dark))'
+				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					light: 'hsl(var(--success-light))',
+					dark: 'hsl(var(--success-dark))'
+				},
+				info: {
+					DEFAULT: 'hsl(var(--info))',
+					light: 'hsl(var(--info-light))',
+					dark: 'hsl(var(--info-dark))'
+				},
+				
+				/* Layout Colors */
+				layout: {
+					sidebar: 'hsl(var(--layout-sidebar))',
+					main: 'hsl(var(--layout-main))'
+				},
+
+				/* Base Colors */
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
