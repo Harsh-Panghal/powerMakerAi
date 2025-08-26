@@ -32,27 +32,25 @@ export function PowerMakerSidebar() {
     <Sidebar collapsible="icon" className="bg-layout-sidebar border-r border-border/30">
       <SidebarHeader className="p-4">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">P</span>
-          </div>
+          <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
           {!isCollapsed && (
             <>
-              <span className="font-semibold text-brand">PowerMaker AI</span>
+              <span className="font-bold text-brand">PowerMaker AI</span>
               <span className="text-xs bg-brand/10 text-brand px-2 py-1 rounded">Beta</span>
             </>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="flex-1 overflow-y-auto">
+      <SidebarContent className="flex-1 overflow-y-auto ">
         {/* New Chat Button */}
         <div className="p-4">
           <Button 
-            className="w-full justify-center bg-transparent border border-border hover:bg-sidebar-accent text-brand"
+            className="w-full justify-center bg-transparent border border-border hover:bg-sidebar-accent text-brand shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out"
             variant="outline"
           >
             <Plus className="w-4 h-4" />
-            {!isCollapsed && <span className="ml-2">New Chat</span>}
+            {!isCollapsed && <span className="ml-1">New Chat</span>}
           </Button>
         </div>
 
@@ -67,7 +65,7 @@ export function PowerMakerSidebar() {
                 {recentChats.map((chat, index) => (
                   <SidebarMenuItem key={index}>
                     <div
-                      className="flex items-center justify-between px-4 py-2 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out"
+                      className="flex items-center justify-between px-4 py-1 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out "
                       onMouseEnter={() => setHoveredChat(index)}
                       onMouseLeave={() => setHoveredChat(null)}
                     >
@@ -109,12 +107,12 @@ export function PowerMakerSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-border">
-        <div className="space-y-2">
-          <SidebarMenuButton className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent">
+        <div>
+          <SidebarMenuButton className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out">
             <HelpCircle className="w-4 h-4" />
             {!isCollapsed && <span className="ml-2">Help</span>}
           </SidebarMenuButton>
-          <SidebarMenuButton className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent">
+          <SidebarMenuButton className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out">
             <Settings className="w-4 h-4" />
             {!isCollapsed && <span className="ml-2">Settings</span>}
           </SidebarMenuButton>
