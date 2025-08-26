@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send, ChevronDown } from "lucide-react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,12 +26,24 @@ const promptSuggestions = [
 ];
 
 const modelOptions = [
-  { value: "model-0-1", label: "Model 0.1" },
-  { value: "crm-customization", label: "CRM Customization" },
-  { value: "model-0-2", label: "Model 0.2" },
-  { value: "plugin-tracing", label: "Plugin Tracing" },
-  { value: "model-0-3", label: "Model 0.3" },
-  { value: "crm-expert", label: "CRM Expert" }
+  { 
+    value: "model-0-1", 
+    title: "Model 0.1", 
+    subtitle: "CRM Customization",
+    icon: Settings
+  },
+  { 
+    value: "model-0-2", 
+    title: "Model 0.2", 
+    subtitle: "Plugin Tracing",
+    icon: Database
+  },
+  { 
+    value: "model-0-3", 
+    title: "Model 0.3", 
+    subtitle: "CRM Expert",
+    icon: Key
+  }
 ];
 
 export function ChatArea() {
@@ -48,6 +60,10 @@ export function ChatArea() {
       console.log("Sending:", prompt);
       // Handle send logic here
     }
+  };
+
+  const getSelectedModel = () => {
+    return modelOptions.find(option => option.value === selectedModel);
   };
 
   return (
@@ -97,16 +113,26 @@ export function ChatArea() {
             {/* Top Right Controls - Model Selector */}
             <div className="absolute right-3 top-3">
               <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger className="w-32 h-8 text-xs border-border">
-                  <SelectValue />
-                  <ChevronDown className="w-3 h-3 ml-1" />
+                <SelectTrigger className="w-40 h-8 text-xs border-border">
+                  <SelectValue>
+                    {getSelectedModel()?.title || "Select Model"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {modelOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value} className="text-xs">
-                      {option.label}
-                    </SelectItem>
-                  ))}
+                  {modelOptions.map((option) => {
+                    const IconComponent = option.icon;
+                    return (
+                      <SelectItem key={option.value} value={option.value} className="text-xs">
+                        <div className="flex items-center gap-2">
+                          <IconComponent className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{option.title}</span>
+                            <span className="text-muted-foreground text-xs">{option.subtitle}</span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
