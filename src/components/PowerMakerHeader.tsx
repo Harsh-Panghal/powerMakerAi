@@ -287,8 +287,8 @@ export function PowerMakerHeader() {
                 Update
               </Button>
               <Button 
-                variant="link" 
-                className="text-red-600 hover:text-red-700"
+                variant="ghost" 
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200"
                 onClick={() => setShowDeleteDialog(true)}
               >
                 Delete Account
