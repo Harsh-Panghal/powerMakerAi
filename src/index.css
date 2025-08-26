@@ -30,9 +30,9 @@
     --info-light: 214 100% 93%;       /* #E7F1FF - tooltip bg */
     --info-dark: 209 75% 28%;         /* #123C66 - tooltip text */
 
-    /* Layout Colors */
-    --layout-sidebar: 60 80% 96% / 0.3;   /* #fffeee4c semi-transparent cream */
-    --layout-main: 60 80% 96% / 0.22;     /* #fffeee37 semi-transparent off-white */
+    /* Layout Colors - Make backgrounds more visible */
+    --layout-sidebar: 60 80% 96%;        /* More opaque cream for sidebar */
+    --layout-main: 0 0% 98%;             /* Light gray for main area */
 
     /* Base Colors for compatibility */
     --background: 0 0% 100%;
@@ -56,8 +56,8 @@
     --ring: 215 58% 55%;              /* brand-light */
     --radius: 0.5rem;
 
-    /* Sidebar tokens */
-    --sidebar-background: 60 80% 96% / 0.3;
+    /* Sidebar tokens - More opaque */
+    --sidebar-background: 60 80% 96%;
     --sidebar-foreground: 209 75% 28%;
     --sidebar-primary: 209 75% 28%;
     --sidebar-primary-foreground: 0 0% 98%;

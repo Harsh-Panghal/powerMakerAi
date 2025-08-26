@@ -4,6 +4,8 @@ import { PowerMakerHeader } from "./PowerMakerHeader";
 import { ChatArea } from "./ChatArea";
 
 export function PowerMakerLayout() {
+  console.log("PowerMakerLayout rendering");
+  
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">

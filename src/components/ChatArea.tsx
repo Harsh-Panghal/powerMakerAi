@@ -51,6 +51,8 @@ export function ChatArea() {
   const [selectedModel, setSelectedModel] = useState("model-0-1");
   const maxLength = 1000;
 
+  console.log("ChatArea rendering");
+
   const handlePromptCardClick = (suggestion: string) => {
     setPrompt(suggestion);
   };
@@ -60,10 +62,6 @@ export function ChatArea() {
       console.log("Sending:", prompt);
       // Handle send logic here
     }
-  };
-
-  const getSelectedModel = () => {
-    return modelOptions.find(option => option.value === selectedModel);
   };
 
   return (
@@ -114,9 +112,7 @@ export function ChatArea() {
             <div className="absolute right-3 top-3">
               <Select value={selectedModel} onValueChange={setSelectedModel}>
                 <SelectTrigger className="w-40 h-8 text-xs border-border">
-                  <SelectValue>
-                    {getSelectedModel()?.title || "Select Model"}
-                  </SelectValue>
+                  <SelectValue placeholder="Select Model" />
                 </SelectTrigger>
                 <SelectContent>
                   {modelOptions.map((option) => {
