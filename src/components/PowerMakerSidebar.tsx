@@ -29,9 +29,9 @@ export function PowerMakerSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/30 shadow-[inset_-8px_0_16px_rgba(0,0,0,0.08)]">
-      <SidebarHeader className="p-4">
-        <div className="flex items-center space-x-2">
+    <Sidebar collapsible="icon" className="border-r border-border/30 shadow-[inset_-8px_0_16px_rgba(0,0,0,0.08)] data-[state=collapsed]:w-16">
+      <SidebarHeader className={`p-4 ${isCollapsed ? 'flex justify-center' : ''}`}>
+        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-2'}`}>
           <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
           {!isCollapsed && (
             <>
@@ -107,12 +107,12 @@ export function PowerMakerSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-border">
-        <div>
-          <SidebarMenuButton className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out">
+        <div className={isCollapsed ? 'flex flex-col items-center space-y-2' : ''}>
+          <SidebarMenuButton className={`w-full ${isCollapsed ? 'justify-center' : 'justify-start'} text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out`}>
             <HelpCircle className="w-4 h-4" />
             {!isCollapsed && <span className="ml-2">Help</span>}
           </SidebarMenuButton>
-          <SidebarMenuButton className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out">
+          <SidebarMenuButton className={`w-full ${isCollapsed ? 'justify-center' : 'justify-start'} text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out`}>
             <Settings className="w-4 h-4" />
             {!isCollapsed && <span className="ml-2">Settings</span>}
           </SidebarMenuButton>
