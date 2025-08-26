@@ -29,7 +29,7 @@ export function PowerMakerSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/30">
+    <Sidebar collapsible="icon" className="border-r border-border/30 shadow-[inset_-8px_0_16px_rgba(0,0,0,0.08)]">
       <SidebarHeader className="p-4">
         <div className="flex items-center space-x-2">
           <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
