@@ -91,12 +91,11 @@ export function ChatArea() {
               placeholder="Enter Prompt Here"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value.slice(0, maxLength))}
-              className="min-h-[60px] pr-32 resize-none border-brand-light focus:ring-brand-light"
+              className="min-h-[100px] pr-36 pb-14 resize-none border-brand-light focus:ring-brand-light"
             />
             
-            {/* Controls */}
-            <div className="absolute right-2 top-2 flex items-center space-x-2">
-              {/* Model Selector */}
+            {/* Top Right Controls - Model Selector */}
+            <div className="absolute right-3 top-3">
               <Select value={selectedModel} onValueChange={setSelectedModel}>
                 <SelectTrigger className="w-32 h-8 text-xs border-border">
                   <SelectValue />
@@ -110,7 +109,10 @@ export function ChatArea() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
 
+            {/* Bottom Right Controls - Character Counter & Send Button */}
+            <div className="absolute right-3 bottom-3 flex items-center space-x-3">
               {/* Character Counter */}
               <span className="text-xs text-muted-foreground">
                 {prompt.length}/{maxLength}
