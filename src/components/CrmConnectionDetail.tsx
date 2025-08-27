@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { X, Plus, Check, Trash2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { FloatingInput } from '@/components/ui/floating-input';
 
 interface Connection {
   id: string;
@@ -222,70 +221,53 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({ isOpen
               </Button>
               
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="connection-name">Connection Name</Label>
-                  <Input 
-                    id="connection-name" 
-                    placeholder="Enter connection name" 
-                    value={formData.connectionName}
-                    onChange={(e) => handleFormChange('connectionName', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="tenant-id">Tenant Id</Label>
-                  <Input 
-                    id="tenant-id" 
-                    placeholder="Enter tenant ID" 
-                    value={formData.tenantId}
-                    onChange={(e) => handleFormChange('tenantId', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="client-id">Client ID</Label>
-                  <Input 
-                    id="client-id" 
-                    placeholder="Enter client ID" 
-                    value={formData.clientId}
-                    onChange={(e) => handleFormChange('clientId', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="client-secret">Client Secret</Label>
-                  <Input 
-                    id="client-secret" 
-                    type="password" 
-                    placeholder="Enter client secret" 
-                    value={formData.clientSecret}
-                    onChange={(e) => handleFormChange('clientSecret', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="resource">Resource (CRM Uri)</Label>
-                  <Input 
-                    id="resource" 
-                    placeholder="Enter CRM URI" 
-                    value={formData.resource}
-                    onChange={(e) => handleFormChange('resource', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="crm-solution">Default CRM Solution (Unmanaged Only)</Label>
-                  <Input 
-                    id="crm-solution" 
-                    placeholder="Enter CRM solution" 
-                    value={formData.crmSolution}
-                    onChange={(e) => handleFormChange('crmSolution', e.target.value)}
-                  />
-                </div>
+                <FloatingInput 
+                  label="Connection Name"
+                  value={formData.connectionName}
+                  onChange={(e) => handleFormChange('connectionName', e.target.value)}
+                />
                 
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button variant="outline" onClick={handleClearForm}>
-                    Clear
-                  </Button>
-                  <Button onClick={handleSaveConnection}>
-                    Save
-                  </Button>
-                </div>
+                <FloatingInput 
+                  label="Tenant Id"
+                  isPassword={true}
+                  value={formData.tenantId}
+                  onChange={(e) => handleFormChange('tenantId', e.target.value)}
+                />
+                
+                <FloatingInput 
+                  label="Client ID"
+                  isPassword={true}
+                  value={formData.clientId}
+                  onChange={(e) => handleFormChange('clientId', e.target.value)}
+                />
+                
+                <FloatingInput 
+                  label="Client Secret"
+                  isPassword={true}
+                  value={formData.clientSecret}
+                  onChange={(e) => handleFormChange('clientSecret', e.target.value)}
+                />
+                
+                <FloatingInput 
+                  label="Resource (CRM Uri)"
+                  value={formData.resource}
+                  onChange={(e) => handleFormChange('resource', e.target.value)}
+                />
+                
+                <FloatingInput 
+                  label="Default CRM Solution (Unmanaged Only)"
+                  value={formData.crmSolution}
+                  onChange={(e) => handleFormChange('crmSolution', e.target.value)}
+                />
+              </div>
+                
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={handleClearForm}>
+                  Clear
+                </Button>
+                <Button onClick={handleSaveConnection}>
+                  Save
+                </Button>
               </div>
             </div>
           )}
