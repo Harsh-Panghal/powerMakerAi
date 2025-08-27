@@ -154,45 +154,46 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
               <Button
                 onClick={handleShowAddForm}
                 variant="outline"
-                className="w-full justify-center gap-2 border-blue-300 text-brand-accent hover:bg-blue-50"
+                className="w-full justify-center gap-1 border-blue-300 text-brand-accent hover:bg-blue-50"
               >
                 <span>Add New Connection</span>
                 <Plus className="h-4 w-4" />
               </Button>
 
               {/* Connection List */}
-              <div className="space-y-2 pb-6">
+              <div className="space-y-2.5 pb-6">
                 <AnimatePresence>
                   {connections.map((connection) => (
                     <motion.div
                       key={connection.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }} // 👈 animate out
+                      exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.3 }}
-                      className="relative bg-gray-100 rounded-lg p-3 transition-colors duration-300 ease-in-out hover:bg-gray-200 group"
+                      className={`cursor-pointer relative rounded-md p-3 transition-colors duration-300 ease-in-out group
+    ${
+      connection.isSelected
+        ? "bg-blue-50 hover:bg-blue-100"
+        : "bg-gray-100 hover:bg-gray-200"
+    }`}
                       onMouseEnter={() => setHoveredConnection(connection.id)}
                       onMouseLeave={() => setHoveredConnection(null)}
                     >
                       {/* Selected indicator */}
                       {connection.isSelected && (
-                        <div className="absolute top-2 left-3 text-xs text-brand-accent font-medium">
+                        <div className="absolute top-0 left-3 text-xs text-brand-accent font-medium">
                           Currently Active
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center justify-between mt-0">
                         <span className="text-foreground font-medium">
                           {connection.name}
                         </span>
 
                         {/* Icons */}
                         <div
-                          className={`flex items-center gap-2 transition-all duration-300 ${
-                            hoveredConnection === connection.id
-                              ? "opacity-100 -translate-y-1.5"
-                              : "opacity-0 translate-y-1 pointer-events-none"
-                          }`}
+                          className={`flex items-center gap-1 transition-all duration-300 `}
                         >
                           {!connection.isSelected && (
                             <Button
@@ -201,7 +202,7 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                               onClick={() =>
                                 handleSelectConnection(connection.id)
                               }
-                              className="h-8 w-8 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors duration-200"
+                              className="h-8 w-8 hover:bg-green-600 text-success/40 rounded-md transition-colors duration-200"
                             >
                               <Check className="h-4 w-4" />
                             </Button>
@@ -213,7 +214,7 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                             onClick={() =>
                               handleDeleteConnection(connection.id)
                             }
-                            className="h-8 w-8 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors duration-200"
+                            className="h-8 w-8  hover:bg-red-600 text-error rounded-md transition-colors duration-200"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -276,7 +277,7 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                 />
 
                 <FloatingInput
-                  label="Resource (CRM Uri)"
+                  label="Resource (CRM Url)"
                   value={formData.resource}
                   onChange={(e) => handleFormChange("resource", e.target.value)}
                 />

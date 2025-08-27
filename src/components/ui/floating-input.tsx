@@ -29,7 +29,7 @@ const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
         <input
           type={inputType}
           className={cn(
-            "flex h-14 w-full rounded-md border border-input bg-background px-3 pt-6 pb-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm peer",
+            "flex h-[40px] w-full rounded-md border border-input bg-background px-3  text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-transparent focus-visible:outline-none  focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm peer",
             className
           )}
           ref={ref}
@@ -39,10 +39,10 @@ const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
           {...props}
         />
         <label className={cn(
-          "absolute left-3 text-muted-foreground transition-all duration-200 pointer-events-none",
+          " absolute left-3 text-muted-foreground transition-all duration-200 pointer-events-none bg-white",
           (isFocused || hasValue) 
-            ? "top-2 text-xs font-medium" 
-            : "top-4 text-base"
+            ? "-top-2 text-xs font-medium" 
+            : "top-1.5 text-sm"
         )}>
           {label}
         </label>
@@ -50,7 +50,7 @@ const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-4 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
           >
             {showPassword ? (
               <EyeOff className="h-4 w-4" />
