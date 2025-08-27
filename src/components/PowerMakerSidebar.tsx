@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, ChevronDown, MoreHorizontal, HelpCircle, Settings, Star, Upload, Trash2, Check, ArrowLeft, X } from "lucide-react";
+import { CrmConnectionDetail } from "@/components/CrmConnectionDetail";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -375,96 +376,10 @@ export function PowerMakerSidebar() {
       </Dialog>
 
       {/* CRM Connection Details Dialog */}
-      <Dialog open={isCrmConnectionOpen} onOpenChange={setIsCrmConnectionOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>CRM Connection Details</DialogTitle>
-          </DialogHeader>
-          
-          {!showConnectionForm ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                {connectionList.map((connection) => (
-                  <div key={connection.id} className="flex items-center justify-between p-2 border rounded">
-                    <span>{connection.name}</span>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleConnectionToggle(connection.id)}
-                        className={connection.isActive ? 'text-green-600' : 'text-gray-400'}
-                      >
-                        <Check className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleConnectionDelete(connection.id)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Button onClick={() => setShowConnectionForm(true)} className="w-full">
-                Add New Connection
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <Button
-                variant="ghost"
-                onClick={() => setShowConnectionForm(false)}
-                className="flex items-center"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Connections
-              </Button>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="connection-name">Connection Name</Label>
-                  <Input id="connection-name" placeholder="Enter connection name" />
-                </div>
-                <div>
-                  <Label htmlFor="tenant-id">Tenant Id</Label>
-                  <Input id="tenant-id" placeholder="Enter tenant ID" />
-                </div>
-                <div>
-                  <Label htmlFor="client-id">Client ID</Label>
-                  <Input id="client-id" placeholder="Enter client ID" />
-                </div>
-                <div>
-                  <Label htmlFor="client-secret">Client Secret</Label>
-                  <Input id="client-secret" type="password" placeholder="Enter client secret" />
-                </div>
-                <div>
-                  <Label htmlFor="resource">Resource (CRM Uri)</Label>
-                  <Input id="resource" placeholder="Enter CRM URI" />
-                </div>
-                <div>
-                  <Label htmlFor="crm-solution">Default CRM Solution (Unmanaged Only)</Label>
-                  <Input id="crm-solution" placeholder="Enter CRM solution" />
-                </div>
-                
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowConnectionForm(false)}>
-                    Clear
-                  </Button>
-                  <Button onClick={() => {
-                    setShowConnectionForm(false);
-                    console.log("Connection saved");
-                  }}>
-                    Save
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <CrmConnectionDetail 
+        isOpen={isCrmConnectionOpen} 
+        onClose={() => setIsCrmConnectionOpen(false)} 
+      />
     </Sidebar>
   );
 }
