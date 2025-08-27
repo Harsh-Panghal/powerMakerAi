@@ -197,7 +197,7 @@ export function PowerMakerSidebar() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="w-full justify-start text-xs text-destructive"
+                            className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
                             onClick={() => console.log("Delete chat:", chat)}
                           >
                             Delete
@@ -218,7 +218,7 @@ export function PowerMakerSidebar() {
                   className="text-brand hover:text-brand-accent flex items-center"
                   onClick={() => setShowAllChats(true)}
                 >
-                  <ChevronDown className="w-4 h-4 mr-1" />
+                  <ChevronDown className="w-4 h-4 mr-0" />
                   More
                 </Button>
               </div>

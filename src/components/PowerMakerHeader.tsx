@@ -64,6 +64,7 @@ export function PowerMakerHeader() {
   return (
     <>
       <header className="h-14 flex items-center justify-between px-4 border-b border-border bg-background">
+        {/* left section */}
         <div className="flex items-center">
           <Button
             variant="ghost"
@@ -74,7 +75,7 @@ export function PowerMakerHeader() {
             <Menu className="w-5 h-5" />
           </Button>
         </div>
-
+         {/* right section */}
         <div className="flex items-center space-x-4">
           {/* Connection Status */}
           <div className="flex items-center space-x-2 text-sm">
@@ -196,7 +197,7 @@ export function PowerMakerHeader() {
                 <UserPlus className="w-4 h-4 mr-2" />
                 Invite
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowLogoutDialog(true)}>
+              <DropdownMenuItem onClick={() => setShowLogoutDialog(true)} className="text-destructive">
                 <LogOut className="w-4 h-4 mr-2" />
                 Log Out
               </DropdownMenuItem>

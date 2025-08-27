@@ -32,7 +32,6 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
     { id: "3", name: "c", isSelected: false },
     { id: "4", name: "d", isSelected: false },
     { id: "5", name: "e", isSelected: false },
-    { id: "6", name: "f", isSelected: false },
   ]);
   const [hoveredConnection, setHoveredConnection] = useState<string | null>(
     null
@@ -161,7 +160,7 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
               </Button>
 
               {/* Connection List */}
-              <div className="space-y-3 pb-6">
+              <div className="space-y-3 pb-4 pt-2 max-h-[475px] overflow-y-auto overflow-x-hidden">
                 <AnimatePresence>
                   {connections.map((connection) => (
                     <motion.div
@@ -185,7 +184,7 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                       )}
                       
                       {/* Main content */}
-                      <div className="p-4 pl-5">
+                      <div className="p-2 pl-5">
                         <div className="flex items-center justify-between">
                           {/* Connection info */}
                           <div className="flex-1 min-w-0">
