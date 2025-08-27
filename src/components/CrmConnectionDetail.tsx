@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
-import { X, Plus, Check, Trash2, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { FloatingInput } from '@/components/ui/floating-input';
+import React, { useState } from "react";
+import { X, Plus, Check, Trash2, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { FloatingInput } from "@/components/ui/floating-input";
 
 interface Connection {
   id: string;
@@ -15,35 +22,44 @@ interface CrmConnectionDetailProps {
   onClose: () => void;
 }
 
-export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({ isOpen, onClose }) => {
+export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const [connections, setConnections] = useState<Connection[]>([
-    { id: '1', name: 'a', isSelected: true },
-    { id: '2', name: 'b', isSelected: false },
+    { id: "1", name: "a", isSelected: true },
+    { id: "2", name: "b", isSelected: false },
+    { id: "3", name: "c", isSelected: false },
+    { id: "4", name: "d", isSelected: false },
+    { id: "5", name: "e", isSelected: false },
+    { id: "6", name: "f", isSelected: false },
   ]);
-  const [hoveredConnection, setHoveredConnection] = useState<string | null>(null);
+  const [hoveredConnection, setHoveredConnection] = useState<string | null>(
+    null
+  );
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    connectionName: '',
-    tenantId: '',
-    clientId: '',
-    clientSecret: '',
-    resource: '',
-    crmSolution: ''
+    connectionName: "",
+    tenantId: "",
+    clientId: "",
+    clientSecret: "",
+    resource: "",
+    crmSolution: "",
   });
 
   const handleSelectConnection = (id: string) => {
-    setConnections(prev =>
-      prev.map(conn => ({
+    setConnections((prev) =>
+      prev.map((conn) => ({
         ...conn,
-        isSelected: conn.id === id
+        isSelected: conn.id === id,
       }))
     );
   };
 
   const handleDeleteConnection = (id: string) => {
-    const connectionToDelete = connections.find(conn => conn.id === id);
-    const newConnections = connections.filter(conn => conn.id !== id);
-    
+    const connectionToDelete = connections.find((conn) => conn.id === id);
+    const newConnections = connections.filter((conn) => conn.id !== id);
+
     if (newConnections.length === 0) {
       setConnections([]);
       return;
@@ -53,7 +69,7 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({ isOpen
     if (connectionToDelete?.isSelected) {
       newConnections[0].isSelected = true;
     }
-    
+
     setConnections(newConnections);
   };
 
@@ -64,19 +80,19 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({ isOpen
   const handleBackToConnections = () => {
     setShowForm(false);
     setFormData({
-      connectionName: '',
-      tenantId: '',
-      clientId: '',
-      clientSecret: '',
-      resource: '',
-      crmSolution: ''
+      connectionName: "",
+      tenantId: "",
+      clientId: "",
+      clientSecret: "",
+      resource: "",
+      crmSolution: "",
     });
   };
 
   const handleFormChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -86,26 +102,29 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({ isOpen
       const newConnection: Connection = {
         id: newId,
         name: formData.connectionName,
-        isSelected: connections.length === 0
+        isSelected: connections.length === 0,
       };
 
-      setConnections(prev => [
-        ...prev.map(conn => ({ ...conn, isSelected: connections.length === 0 ? false : conn.isSelected })),
-        newConnection
+      setConnections((prev) => [
+        ...prev.map((conn) => ({
+          ...conn,
+          isSelected: connections.length === 0 ? false : conn.isSelected,
+        })),
+        newConnection,
       ]);
-      
+
       handleBackToConnections();
     }
   };
 
   const handleClearForm = () => {
     setFormData({
-      connectionName: '',
-      tenantId: '',
-      clientId: '',
-      clientSecret: '',
-      resource: '',
-      crmSolution: ''
+      connectionName: "",
+      tenantId: "",
+      clientId: "",
+      clientSecret: "",
+      resource: "",
+      crmSolution: "",
     });
   };
 
@@ -117,22 +136,15 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({ isOpen
             <DialogTitle className="text-xl font-semibold text-foreground">
               Crm Connection Detail
             </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-6 w-6 rounded-full hover:bg-muted"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </DialogHeader>
 
         <div className="px-6 space-y-4">
           {/* Info Banner */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-blue-700 text-sm text-center font-medium">
-              "Your Connection Information Is Protected With Industry-Standard Encryption."
+            <p className="text-brand-medium text-sm text-center font-medium">
+              "Your Connection Information Is Protected With Industry-Standard
+              Encryption."
             </p>
           </div>
 
@@ -142,7 +154,7 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({ isOpen
               <Button
                 onClick={handleShowAddForm}
                 variant="outline"
-                className="w-full justify-center gap-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+                className="w-full justify-center gap-2 border-blue-300 text-brand-accent hover:bg-blue-50"
               >
                 <span>Add New Connection</span>
                 <Plus className="h-4 w-4" />
@@ -150,60 +162,71 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({ isOpen
 
               {/* Connection List */}
               <div className="space-y-2 pb-6">
-                {connections.map((connection) => (
-                  <div
-                    key={connection.id}
-                    className="relative bg-gray-100 rounded-lg p-3 transition-all duration-300 ease-in-out hover:bg-gray-200 group animate-fade-in"
-                    onMouseEnter={() => setHoveredConnection(connection.id)}
-                    onMouseLeave={() => setHoveredConnection(null)}
-                  >
-                    {/* Selected indicator inside connection item */}
-                    {connection.isSelected && (
-                      <div className="absolute top-2 left-3 text-xs text-blue-600 font-medium">
-                        Currently Active
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between mt-4">
-                      <span className="text-foreground font-medium">
-                        {connection.name}
-                      </span>
+                <AnimatePresence>
+                  {connections.map((connection) => (
+                    <motion.div
+                      key={connection.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }} // 👈 animate out
+                      transition={{ duration: 0.3 }}
+                      className="relative bg-gray-100 rounded-lg p-3 transition-colors duration-300 ease-in-out hover:bg-gray-200 group"
+                      onMouseEnter={() => setHoveredConnection(connection.id)}
+                      onMouseLeave={() => setHoveredConnection(null)}
+                    >
+                      {/* Selected indicator */}
+                      {connection.isSelected && (
+                        <div className="absolute top-2 left-3 text-xs text-brand-accent font-medium">
+                          Currently Active
+                        </div>
+                      )}
 
-                      {/* Action Icons with smooth animations */}
-                      <div className="flex items-center gap-2">
-                        {hoveredConnection === connection.id && (
-                          <div className="flex items-center gap-2 animate-fade-in">
-                            {/* Show checkmark only for non-selected connections */}
-                            {!connection.isSelected && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleSelectConnection(connection.id)}
-                                className="h-8 w-8 bg-green-500 hover:bg-green-600 text-white rounded-full transition-all duration-200 animate-scale-in"
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                            )}
+                      <div className="flex items-center justify-between mt-4">
+                        <span className="text-foreground font-medium">
+                          {connection.name}
+                        </span>
 
-                            {/* Always show delete icon on hover */}
+                        {/* Icons */}
+                        <div
+                          className={`flex items-center gap-2 transition-all duration-300 ${
+                            hoveredConnection === connection.id
+                              ? "opacity-100 -translate-y-1.5"
+                              : "opacity-0 translate-y-1 pointer-events-none"
+                          }`}
+                        >
+                          {!connection.isSelected && (
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleDeleteConnection(connection.id)}
-                              className="h-8 w-8 bg-red-500 hover:bg-red-600 text-white rounded-full transition-all duration-200 animate-scale-in"
+                              onClick={() =>
+                                handleSelectConnection(connection.id)
+                              }
+                              className="h-8 w-8 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors duration-200"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Check className="h-4 w-4" />
                             </Button>
-                          </div>
-                        )}
+                          )}
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              handleDeleteConnection(connection.id)
+                            }
+                            className="h-8 w-8 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors duration-200"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
 
                 {connections.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
-                    No connections available. Add a new connection to get started.
+                    No connections available. Add a new connection to get
+                    started.
                   </div>
                 )}
               </div>
@@ -214,60 +237,64 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({ isOpen
               <Button
                 variant="ghost"
                 onClick={handleBackToConnections}
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 p-0"
+                className="flex items-center gap-2 text-brand-accent  p-2 transition-all duration-300 ease-in-out"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back to Connections
               </Button>
-              
+
               <div className="space-y-4">
-                <FloatingInput 
+                <FloatingInput
                   label="Connection Name"
                   value={formData.connectionName}
-                  onChange={(e) => handleFormChange('connectionName', e.target.value)}
+                  onChange={(e) =>
+                    handleFormChange("connectionName", e.target.value)
+                  }
                 />
-                
-                <FloatingInput 
+
+                <FloatingInput
                   label="Tenant Id"
                   isPassword={true}
                   value={formData.tenantId}
-                  onChange={(e) => handleFormChange('tenantId', e.target.value)}
+                  onChange={(e) => handleFormChange("tenantId", e.target.value)}
                 />
-                
-                <FloatingInput 
+
+                <FloatingInput
                   label="Client ID"
                   isPassword={true}
                   value={formData.clientId}
-                  onChange={(e) => handleFormChange('clientId', e.target.value)}
+                  onChange={(e) => handleFormChange("clientId", e.target.value)}
                 />
-                
-                <FloatingInput 
+
+                <FloatingInput
                   label="Client Secret"
                   isPassword={true}
                   value={formData.clientSecret}
-                  onChange={(e) => handleFormChange('clientSecret', e.target.value)}
+                  onChange={(e) =>
+                    handleFormChange("clientSecret", e.target.value)
+                  }
                 />
-                
-                <FloatingInput 
+
+                <FloatingInput
                   label="Resource (CRM Uri)"
                   value={formData.resource}
-                  onChange={(e) => handleFormChange('resource', e.target.value)}
+                  onChange={(e) => handleFormChange("resource", e.target.value)}
                 />
-                
-                <FloatingInput 
+
+                <FloatingInput
                   label="Default CRM Solution (Unmanaged Only)"
                   value={formData.crmSolution}
-                  onChange={(e) => handleFormChange('crmSolution', e.target.value)}
+                  onChange={(e) =>
+                    handleFormChange("crmSolution", e.target.value)
+                  }
                 />
               </div>
-                
+
               <div className="flex justify-end space-x-2 pt-4">
                 <Button variant="outline" onClick={handleClearForm}>
                   Clear
                 </Button>
-                <Button onClick={handleSaveConnection}>
-                  Save
-                </Button>
+                <Button onClick={handleSaveConnection}>Save</Button>
               </div>
             </div>
           )}
