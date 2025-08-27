@@ -170,37 +170,66 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className={`relative rounded-xl border transition-all duration-300 ease-in-out group cursor-pointer
+                      className={`relative overflow-hidden rounded-lg border bg-card transition-all duration-300 ease-in-out group cursor-pointer
                         ${
                           connection.isSelected
-                            ? "bg-gradient-to-r from-brand/5 to-brand-light/5 border-brand/20 shadow-sm"
-                            : "bg-card border-border/50 hover:border-brand/30 hover:shadow-md"
+                            ? "border-brand/30 shadow-lg shadow-brand/10 bg-gradient-to-br from-brand/5 via-card to-brand-light/5"
+                            : "border-border hover:border-brand/20 hover:shadow-md"
                         }`}
                       onMouseEnter={() => setHoveredConnection(connection.id)}
                       onMouseLeave={() => setHoveredConnection(null)}
                     >
-                      {/* Content Container */}
-                      <div className="p-4">
-                        {/* Header with name and active badge */}
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-foreground text-base">
+                      {/* Left border accent for active connection */}
+                      {connection.isSelected && (
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-brand to-brand-light" />
+                      )}
+                      
+                      {/* Main content */}
+                      <div className="p-4 pl-5">
+                        <div className="flex items-center justify-between">
+                          {/* Connection info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-1">
+                              {/* Status dot */}
+                              <div className={`relative w-3 h-3 rounded-full ${
+                                connection.isSelected 
+                                  ? "bg-success" 
+                                  : "bg-muted-foreground/30"
+                              }`}>
+                                {connection.isSelected && (
+                                  <div className="absolute inset-0 rounded-full bg-success animate-ping opacity-75" />
+                                )}
+                              </div>
+                              
+                              {/* Connection name */}
+                              <h3 className="font-semibold text-foreground text-base truncate">
                                 {connection.name}
-                              </span>
+                              </h3>
+                              
+                              {/* Active badge */}
                               {connection.isSelected && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-brand/10 text-brand border border-brand/20">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand text-primary-foreground">
                                   Active
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              CRM Connection
-                            </p>
+                            
+                            {/* Connection details */}
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-current opacity-50" />
+                                CRM Connection
+                              </span>
+                              <span className={connection.isSelected ? "text-success font-medium" : ""}>
+                                {connection.isSelected ? "Connected" : "Available"}
+                              </span>
+                            </div>
                           </div>
 
-                          {/* Action Icons */}
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          {/* Action buttons */}
+                          <div className={`flex items-center gap-1 transition-all duration-300 ${
+                            hoveredConnection === connection.id ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2"
+                          }`}>
                             {!connection.isSelected && (
                               <Button
                                 variant="ghost"
@@ -209,7 +238,8 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                                   e.stopPropagation();
                                   handleSelectConnection(connection.id);
                                 }}
-                                className="h-8 w-8 hover:bg-success/10 hover:text-success text-muted-foreground transition-all duration-200"
+                                className="h-9 w-9 hover:bg-success/10 hover:text-success hover:scale-105 transition-all duration-200"
+                                title="Set as active connection"
                               >
                                 <Check className="h-4 w-4" />
                               </Button>
@@ -222,38 +252,19 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                                 e.stopPropagation();
                                 handleDeleteConnection(connection.id);
                               }}
-                              className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all duration-200"
+                              className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive hover:scale-105 transition-all duration-200"
+                              title="Delete connection"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
-
-                        {/* Connection Status */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${
-                              connection.isSelected 
-                                ? "bg-success animate-pulse" 
-                                : "bg-muted-foreground/30"
-                            }`} />
-                            <span className="text-sm text-muted-foreground">
-                              {connection.isSelected ? "Connected" : "Available"}
-                            </span>
-                          </div>
-                          
-                          {connection.isSelected && (
-                            <span className="text-xs text-brand font-medium">
-                              Primary Connection
-                            </span>
-                          )}
-                        </div>
                       </div>
 
-                      {/* Active Connection Highlight */}
-                      {connection.isSelected && (
-                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-brand/5 to-transparent pointer-events-none" />
-                      )}
+                      {/* Hover overlay */}
+                      <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-brand/5 to-transparent transition-opacity duration-300 pointer-events-none ${
+                        hoveredConnection === connection.id ? "opacity-100" : "opacity-0"
+                      }`} />
                     </motion.div>
                   ))}
                 </AnimatePresence>
