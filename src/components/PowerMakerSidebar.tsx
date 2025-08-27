@@ -137,11 +137,12 @@ export function PowerMakerSidebar() {
 
       <SidebarContent className="flex-1 overflow-y-auto ">
         {/* New Chat Button */}
-        <div className="p-4">
+        <div className={`p-4 ${isCollapsed ? 'px-2' : ''}`}>
           <Button 
-            className="w-full justify-center bg-transparent border border-border hover:bg-sidebar-accent text-brand shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out"
+            className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-center'} bg-transparent border border-border hover:bg-sidebar-accent text-brand shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out`}
             variant="outline"
             onClick={handleNewChat}
+            size={isCollapsed ? "sm" : "default"}
           >
             <Plus className="w-4 h-4" />
             {!isCollapsed && <span className="ml-1">New Chat</span>}
