@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, Check, Trash2, ArrowLeft, AlertCircle } from "lucide-react";
+import { X, Plus, Check, Trash2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -68,7 +68,6 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
   const [fieldErrors, setFieldErrors] = useState<{
     [key: string]: { hasError: boolean; message: string; showError: boolean };
   }>({});
-  const [errorTimeouts, setErrorTimeouts] = useState<{[key: string]: NodeJS.Timeout}>({});
 
   const handleSelectConnection = (id: string) => {
     setConnections((prev) =>
@@ -229,18 +228,8 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
     });
     setConnectionTestResult(null);
     setFieldErrors({});
-    
-    // Clear all timeouts
-    Object.values(errorTimeouts).forEach(timeout => clearTimeout(timeout));
-    setErrorTimeouts({});
   };
 
-  // Cleanup timeouts on unmount
-  useEffect(() => {
-    return () => {
-      Object.values(errorTimeouts).forEach(timeout => clearTimeout(timeout));
-    };
-  }, [errorTimeouts]);
 
   const handleTestConnection = async () => {
     const requiredFields = ["connectionName", "tenantId", "clientId", "clientSecret", "resource"];
@@ -490,23 +479,12 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                     <FloatingInput
                       label="Connection Name *"
                       value={formData.connectionName}
+                      error={fieldErrors.connectionName}
                       onChange={(e) =>
                         handleFormChange("connectionName", e.target.value)
                       }
                       onBlur={(e) => handleFieldBlur("connectionName", e.target.value)}
                     />
-                    {fieldErrors.connectionName?.showError && (
-                      <Tooltip open>
-                        <TooltipTrigger asChild>
-                          <div className="absolute right-3 top-3 pointer-events-none">
-                            <AlertCircle className="h-4 w-4 text-destructive" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="bg-destructive text-destructive-foreground">
-                          <p>{fieldErrors.connectionName.message}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
                   </div>
 
                   <div className="relative">
@@ -514,21 +492,10 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                       label="Tenant Id *"
                       isPassword={true}
                       value={formData.tenantId}
+                      error={fieldErrors.tenantId}
                       onChange={(e) => handleFormChange("tenantId", e.target.value)}
                       onBlur={(e) => handleFieldBlur("tenantId", e.target.value)}
                     />
-                    {fieldErrors.tenantId?.showError && (
-                      <Tooltip open>
-                        <TooltipTrigger asChild>
-                          <div className="absolute right-12 top-3 pointer-events-none">
-                            <AlertCircle className="h-4 w-4 text-destructive" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="bg-destructive text-destructive-foreground">
-                          <p>{fieldErrors.tenantId.message}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
                   </div>
 
                   <div className="relative">
@@ -536,21 +503,10 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                       label="Client ID *"
                       isPassword={true}
                       value={formData.clientId}
+                      error={fieldErrors.clientId}
                       onChange={(e) => handleFormChange("clientId", e.target.value)}
                       onBlur={(e) => handleFieldBlur("clientId", e.target.value)}
                     />
-                    {fieldErrors.clientId?.showError && (
-                      <Tooltip open>
-                        <TooltipTrigger asChild>
-                          <div className="absolute right-12 top-3 pointer-events-none">
-                            <AlertCircle className="h-4 w-4 text-destructive" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="bg-destructive text-destructive-foreground">
-                          <p>{fieldErrors.clientId.message}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
                   </div>
 
                   <div className="relative">
@@ -558,44 +514,22 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                       label="Client Secret *"
                       isPassword={true}
                       value={formData.clientSecret}
+                      error={fieldErrors.clientSecret}
                       onChange={(e) =>
                         handleFormChange("clientSecret", e.target.value)
                       }
                       onBlur={(e) => handleFieldBlur("clientSecret", e.target.value)}
                     />
-                    {fieldErrors.clientSecret?.showError && (
-                      <Tooltip open>
-                        <TooltipTrigger asChild>
-                          <div className="absolute right-12 top-3 pointer-events-none">
-                            <AlertCircle className="h-4 w-4 text-destructive" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="bg-destructive text-destructive-foreground">
-                          <p>{fieldErrors.clientSecret.message}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
                   </div>
 
                   <div className="relative">
                     <FloatingInput
                       label="Resource (CRM Url) *"
                       value={formData.resource}
+                      error={fieldErrors.resource}
                       onChange={(e) => handleFormChange("resource", e.target.value)}
                       onBlur={(e) => handleFieldBlur("resource", e.target.value)}
                     />
-                    {fieldErrors.resource?.showError && (
-                      <Tooltip open>
-                        <TooltipTrigger asChild>
-                          <div className="absolute right-3 top-3 pointer-events-none">
-                            <AlertCircle className="h-4 w-4 text-destructive" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="bg-destructive text-destructive-foreground">
-                          <p>{fieldErrors.resource.message}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
                   </div>
 
                   <FloatingInput
