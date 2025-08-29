@@ -52,6 +52,11 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
     resource: "",
     crmSolution: "",
   });
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [connectionTestResult, setConnectionTestResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   const handleSelectConnection = (id: string) => {
     setConnections((prev) =>
@@ -132,6 +137,48 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
       resource: "",
       crmSolution: "",
     });
+    setConnectionTestResult(null);
+  };
+
+  const handleTestConnection = async () => {
+    const requiredFields = ["connectionName", "tenantId", "clientId", "clientSecret", "resource"];
+    const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]?.trim());
+    
+    if (missingFields.length > 0) {
+      setConnectionTestResult({
+        success: false,
+        message: "Please fill in all required fields"
+      });
+      return;
+    }
+
+    setIsTestingConnection(true);
+    setConnectionTestResult(null);
+
+    try {
+      // Simulate API call to test connection
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Mock success/failure (you can replace this with actual API call)
+      const isSuccess = Math.random() > 0.3; // 70% success rate for demo
+      
+      setConnectionTestResult({
+        success: isSuccess,
+        message: isSuccess ? "Connection successful!" : "Connection failed. Please check your credentials."
+      });
+    } catch (error) {
+      setConnectionTestResult({
+        success: false,
+        message: "Connection test failed. Please try again."
+      });
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
+
+  const isFormValid = () => {
+    const requiredFields = ["connectionName", "tenantId", "clientId", "clientSecret", "resource"];
+    return requiredFields.every(field => formData[field as keyof typeof formData]?.trim());
   };
 
   return (
@@ -382,11 +429,39 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
                 />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={handleClearForm}>
-                  Clear
+              {/* Connection Test Result */}
+              {connectionTestResult && (
+                <div className={`rounded-lg p-3 text-sm font-medium ${
+                  connectionTestResult.success 
+                    ? 'bg-success/10 text-success border border-success/20' 
+                    : 'bg-destructive/10 text-destructive border border-destructive/20'
+                }`}>
+                  {connectionTestResult.message}
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={handleTestConnection}
+                  disabled={!isFormValid() || isTestingConnection}
+                  className="border-brand/20 text-brand hover:bg-brand/5"
+                >
+                  {isTestingConnection ? "Testing..." : "Test Connection"}
                 </Button>
-                <Button onClick={handleSaveConnection}>Save</Button>
+                
+                <div className="flex space-x-2">
+                  <Button variant="outline" onClick={handleClearForm}>
+                    Clear
+                  </Button>
+                  <Button 
+                    onClick={handleSaveConnection}
+                    disabled={!connectionTestResult?.success}
+                    className={!connectionTestResult?.success ? "opacity-50 cursor-not-allowed" : ""}
+                  >
+                    Save
+                  </Button>
+                </div>
               </div>
             </div>
           )}
