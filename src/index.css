@@ -115,3 +115,31 @@
     @apply bg-background text-foreground;
   }
 }
+.profile-dialog {
+  /* use your tokens */
+  --sb-track: hsl(var(--sidebar-accent));
+  --sb-thumb: hsl(var(--sidebar-foreground));
+  --sb-thumb-hover: hsl(var(--sidebar-primary));
+
+  /* Firefox */
+  scrollbar-width: thin;                  /* auto | thin | none */
+  scrollbar-color: var(--sb-thumb) var(--sb-track);
+}
+
+/* Chrome/Edge/Safari */
+.profile-dialog::-webkit-scrollbar {
+  width: 10px;                            /* <-- scrollbar width */
+  height: 10px;                           /* for horizontal bars */
+}
+.profile-dialog::-webkit-scrollbar-track {
+  background: var(--sb-track);
+}
+.profile-dialog::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb);
+  border-radius: 9999px;
+  border: 2px solid var(--sb-track);      /* creates a nice inset look */
+}
+.profile-dialog:hover::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-hover);
+  cursor: pointer;
+}

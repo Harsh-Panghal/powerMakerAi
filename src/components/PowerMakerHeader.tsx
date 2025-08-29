@@ -208,7 +208,7 @@ export function PowerMakerHeader() {
 
       {/* Profile Dialog */}
       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="profile-dialog sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center text-lg">Profile</DialogTitle>
             <div className="flex justify-end">
