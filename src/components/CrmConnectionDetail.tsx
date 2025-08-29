@@ -118,21 +118,21 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
       [field]: value,
     }));
     
-    // Clear error when user starts typing
-    if (fieldErrors[field]?.hasError) {
-      setFieldErrors(prev => ({
-        ...prev,
-        [field]: { hasError: false, message: "", showError: false }
-      }));
-      
-      // Clear timeout if exists
-      if (errorTimeouts[field]) {
-        clearTimeout(errorTimeouts[field]);
-        setErrorTimeouts(prev => {
-          const newTimeouts = { ...prev };
-          delete newTimeouts[field];
-          return newTimeouts;
-        });
+    // Validate field in real-time as user types
+    if (value.trim()) {
+      validateField(field, value);
+    } else {
+      // Show error immediately if field becomes empty (for required fields)
+      const requiredFields = ["connectionName", "tenantId", "clientId", "clientSecret", "resource"];
+      if (requiredFields.includes(field)) {
+        setFieldErrors(prev => ({
+          ...prev,
+          [field]: { 
+            hasError: true, 
+            message: `${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} is required`,
+            showError: true 
+          }
+        }));
       }
     }
   };
@@ -184,24 +184,11 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
         ...prev,
         [field]: { hasError: true, message, showError: true }
       }));
-      
-      // Set timeout to hide error after 3 seconds
-      const timeout = setTimeout(() => {
-        setFieldErrors(prev => ({
-          ...prev,
-          [field]: { ...prev[field], showError: false }
-        }));
-        
-        setErrorTimeouts(prev => {
-          const newTimeouts = { ...prev };
-          delete newTimeouts[field];
-          return newTimeouts;
-        });
-      }, 3000);
-      
-      setErrorTimeouts(prev => ({
+    } else {
+      // Clear error when validation passes
+      setFieldErrors(prev => ({
         ...prev,
-        [field]: timeout
+        [field]: { hasError: false, message: "", showError: false }
       }));
     }
   };
