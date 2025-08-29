@@ -52,10 +52,10 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     connectionName: "",
-    tenantId: "52d465ba-b7a3-4395-8957-499d77f20477",
-    clientId: "bc6676d6-1387-4dc4-be89-ba13b08ceb4e",
-    clientSecret: "iU48Q~JdVefmsBern5ZCjp5PlplvzEe9TFszvc6V",
-    resource: "https://ogre-dev.crm11.dynamics.com",
+    tenantId: "",
+    clientId: "",
+    clientSecret: "",
+    resource: "",
     crmSolution: "",
   });
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -104,10 +104,10 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
     setShowForm(false);
     setFormData({
       connectionName: "",
-      tenantId: "52d465ba-b7a3-4395-8957-499d77f20477",
-      clientId: "bc6676d6-1387-4dc4-be89-ba13b08ceb4e",
-      clientSecret: "iU48Q~JdVefmsBern5ZCjp5PlplvzEe9TFszvc6V",
-      resource: "https://ogre-dev.crm11.dynamics.com",
+      tenantId: "",
+      clientId: "",
+      clientSecret: "",
+      resource: "",
       crmSolution: "",
     });
   };
@@ -148,9 +148,35 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
     if (!value.trim()) {
       hasError = true;
       message = `${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} is required`;
-    } else if (field === "resource" && !/^https?:\/\/.+/.test(value.trim())) {
-      hasError = true;
-      message = "Resource URL must be a valid URL starting with http:// or https://";
+    } else {
+      // Pattern validation for specific fields
+      switch (field) {
+        case "tenantId":
+        case "clientId":
+          // UUID pattern: 8-4-4-4-12 hexadecimal digits
+          const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (!uuidPattern.test(value.trim())) {
+            hasError = true;
+            message = `${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} must be a valid UUID format`;
+          }
+          break;
+        case "clientSecret":
+          // Client secret pattern: alphanumeric with special characters like ~, _
+          const clientSecretPattern = /^[A-Za-z0-9~_.-]{20,}$/;
+          if (!clientSecretPattern.test(value.trim())) {
+            hasError = true;
+            message = "Client Secret must contain valid characters and be at least 20 characters long";
+          }
+          break;
+        case "resource":
+          // Environment URL pattern: must be https and contain dynamics.com
+          const urlPattern = /^https:\/\/[a-zA-Z0-9-]+\.(crm|dynamics)\.com$/i;
+          if (!urlPattern.test(value.trim())) {
+            hasError = true;
+            message = "Resource URL must be a valid Dynamics 365 URL (https://example.crm.dynamics.com)";
+          }
+          break;
+      }
     }
     
     if (hasError) {
@@ -208,10 +234,10 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
   const handleClearForm = () => {
     setFormData({
       connectionName: "",
-      tenantId: "52d465ba-b7a3-4395-8957-499d77f20477",
-      clientId: "bc6676d6-1387-4dc4-be89-ba13b08ceb4e",
-      clientSecret: "iU48Q~JdVefmsBern5ZCjp5PlplvzEe9TFszvc6V",
-      resource: "https://ogre-dev.crm11.dynamics.com",
+      tenantId: "",
+      clientId: "",
+      clientSecret: "",
+      resource: "",
       crmSolution: "",
     });
     setConnectionTestResult(null);
