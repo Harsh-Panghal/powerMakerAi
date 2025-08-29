@@ -98,9 +98,9 @@ const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
               
               {/* Tooltip */}
               {showTooltip && (
-                <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-error-light text-error-dark text-xs rounded-md whitespace-nowrap z-50 animate-in fade-in-0 zoom-in-95 shadow-lg border border-error/20">
+                <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-error text-white text-xs rounded-md whitespace-nowrap z-50 animate-in fade-in-0 zoom-in-95 shadow-lg border border-error/20">
                   {error.message}
-                  <div className="absolute top-full right-3 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-transparent border-t-error-light" />
+                  <div className="absolute top-full right-3 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-transparent border-t-error" />
                 </div>
               )}
             </div>
