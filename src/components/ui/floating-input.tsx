@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface FloatingInputProps extends React.ComponentProps<"input"> {
@@ -68,7 +68,7 @@ const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
           type={inputType}
           className={cn(
             "flex h-[40px] w-full rounded-md border border-input bg-background px-3 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-transparent focus-visible:outline-none focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm peer",
-            error?.hasError && error?.showError && "border-destructive",
+            error?.hasError && error?.showError && "border-error",
             className
           )}
           ref={ref}
@@ -94,22 +94,13 @@ const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
               onMouseEnter={handleErrorIconHover}
               onMouseLeave={handleErrorIconLeave}
             >
-              <svg
-                className="h-4 w-4 text-destructive"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
+              <AlertTriangle className="h-4 w-4 text-error" />
               
               {/* Tooltip */}
               {showTooltip && (
-                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap z-50 animate-in fade-in-0 zoom-in-95">
+                <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-error-light text-error-dark text-xs rounded-md whitespace-nowrap z-50 animate-in fade-in-0 zoom-in-95 shadow-lg border border-error/20">
                   {error.message}
-                  <div className="absolute top-full right-2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-900" />
+                  <div className="absolute top-full right-3 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-transparent border-t-error-light" />
                 </div>
               )}
             </div>
