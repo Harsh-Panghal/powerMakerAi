@@ -16,12 +16,14 @@ const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
     const inputType = isPassword ? (showPassword ? "text" : "password") : type
 
     const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setHasValue(e.target.value.length > 0)
-      props.onChange?.(e)
+      const value = e.target.value;
+      setHasValue(value.length > 0);
+      props.onChange?.(e);
     }
 
     React.useEffect(() => {
-      setHasValue((props.value as string)?.length > 0 || false)
+      const value = props.value as string;
+      setHasValue(value != null && value.length > 0);
     }, [props.value])
 
     return (

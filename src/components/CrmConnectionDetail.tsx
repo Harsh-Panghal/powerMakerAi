@@ -52,10 +52,10 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     connectionName: "",
-    tenantId: "",
-    clientId: "",
-    clientSecret: "",
-    resource: "",
+    tenantId: "52d465ba-b7a3-4395-8957-499d77f20477",
+    clientId: "bc6676d6-1387-4dc4-be89-ba13b08ceb4e",
+    clientSecret: "iU48Q~JdVefmsBern5ZCjp5PlplvzEe9TFszvc6V",
+    resource: "https://ogre-dev.crm11.dynamics.com",
     crmSolution: "",
   });
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -104,10 +104,10 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
     setShowForm(false);
     setFormData({
       connectionName: "",
-      tenantId: "",
-      clientId: "",
-      clientSecret: "",
-      resource: "",
+      tenantId: "52d465ba-b7a3-4395-8957-499d77f20477",
+      clientId: "bc6676d6-1387-4dc4-be89-ba13b08ceb4e",
+      clientSecret: "iU48Q~JdVefmsBern5ZCjp5PlplvzEe9TFszvc6V",
+      resource: "https://ogre-dev.crm11.dynamics.com",
       crmSolution: "",
     });
   };
@@ -208,10 +208,10 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
   const handleClearForm = () => {
     setFormData({
       connectionName: "",
-      tenantId: "",
-      clientId: "",
-      clientSecret: "",
-      resource: "",
+      tenantId: "52d465ba-b7a3-4395-8957-499d77f20477",
+      clientId: "bc6676d6-1387-4dc4-be89-ba13b08ceb4e",
+      clientSecret: "iU48Q~JdVefmsBern5ZCjp5PlplvzEe9TFszvc6V",
+      resource: "https://ogre-dev.crm11.dynamics.com",
       crmSolution: "",
     });
     setConnectionTestResult(null);
