@@ -33,13 +33,10 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
   onClose,
 }) => {
   const [connections, setConnections] = useState<Connection[]>([
-    { id: "1", name: "a", isSelected: true },
-    { id: "2", name: "b", isSelected: false },
-    { id: "3", name: "c", isSelected: false },
-    { id: "4", name: "d", isSelected: false },
-    { id: "5", name: "e", isSelected: false },
-    { id: "6", name: "f", isSelected: false },
-    { id: "7", name: "g", isSelected: false },
+    { id: "1", name: "CRM Dev", isSelected: true },
+    { id: "2", name: "CRM UAT", isSelected: false },
+    { id: "3", name: "CRM PreProd", isSelected: false },
+    { id: "4", name: "CRM Prod", isSelected: false },
   ]);
   const [hoveredConnection, setHoveredConnection] = useState<string | null>(
     null
@@ -286,7 +283,7 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
         <div className="px-6 space-y-4">
           {/* Info Banner */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-brand-medium text-sm text-center font-medium">
+            <p className="text-brand-medium text-sm font-medium">
               Your Connection Information Is Protected With Industry-Standard
               Encryption.
             </p>
