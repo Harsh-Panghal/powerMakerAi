@@ -1,30 +1,68 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PromptCard } from "@/components/PromptCard";
-import { Database, Calendar, Key, Settings } from "lucide-react";
+import { Database, Calendar, Key, Settings, Search, Clock, AlertTriangle, Timer, List, DollarSign, UserPlus, FileText } from "lucide-react";
 import { useChatStore } from "@/store/chatStore";
 
-const promptSuggestions = [
-  {
-    title: "Create a custom entity to store API configuration details and suggest relevant columns.",
-    icon: Database
-  },
-  {
-    title: "Add a boolean and a date field to the opportunity entity.",
-    icon: Calendar
-  },
-  {
-    title: "I want to store 3rd party integration keys - create a config entity for that!",
-    icon: Key
-  },
-  {
-    title: "Create a settings entity for storing SMTP details with column suggestions.",
-    icon: Settings
-  }
-];
+const promptSuggestionsByModel = {
+  "model-0-1": [
+    {
+      title: "Create a custom entity to store API configuration details and suggest relevant columns.",
+      icon: Database
+    },
+    {
+      title: "Add a boolean and a date field to the opportunity entity.",
+      icon: Calendar
+    },
+    {
+      title: "I want to store 3rd party integration keys — create a config entity for that.!",
+      icon: Key
+    },
+    {
+      title: "Create a settings entity for storing SMTP details with column suggestions.",
+      icon: Settings
+    }
+  ],
+  "model-0-2": [
+    {
+      title: "Show all plugin trace logs for the account entity.",
+      icon: Search
+    },
+    {
+      title: "Filter trace logs generated in the last 1 hour.",
+      icon: Clock
+    },
+    {
+      title: "Find plugin logs that contain a NullReferenceException.",
+      icon: AlertTriangle
+    },
+    {
+      title: "List trace logs where execution time exceeded 60,000 ms.",
+      icon: Timer
+    }
+  ],
+  "model-0-3": [
+    {
+      title: "List all attributes of the Account entity..",
+      icon: List
+    },
+    {
+      title: "Show opportunities with Estimated Revenue over 1 lakh.",
+      icon: DollarSign
+    },
+    {
+      title: "Create a contact named John Doe.",
+      icon: UserPlus
+    },
+    {
+      title: "Get all cases with 'refund' in the title.",
+      icon: FileText
+    }
+  ]
+};
 
 const modelOptions = [
   { 
@@ -51,6 +89,10 @@ export function GreetingContainer() {
   const [prompt, setPrompt] = useState("");
   const { selectedModel, setModel, startChat } = useChatStore();
   const maxLength = 1000;
+
+  const currentPromptSuggestions = useMemo(() => {
+    return promptSuggestionsByModel[selectedModel as keyof typeof promptSuggestionsByModel] || promptSuggestionsByModel["model-0-1"];
+  }, [selectedModel]);
 
   const handlePromptCardClick = (suggestion: string) => {
     setPrompt(suggestion);
@@ -89,10 +131,10 @@ export function GreetingContainer() {
           </div>
 
           {/* Prompt Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {promptSuggestions.map((suggestion, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 transition-all duration-300">
+            {currentPromptSuggestions.map((suggestion, index) => (
               <PromptCard
-                key={index}
+                key={`${selectedModel}-${index}`}
                 title={suggestion.title}
                 icon={suggestion.icon}
                 onClick={() => handlePromptCardClick(suggestion.title)}
