@@ -8,7 +8,8 @@ export function AttributesTable() {
       schemaName: 'dev_name',
       dataType: 'Single Line of Text',
       format: 'Text',
-      description: '(null)'
+      description: '(null)',
+      requiredLevel: 'Optional'
     }
   ];
 
@@ -27,6 +28,7 @@ export function AttributesTable() {
                 <TableHead className="font-medium">Data Type</TableHead>
                 <TableHead className="font-medium">Format</TableHead>
                 <TableHead className="font-medium">Description</TableHead>
+                <TableHead className="font-medium">Required Level</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -41,6 +43,7 @@ export function AttributesTable() {
                   <TableCell className="text-muted-foreground italic">
                     {attribute.description}
                   </TableCell>
+                  <TableCell>{attribute.requiredLevel}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
