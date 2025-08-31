@@ -38,6 +38,7 @@ interface ChatStore {
   addAssistantMessage: (content: string, isStreaming?: boolean) => void;
   updateStreamingMessage: (content: string) => void;
   finishStreaming: () => void;
+  saveToRecentThreads: () => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -108,14 +109,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
   
   newChat: () => {
-    const currentThread = get().currentThread;
-    
     // Save current thread to recent threads if it exists
-    if (currentThread && currentThread.messages.length > 0) {
-      const recentThreads = get().recentThreads;
-      const updatedRecentThreads = [currentThread, ...recentThreads.slice(0, 9)]; // Keep last 10
-      set({ recentThreads: updatedRecentThreads });
-    }
+    get().saveToRecentThreads();
     
     set({ 
       showGreeting: true, 
@@ -199,6 +194,33 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       };
       
       set({ currentThread: updatedThread });
+      
+      // Auto-save to recent threads when response is complete
+      get().saveToRecentThreads();
+    }
+  },
+  
+  saveToRecentThreads: () => {
+    const currentThread = get().currentThread;
+    
+    // Only save if thread exists and has messages
+    if (currentThread && currentThread.messages.length > 0) {
+      const recentThreads = get().recentThreads;
+      
+      // Check if this thread is already in recent threads
+      const existingIndex = recentThreads.findIndex(thread => thread.id === currentThread.id);
+      
+      let updatedRecentThreads;
+      if (existingIndex >= 0) {
+        // Update existing thread
+        updatedRecentThreads = [...recentThreads];
+        updatedRecentThreads[existingIndex] = currentThread;
+      } else {
+        // Add new thread to the beginning
+        updatedRecentThreads = [currentThread, ...recentThreads.slice(0, 9)]; // Keep last 10
+      }
+      
+      set({ recentThreads: updatedRecentThreads });
     }
   },
 }));
