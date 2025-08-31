@@ -47,7 +47,7 @@ export function ChatInput() {
   };
 
   return (
-    <div className="p-6 bg-layout-main border-t border-border">
+    <div className="p-6 bg-layout-main">
       <div className="max-w-4xl mx-auto">
         <div className="relative">
           {/* Textarea */}

@@ -29,7 +29,7 @@ export function ChatArea() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col h-full relative"
           >
             {/* Chat Header */}
             <div className="p-4 border-b border-border bg-layout-main">
@@ -45,11 +45,15 @@ export function ChatArea() {
               </div>
             </div>
             
-            {/* Messages Area */}
-            <MessageList />
+            {/* Scrollable Messages Area */}
+            <div className="flex-1 overflow-hidden">
+              <MessageList />
+            </div>
             
-            {/* Chat Input */}
-            <ChatInput />
+            {/* Fixed Chat Input */}
+            <div className="border-t border-border bg-layout-main">
+              <ChatInput />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

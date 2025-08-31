@@ -46,12 +46,12 @@ export function MessageList() {
   if (!currentThread) return null;
 
   return (
-    <div className="flex-1 relative">
+    <div className="h-full relative">
       {/* Messages Container */}
       <div 
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto p-4 space-y-4"
+        className="h-full overflow-y-auto px-4 py-4"
       >
         <div className="max-w-4xl mx-auto space-y-6">
           <AnimatePresence initial={false}>
