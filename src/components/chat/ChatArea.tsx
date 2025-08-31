@@ -9,7 +9,7 @@ export function ChatArea() {
   const { showGreeting, currentThread } = useChatStore();
 
   return (
-    <div className="flex-1 flex flex-col bg-layout-main relative min-h-0">
+    <div className="flex-1 flex flex-col bg-layout-main relative">
       <AnimatePresence mode="wait">
         {showGreeting ? (
           <motion.div
@@ -18,7 +18,7 @@ export function ChatArea() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 overflow-auto"
+            className="flex-1"
           >
             <GreetingContainer />
           </motion.div>
@@ -29,10 +29,10 @@ export function ChatArea() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col min-h-0"
+            className="flex-1 flex flex-col h-full relative"
           >
-            {/* Fixed Chat Header */}
-            <div className="flex-shrink-0 p-4 border-b border-border bg-layout-main">
+            {/* Chat Header */}
+            <div className="p-4 border-b border-border bg-layout-main">
               <div className="max-w-4xl mx-auto">
                 <h2 className="text-lg font-semibold text-brand">
                   {currentThread?.title || 'New Conversation'}
@@ -46,12 +46,12 @@ export function ChatArea() {
             </div>
             
             {/* Scrollable Messages Area */}
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 overflow-hidden">
               <MessageList />
             </div>
             
             {/* Fixed Chat Input */}
-            <div className="flex-shrink-0 border-t border-border bg-layout-main">
+            <div className="border-t border-border bg-layout-main">
               <ChatInput />
             </div>
           </motion.div>
