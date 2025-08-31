@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Sparkles, Plus, FileCode, Code, HelpCircle } from 'lucide-react';
+import { Eye, Sparkles, Plus, FileCode, Code, HelpCircle, Table2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Message, useChatStore } from '@/store/chatStore';
+import { TablesView } from './TablesView';
 
 interface AssistantActionsProps {
   message: Message;
@@ -37,6 +39,7 @@ const quickPrompts = [
 
 export function AssistantActions({ message }: AssistantActionsProps) {
   const { openPreview, sendMessage } = useChatStore();
+  const [showTables, setShowTables] = useState(false);
 
   const handlePreview = () => {
     openPreview(message.content);
@@ -47,23 +50,42 @@ export function AssistantActions({ message }: AssistantActionsProps) {
   };
 
   return (
-    <div className="space-y-3">
-      {/* Show Preview Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <Button
-          onClick={handlePreview}
-          variant="outline"
-          size="sm"
-          className="bg-background hover:bg-muted border-border text-foreground"
-        >
-          <Eye className="w-4 h-4 mr-2" />
-          Show Preview
-        </Button>
-      </motion.div>
+    <>
+      <div className="space-y-3">
+        {/* Action Buttons */}
+        <div className="flex gap-2 flex-wrap">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Button
+              onClick={handlePreview}
+              variant="outline"
+              size="sm"
+              className="bg-background hover:bg-muted border-border text-foreground"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Show Preview
+            </Button>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Button
+              onClick={() => setShowTables(true)}
+              variant="outline"
+              size="sm"
+              className="bg-background hover:bg-muted border-border text-foreground"
+            >
+              <Table2 className="w-4 h-4 mr-2" />
+              Show Tables
+            </Button>
+          </motion.div>
+        </div>
 
       {/* Quick Prompts */}
       <motion.div
@@ -96,6 +118,13 @@ export function AssistantActions({ message }: AssistantActionsProps) {
           );
         })}
       </motion.div>
-    </div>
+      </div>
+      
+      {/* Tables Modal */}
+      <TablesView 
+        isOpen={showTables} 
+        onClose={() => setShowTables(false)} 
+      />
+    </>
   );
 }
