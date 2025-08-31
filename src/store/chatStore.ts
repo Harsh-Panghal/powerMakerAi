@@ -39,6 +39,7 @@ interface ChatStore {
   updateStreamingMessage: (content: string) => void;
   finishStreaming: () => void;
   saveToRecentThreads: () => void;
+  loadThread: (threadId: string) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -221,6 +222,18 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
       
       set({ recentThreads: updatedRecentThreads });
+    }
+  },
+  
+  loadThread: (threadId: string) => {
+    const recentThreads = get().recentThreads;
+    const threadToLoad = recentThreads.find(thread => thread.id === threadId);
+    
+    if (threadToLoad) {
+      set({ 
+        showGreeting: false,
+        currentThread: threadToLoad 
+      });
     }
   },
 }));

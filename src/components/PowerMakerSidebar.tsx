@@ -56,7 +56,7 @@ export function PowerMakerSidebar() {
   const isCollapsed = state === "collapsed";
   
   // Chat store integration
-  const { newChat, recentThreads } = useChatStore();
+  const { newChat, recentThreads, loadThread } = useChatStore();
 
   const handleLogoClick = () => {
     // Navigate to default/landing page - reload greeting container
@@ -67,9 +67,8 @@ export function PowerMakerSidebar() {
     newChat();
   };
 
-  const handleChatClick = (chatTitle: string) => {
-    // Display specific chat in chat area
-    console.log("Loading chat:", chatTitle);
+  const handleChatClick = (threadId: string) => {
+    loadThread(threadId);
   };
 
   const handleHelpClick = () => {
@@ -171,7 +170,7 @@ export function PowerMakerSidebar() {
                       >
                         <SidebarMenuButton 
                           className="flex-1 justify-start p-0 h-auto cursor-pointer"
-                          onClick={() => handleChatClick(thread.title)}
+                          onClick={() => handleChatClick(thread.id)}
                         >
                           <MessageSquare className="w-3 h-3 mr-2 text-muted-foreground flex-shrink-0" />
                           <div className="flex flex-col items-start min-w-0">
