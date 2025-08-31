@@ -98,7 +98,7 @@ export function PreviewDrawer() {
 
   return (
     <Sheet open={isPreviewOpen} onOpenChange={(open) => !open && closePreview()}>
-      <SheetContent side="right" className="w-full sm:w-[600px] sm:max-w-[90vw]">
+      <SheetContent side="right" className="w-full sm:w-[600px] sm:max-w-[90vw]" showClose={false}>
         <SheetHeader className="space-y-1">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-lg font-semibold text-brand">
