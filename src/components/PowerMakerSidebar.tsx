@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, ChevronDown, MoreHorizontal, HelpCircle, Settings, Star, Upload, Trash2, Check, ArrowLeft, X } from "lucide-react";
+import { Plus, ChevronDown, MoreHorizontal, HelpCircle, Settings, Star, Upload, Trash2, Check, ArrowLeft, X, MessageSquare } from "lucide-react";
 import { CrmConnectionDetail } from "@/components/CrmConnectionDetail";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -21,6 +21,7 @@ import {
   SidebarMenuButton,
   useSidebar
 } from "@/components/ui/sidebar";
+import { useChatStore } from "@/store/chatStore";
 
 const recentChats = [
   "API Config Entity Design",
@@ -53,6 +54,9 @@ export function PowerMakerSidebar() {
   const [connectionList, setConnectionList] = useState(connections);
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  
+  // Chat store integration
+  const { newChat, recentThreads } = useChatStore();
 
   const handleLogoClick = () => {
     // Navigate to default/landing page - reload greeting container
@@ -60,8 +64,7 @@ export function PowerMakerSidebar() {
   };
 
   const handleNewChat = () => {
-    // Load greeting container in chat area
-    console.log("Loading new chat greeting");
+    newChat();
   };
 
   const handleChatClick = (chatTitle: string) => {
@@ -157,56 +160,68 @@ export function PowerMakerSidebar() {
               Recent
             </SidebarGroupLabel>
             <SidebarGroupContent>
-                <SidebarMenu>
-                {recentChats.map((chat, index) => (
-                  <SidebarMenuItem key={index}>
-                    <div
-                      className="flex items-center justify-between px-4 py-1 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out"
-                      onMouseEnter={() => setHoveredChat(index)}
-                      onMouseLeave={() => setHoveredChat(null)}
-                    >
-                      <SidebarMenuButton 
-                        className="flex-1 justify-start p-0 h-auto cursor-pointer"
-                        onClick={() => handleChatClick(chat)}
+              <SidebarMenu>
+                {recentThreads.length > 0 ? (
+                  recentThreads.map((thread, index) => (
+                    <SidebarMenuItem key={thread.id}>
+                      <div
+                        className="flex items-center justify-between px-4 py-1 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out"
+                        onMouseEnter={() => setHoveredChat(index)}
+                        onMouseLeave={() => setHoveredChat(null)}
                       >
-                        <span className="text-sm text-sidebar-foreground truncate">
-                          {chat}
-                        </span>
-                      </SidebarMenuButton>
-                      <Popover open={chatMenuOpen === index} onOpenChange={(open) => setChatMenuOpen(open ? index : null)}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
-                              hoveredChat === index ? 'opacity-100' : 'opacity-0'
-                            }`}
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-32 p-1" side="right" align="start">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs"
-                            onClick={() => console.log("Rename chat:", chat)}
-                          >
-                            Rename
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
-                            onClick={() => console.log("Delete chat:", chat)}
-                          >
-                            Delete
-                          </Button>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </SidebarMenuItem>
-                ))}
+                        <SidebarMenuButton 
+                          className="flex-1 justify-start p-0 h-auto cursor-pointer"
+                          onClick={() => handleChatClick(thread.title)}
+                        >
+                          <MessageSquare className="w-3 h-3 mr-2 text-muted-foreground flex-shrink-0" />
+                          <div className="flex flex-col items-start min-w-0">
+                            <span className="text-sm text-sidebar-foreground truncate">
+                              {thread.title}
+                            </span>
+                            <span className="text-xs text-muted-foreground truncate">
+                              {thread.messages.length} messages • {thread.createdAt.toLocaleDateString()}
+                            </span>
+                          </div>
+                        </SidebarMenuButton>
+                        <Popover open={chatMenuOpen === index} onOpenChange={(open) => setChatMenuOpen(open ? index : null)}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
+                                hoveredChat === index ? 'opacity-100' : 'opacity-0'
+                              }`}
+                            >
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-32 p-1" side="right" align="start">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start text-xs"
+                              onClick={() => console.log("Rename chat:", thread.title)}
+                            >
+                              Rename
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
+                              onClick={() => console.log("Delete chat:", thread.title)}
+                            >
+                              Delete
+                            </Button>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </SidebarMenuItem>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-sm text-muted-foreground">
+                    No recent conversations
+                  </div>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
 

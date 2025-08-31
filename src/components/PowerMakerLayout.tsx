@@ -1,7 +1,7 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { PowerMakerSidebar } from "./PowerMakerSidebar";
 import { PowerMakerHeader } from "./PowerMakerHeader";
-import { ChatArea } from "./ChatArea";
+import { ChatArea } from "./chat/ChatArea";
 
 export function PowerMakerLayout() {
   console.log("PowerMakerLayout rendering");

@@ -1,0 +1,204 @@
+import { create } from 'zustand';
+import { startStreamingResponse } from '@/utils/mockApi';
+
+export interface Message {
+  id: string;
+  type: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  isStreaming?: boolean;
+}
+
+export interface ChatThread {
+  id: string;
+  title: string;
+  messages: Message[];
+  createdAt: Date;
+  model: string;
+}
+
+interface ChatStore {
+  // UI State
+  showGreeting: boolean;
+  isPreviewOpen: boolean;
+  previewContent: string;
+  
+  // Chat State
+  currentThread: ChatThread | null;
+  recentThreads: ChatThread[];
+  selectedModel: string;
+  
+  // Actions
+  startChat: (prompt: string) => void;
+  sendMessage: (message: string) => void;
+  newChat: () => void;
+  openPreview: (content: string) => void;
+  closePreview: () => void;
+  setModel: (model: string) => void;
+  addAssistantMessage: (content: string, isStreaming?: boolean) => void;
+  updateStreamingMessage: (content: string) => void;
+  finishStreaming: () => void;
+}
+
+export const useChatStore = create<ChatStore>((set, get) => ({
+  // Initial UI State
+  showGreeting: true,
+  isPreviewOpen: false,
+  previewContent: '',
+  
+  // Initial Chat State
+  currentThread: null,
+  recentThreads: [],
+  selectedModel: 'model-0-1',
+  
+  // Actions
+  startChat: (prompt: string) => {
+    const threadId = `thread-${Date.now()}`;
+    const messageId = `msg-${Date.now()}`;
+    
+    const newThread: ChatThread = {
+      id: threadId,
+      title: prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt,
+      messages: [{
+        id: messageId,
+        type: 'user',
+        content: prompt,
+        timestamp: new Date(),
+      }],
+      createdAt: new Date(),
+      model: get().selectedModel,
+    };
+    
+    set({ 
+      showGreeting: false, 
+      currentThread: newThread 
+    });
+    
+    // Trigger streaming assistant response
+    setTimeout(() => {
+      get().addAssistantMessage('', true);
+      startStreamingResponse(prompt);
+    }, 500);
+  },
+  
+  sendMessage: (message: string) => {
+    const currentThread = get().currentThread;
+    if (!currentThread) return;
+    
+    const messageId = `msg-${Date.now()}`;
+    const userMessage: Message = {
+      id: messageId,
+      type: 'user',
+      content: message,
+      timestamp: new Date(),
+    };
+    
+    const updatedThread = {
+      ...currentThread,
+      messages: [...currentThread.messages, userMessage],
+    };
+    
+    set({ currentThread: updatedThread });
+    
+    // Trigger streaming assistant response
+    setTimeout(() => {
+      get().addAssistantMessage('', true);
+      startStreamingResponse(message);
+    }, 500);
+  },
+  
+  newChat: () => {
+    const currentThread = get().currentThread;
+    
+    // Save current thread to recent threads if it exists
+    if (currentThread && currentThread.messages.length > 0) {
+      const recentThreads = get().recentThreads;
+      const updatedRecentThreads = [currentThread, ...recentThreads.slice(0, 9)]; // Keep last 10
+      set({ recentThreads: updatedRecentThreads });
+    }
+    
+    set({ 
+      showGreeting: true, 
+      currentThread: null,
+      isPreviewOpen: false,
+      previewContent: '',
+    });
+  },
+  
+  openPreview: (content: string) => {
+    set({ 
+      isPreviewOpen: true, 
+      previewContent: content 
+    });
+  },
+  
+  closePreview: () => {
+    set({ 
+      isPreviewOpen: false, 
+      previewContent: '' 
+    });
+  },
+  
+  setModel: (model: string) => {
+    set({ selectedModel: model });
+  },
+  
+  addAssistantMessage: (content: string, isStreaming = false) => {
+    const currentThread = get().currentThread;
+    if (!currentThread) return;
+    
+    const messageId = `msg-${Date.now()}`;
+    const assistantMessage: Message = {
+      id: messageId,
+      type: 'assistant',
+      content,
+      timestamp: new Date(),
+      isStreaming,
+    };
+    
+    const updatedThread = {
+      ...currentThread,
+      messages: [...currentThread.messages, assistantMessage],
+    };
+    
+    set({ currentThread: updatedThread });
+  },
+  
+  updateStreamingMessage: (content: string) => {
+    const currentThread = get().currentThread;
+    if (!currentThread) return;
+    
+    const messages = [...currentThread.messages];
+    const lastMessage = messages[messages.length - 1];
+    
+    if (lastMessage && lastMessage.type === 'assistant' && lastMessage.isStreaming) {
+      lastMessage.content = content;
+      
+      const updatedThread = {
+        ...currentThread,
+        messages,
+      };
+      
+      set({ currentThread: updatedThread });
+    }
+  },
+  
+  finishStreaming: () => {
+    const currentThread = get().currentThread;
+    if (!currentThread) return;
+    
+    const messages = [...currentThread.messages];
+    const lastMessage = messages[messages.length - 1];
+    
+    if (lastMessage && lastMessage.type === 'assistant' && lastMessage.isStreaming) {
+      lastMessage.isStreaming = false;
+      
+      const updatedThread = {
+        ...currentThread,
+        messages,
+      };
+      
+      set({ currentThread: updatedThread });
+    }
+  },
+}));
