@@ -51,9 +51,9 @@ export function MessageList() {
       <div 
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto px-4 py-4"
+        className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-2 sm:py-4"
       >
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
           <AnimatePresence initial={false}>
             {messages.map((message, index) => (
               <motion.div
@@ -84,7 +84,7 @@ export function MessageList() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-4 right-4 z-10"
+            className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 z-10"
           >
             <Button
               onClick={() => {
@@ -92,11 +92,12 @@ export function MessageList() {
                 scrollToBottom(true);
               }}
               size="sm"
-              className="rounded-full bg-background border border-border shadow-lg hover:bg-muted"
+              className="rounded-full bg-background border border-border shadow-lg hover:bg-muted text-xs sm:text-sm px-2 sm:px-4"
               variant="outline"
             >
-              <ChevronDown className="w-4 h-4 mr-1" />
-              Scroll to latest
+              <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+              <span className="hidden sm:inline">Scroll to latest</span>
+              <span className="sm:hidden">Latest</span>
             </Button>
           </motion.div>
         )}

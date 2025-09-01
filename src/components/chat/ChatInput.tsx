@@ -47,36 +47,38 @@ export function ChatInput() {
   };
 
   return (
-    <div className="mb-2 bg-layout-main">
-      <div className="max-w-4xl mx-auto">
-        <div className="relative ">
+    <div className="p-2 sm:p-4 bg-layout-main border-t border-border">
+      <div className="max-w-4xl mx-auto px-2 sm:px-4">
+        <div className="relative">
           {/* Textarea */}
           <Textarea
             placeholder="Enter Prompt Here"
             value={message}
             onChange={(e) => setMessage(e.target.value.slice(0, maxLength))}
             onKeyDown={handleKeyDown}
-            className="min-h-[100px] pr-36 pb-14 resize-none border-brand-light focus:ring-brand-light"
+            className="min-h-[80px] sm:min-h-[100px] pr-4 sm:pr-36 pb-12 sm:pb-14 resize-none border-brand-light focus:ring-brand-light text-sm sm:text-base"
           />
           
           {/* Top Right Controls - Model Selector */}
-          <div className="absolute right-3 top-3">
+          <div className="absolute right-2 sm:right-3 top-2 sm:top-3">
             <Select value={selectedModel} onValueChange={setModel}>
-              <SelectTrigger className="w-40 h-8 text-xs border-border focus:ring-0 focus:ring-offset-0">
+              <SelectTrigger className="w-32 sm:w-40 h-7 sm:h-8 text-xs border-border focus:ring-0 focus:ring-offset-0">
                 <SelectValue>
-                  {modelOptions.find(option => option.value === selectedModel)?.title || "Model 0.1"}
+                  <span className="truncate">
+                    {modelOptions.find(option => option.value === selectedModel)?.title || "Model 0.1"}
+                  </span>
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="focus:ring-0">
+              <SelectContent className="focus:ring-0 z-50">
                 {modelOptions.map((option) => {
                   const IconComponent = option.icon;
                   return (
                     <SelectItem key={option.value} value={option.value} className="text-xs focus:bg-muted focus:text-foreground">
                       <div className="flex items-center gap-2">
-                        <IconComponent className="w-4 h-4 text-muted-foreground" />
-                        <div className="flex flex-col">
-                          <span className="font-medium">{option.title}</span>
-                          <span className="text-muted-foreground text-xs">{option.subtitle}</span>
+                        <IconComponent className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-medium truncate">{option.title}</span>
+                          <span className="text-muted-foreground text-xs truncate">{option.subtitle}</span>
                         </div>
                       </div>
                     </SelectItem>
@@ -87,9 +89,9 @@ export function ChatInput() {
           </div>
 
           {/* Bottom Right Controls - Character Counter & Send Button */}
-          <div className="absolute right-3 bottom-3 flex items-center space-x-3">
+          <div className="absolute right-2 sm:right-3 bottom-2 sm:bottom-3 flex items-center space-x-2 sm:space-x-3">
             {/* Character Counter */}
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground hidden sm:inline">
               {message.length}/{maxLength}
             </span>
 
@@ -98,9 +100,9 @@ export function ChatInput() {
               onClick={handleSend}
               disabled={!message.trim()}
               size="sm"
-              className="w-8 h-8 p-0 rounded-full bg-success-light hover:bg-success text-success-dark"
+              className="w-7 h-7 sm:w-8 sm:h-8 p-0 rounded-full bg-success-light hover:bg-success text-success-dark flex-shrink-0"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
           </div>
         </div>

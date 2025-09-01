@@ -25,30 +25,30 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
   const isStreaming = message.isStreaming && !message.content;
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full`}>
-      <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start gap-3 max-w-[85%]`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full px-2 sm:px-4`}>
+      <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start gap-2 sm:gap-3 max-w-[95%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%]`}>
         {/* Avatar */}
-        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+        <div className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
           isUser 
             ? 'bg-primary text-primary-foreground' 
             : 'bg-muted text-muted-foreground'
         }`}>
           {isUser ? (
-            <User className="w-4 h-4" />
+            <User className="w-3 h-3 sm:w-4 sm:h-4" />
           ) : (
-            <Bot className="w-4 h-4" />
+            <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
           )}
         </div>
 
         {/* Message Content */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 overflow-hidden">
           <motion.div
             onHoverStart={() => setShowTimestamp(true)}
             onHoverEnd={() => setShowTimestamp(false)}
-            className={`relative rounded-2xl px-4 py-3 break-words ${
+            className={`relative rounded-2xl px-3 py-2 sm:px-4 sm:py-3 break-words word-wrap overflow-wrap-anywhere ${
               isUser
-                ? 'bg-primary text-primary-foreground ml-4'
-                : 'bg-muted text-foreground mr-4'
+                ? 'bg-primary text-primary-foreground ml-2 sm:ml-4'
+                : 'bg-muted text-foreground mr-2 sm:mr-4'
             }`}
           >
             {/* Streaming Loading State */}
@@ -60,7 +60,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
               </div>
             ) : (
               /* Message Content */
-              <div className="prose prose-sm max-w-none dark:prose-invert">
+              <div className="prose prose-sm max-w-none dark:prose-invert text-sm sm:text-base">
                 {message.content.split('\n').map((line, index) => {
                   // Handle table formatting
                   if (line.includes('|') && line.includes('---')) {
@@ -69,9 +69,9 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                   if (line.includes('|')) {
                     const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
                     return (
-                      <div key={index} className="flex border-b border-border/20 py-1">
+                      <div key={index} className="flex flex-col sm:flex-row border-b border-border/20 py-1 gap-1 sm:gap-0">
                         {cells.map((cell, cellIndex) => (
-                          <div key={cellIndex} className={`flex-1 px-2 text-xs ${cellIndex === 0 ? 'font-medium' : ''}`}>
+                          <div key={cellIndex} className={`flex-1 px-1 sm:px-2 text-xs sm:text-sm break-words ${cellIndex === 0 ? 'font-medium' : ''}`}>
                             {cell}
                           </div>
                         ))}
@@ -83,7 +83,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                   if (line.includes('**')) {
                     const parts = line.split('**');
                     return (
-                      <p key={index} className="mb-2">
+                      <p key={index} className="mb-2 break-words">
                         {parts.map((part, partIndex) => 
                           partIndex % 2 === 1 ? 
                             <strong key={partIndex}>{part}</strong> : 
@@ -94,7 +94,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                   }
                   
                   // Regular text
-                  return line ? <p key={index} className="mb-2">{line}</p> : <br key={index} />;
+                  return line ? <p key={index} className="mb-2 break-words">{line}</p> : <br key={index} />;
                 })}
               </div>
             )}
