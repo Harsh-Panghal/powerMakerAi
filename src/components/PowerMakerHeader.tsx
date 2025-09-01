@@ -84,12 +84,12 @@ export function PowerMakerHeader() {
             <SelectTrigger className="w-full min-w-[100px] sm:min-w-[140px] max-w-[120px] sm:max-w-[200px] h-8 border border-border/40 bg-background/80 backdrop-blur-sm hover:bg-muted/30 transition-colors duration-200 rounded-md shadow-sm">
               <SelectValue>
                 <span className="text-xs sm:text-sm font-medium text-brand truncate">
-                  <span className="hidden md:inline">
+                  <span className="hidden lg:inline">
                     {selectedModel === 'model-0-1' ? '0.1 - CRM Customization' : 
                      selectedModel === 'model-0-2' ? '0.2 - Plugin Tracing' :
                      '0.3 - CRM Expert'}
                   </span>
-                  <span className="md:hidden">
+                  <span className="lg:hidden">
                     {selectedModel === 'model-0-1' ? '0.1 - CRM' : 
                      selectedModel === 'model-0-2' ? '0.2 - Plugin' :
                      '0.3 - Expert'}
@@ -97,18 +97,18 @@ export function PowerMakerHeader() {
                 </span>
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="min-w-[100px] sm:min-w-[140px] md:min-w-[200px] border-border/40 bg-background/95 backdrop-blur-sm">
+            <SelectContent className="min-w-[100px] sm:min-w-[140px] lg:min-w-[200px] border-border/40 bg-background/95 backdrop-blur-sm">
               <SelectItem value="model-0-1" className="focus:bg-accent/50 focus:text-brand">
-                <span className="hidden md:inline">0.1 - CRM Customization</span>
-                <span className="md:hidden">0.1 - CRM</span>
+                <span className="hidden lg:inline">0.1 - CRM Customization</span>
+                <span className="lg:hidden">0.1 - CRM</span>
               </SelectItem>
               <SelectItem value="model-0-2" className="focus:bg-accent/50 focus:text-brand">
-                <span className="hidden md:inline">0.2 - Plugin Tracing</span>
-                <span className="md:hidden">0.2 - Plugin</span>
+                <span className="hidden lg:inline">0.2 - Plugin Tracing</span>
+                <span className="lg:hidden">0.2 - Plugin</span>
               </SelectItem>
               <SelectItem value="model-0-3" className="focus:bg-accent/50 focus:text-brand">
-                <span className="hidden md:inline">0.3 - CRM Expert</span>
-                <span className="md:hidden">0.3 - Expert</span>
+                <span className="hidden lg:inline">0.3 - CRM Expert</span>
+                <span className="lg:hidden">0.3 - Expert</span>
               </SelectItem>
             </SelectContent>
           </Select>
