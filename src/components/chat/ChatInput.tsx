@@ -58,11 +58,12 @@ export function ChatInput() {
             onKeyDown={handleKeyDown}
             className="min-h-[80px] sm:min-h-[100px] pr-4 sm:pr-36 pb-12 sm:pb-14 resize-none border-brand-light focus:ring-brand-light text-sm sm:text-base"
           />
-          
-          {/* Top Right Controls - Model Selector */}
-          <div className="absolute right-2 sm:right-3 top-2 sm:top-3">
+
+          {/* Bottom Controls - Model Selector, Character Counter & Send Button */}
+          <div className="absolute right-2 sm:right-3 bottom-2 sm:bottom-3 flex items-center space-x-2 sm:space-x-3">
+            {/* Model Selector */}
             <Select value={selectedModel} onValueChange={setModel}>
-              <SelectTrigger className="w-32 sm:w-40 h-7 sm:h-8 text-xs border-border focus:ring-0 focus:ring-offset-0">
+              <SelectTrigger className="w-24 sm:w-32 h-6 sm:h-7 text-xs border-border focus:ring-0 focus:ring-offset-0">
                 <SelectValue>
                   <span className="truncate">
                     {modelOptions.find(option => option.value === selectedModel)?.title || "Model 0.1"}
@@ -86,10 +87,7 @@ export function ChatInput() {
                 })}
               </SelectContent>
             </Select>
-          </div>
 
-          {/* Bottom Right Controls - Character Counter & Send Button */}
-          <div className="absolute right-2 sm:right-3 bottom-2 sm:bottom-3 flex items-center space-x-2 sm:space-x-3">
             {/* Character Counter */}
             <span className="text-xs text-muted-foreground hidden sm:inline">
               {message.length}/{maxLength}
