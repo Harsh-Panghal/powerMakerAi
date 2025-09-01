@@ -10,7 +10,7 @@ interface PromptCardProps {
 export function PromptCard({ title, icon: Icon, onClick }: PromptCardProps) {
   return (
     <Card 
-      className="cursor-pointer transition-all hover:shadow-md hover:border-brand-light bg-info-light border-border flex-shrink-0 min-w-[220px] lg:min-w-0"
+      className="cursor-pointer transition-all hover:shadow-md hover:border-brand-light bg-info-light border-border flex-shrink-0 min-w-[180px] lg:min-w-0"
       onClick={onClick}
     >
       <CardContent className="p-4">
