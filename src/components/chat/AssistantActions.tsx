@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Sparkles, Plus, FileCode, Code, HelpCircle, Table2 } from 'lucide-react';
+import { Eye, Sparkles, Plus, FileCode, Code, HelpCircle, Table2, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Message, useChatStore } from '@/store/chatStore';
 import { TablesView } from './TablesView';
+import { TraceLogFilters } from './TraceLogFilters';
+import { PluginTraceLogs } from './PluginTraceLogs';
 
 interface AssistantActionsProps {
   message: Message;
@@ -38,8 +40,10 @@ const quickPrompts = [
 ];
 
 export function AssistantActions({ message }: AssistantActionsProps) {
-  const { openPreview, sendMessage } = useChatStore();
+  const { openPreview, sendMessage, selectedModel } = useChatStore();
   const [showTables, setShowTables] = useState(false);
+  const [showTraceLogFilters, setShowTraceLogFilters] = useState(false);
+  const [showPluginTraceLogs, setShowPluginTraceLogs] = useState(false);
 
   const handlePreview = () => {
     openPreview(message.content);
@@ -47,6 +51,16 @@ export function AssistantActions({ message }: AssistantActionsProps) {
 
   const handleQuickPrompt = (promptText: string) => {
     sendMessage(promptText);
+  };
+
+  const handleShowTraceLogs = () => {
+    setShowTraceLogFilters(false);
+    setShowPluginTraceLogs(true);
+  };
+
+  const handleBackToFilters = () => {
+    setShowPluginTraceLogs(false);
+    setShowTraceLogFilters(true);
   };
 
   return (
@@ -70,21 +84,41 @@ export function AssistantActions({ message }: AssistantActionsProps) {
             </Button>
           </motion.div>
           
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Button
-              onClick={() => setShowTables(true)}
-              variant="outline"
-              size="sm"
-              className="bg-background hover:bg-muted border-border text-foreground"
+          {selectedModel === 'model-0-1' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
             >
-              <Table2 className="w-4 h-4 mr-2" />
-              Show Tables
-            </Button>
-          </motion.div>
+              <Button
+                onClick={() => setShowTables(true)}
+                variant="outline"
+                size="sm"
+                className="bg-background hover:bg-muted border-border text-foreground"
+              >
+                <Table2 className="w-4 h-4 mr-2" />
+                Show Tables
+              </Button>
+            </motion.div>
+          )}
+          
+          {selectedModel === 'model-0-2' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Button
+                onClick={() => setShowTraceLogFilters(true)}
+                variant="outline"
+                size="sm"
+                className="bg-background hover:bg-muted border-border text-foreground"
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                Show Trace Logs
+              </Button>
+            </motion.div>
+          )}
         </div>
 
       {/* Quick Prompts */}
@@ -120,11 +154,28 @@ export function AssistantActions({ message }: AssistantActionsProps) {
       </motion.div>
       </div>
       
-      {/* Tables Modal */}
-      <TablesView 
-        isOpen={showTables} 
-        onClose={() => setShowTables(false)} 
-      />
+      {/* Conditional Modals */}
+      {selectedModel === 'model-0-1' && (
+        <TablesView 
+          isOpen={showTables} 
+          onClose={() => setShowTables(false)} 
+        />
+      )}
+      
+      {selectedModel === 'model-0-2' && (
+        <>
+          <TraceLogFilters
+            isOpen={showTraceLogFilters}
+            onClose={() => setShowTraceLogFilters(false)}
+            onShowTraceLogs={handleShowTraceLogs}
+          />
+          <PluginTraceLogs
+            isOpen={showPluginTraceLogs}
+            onClose={() => setShowPluginTraceLogs(false)}
+            onBack={handleBackToFilters}
+          />
+        </>
+      )}
     </>
   );
 }
