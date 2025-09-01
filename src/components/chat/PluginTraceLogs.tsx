@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { X, Search, Download } from 'lucide-react';
+import { X, Search, Download, ArrowLeft } from 'lucide-react';
+import { on } from 'events';
 
 interface PluginTraceLogsProps {
   isOpen: boolean;
@@ -43,12 +44,12 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
             <div className="flex items-center gap-4">
               <Button
+                variant="ghost"
                 onClick={onBack}
-                variant="outline"
-                size="sm"
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="flex items-center gap-2 text-brand-accent  p-2 transition-all duration-300 ease-in-out"
               >
-                Show Trace Logs
+                <ArrowLeft className="w-4 h-4" />
+                Back to Trace Filters
               </Button>
               <CardTitle className="text-xl font-semibold">Plugin Trace Logs</CardTitle>
             </div>
