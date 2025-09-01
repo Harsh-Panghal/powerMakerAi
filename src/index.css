@@ -140,6 +140,7 @@
 
 *::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--brand) / 0.5);
+  cursor: pointer;
 }
 
 *::-webkit-scrollbar-corner {
