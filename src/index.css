@@ -115,31 +115,33 @@
     @apply bg-background text-foreground;
   }
 }
-.profile-dialog {
-  /* use your tokens */
-  --sb-track: hsl(var(--sidebar-accent));
-  --sb-thumb: hsl(var(--sidebar-foreground));
-  --sb-thumb-hover: hsl(var(--sidebar-primary));
-
+/* Global scrollbar styles - Slim and themed */
+* {
   /* Firefox */
-  scrollbar-width: thin;                  /* auto | thin | none */
-  scrollbar-color: var(--sb-thumb) var(--sb-track);
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--brand) / 0.3) transparent;
 }
 
 /* Chrome/Edge/Safari */
-.profile-dialog::-webkit-scrollbar {
-  width: 10px;                            /* <-- scrollbar width */
-  height: 10px;                           /* for horizontal bars */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-.profile-dialog::-webkit-scrollbar-track {
-  background: var(--sb-track);
+
+*::-webkit-scrollbar-track {
+  background: transparent;
 }
-.profile-dialog::-webkit-scrollbar-thumb {
-  background: var(--sb-thumb);
-  border-radius: 9999px;
-  border: 2px solid var(--sb-track);      /* creates a nice inset look */
+
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--brand) / 0.3);
+  border-radius: 3px;
+  transition: background 0.3s ease;
 }
-.profile-dialog:hover::-webkit-scrollbar-thumb {
-  background: var(--sb-thumb-hover);
-  cursor: pointer;
+
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--brand) / 0.5);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
