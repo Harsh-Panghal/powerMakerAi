@@ -159,25 +159,28 @@ export function GreetingContainer() {
               onKeyDown={handleKeyDown}
               className="min-h-[100px] pr-36 pb-14 resize-none border-brand-light focus:ring-brand-light"
             />
-            
-            {/* Top Right Controls - Model Selector */}
-            <div className="absolute right-3 top-3">
+
+            {/* Bottom Controls - Model Selector, Character Counter & Send Button */}
+            <div className="absolute right-3 bottom-3 flex items-center space-x-3">
+              {/* Model Selector */}
               <Select value={selectedModel} onValueChange={setModel}>
-                <SelectTrigger className="w-40 h-8 text-xs border-border focus:ring-0 focus:ring-offset-0">
+                <SelectTrigger className="w-32 h-7 text-xs border-border focus:ring-0 focus:ring-offset-0">
                   <SelectValue>
-                    {modelOptions.find(option => option.value === selectedModel)?.title || "Model 0.1"}
+                    <span className="truncate">
+                      {modelOptions.find(option => option.value === selectedModel)?.title || "Model 0.1"}
+                    </span>
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent className="focus:ring-0">
+                <SelectContent className="focus:ring-0 z-50">
                   {modelOptions.map((option) => {
                     const IconComponent = option.icon;
                     return (
                       <SelectItem key={option.value} value={option.value} className="text-xs focus:bg-muted focus:text-foreground">
                         <div className="flex items-center gap-2">
-                          <IconComponent className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex flex-col">
-                            <span className="font-medium">{option.title}</span>
-                            <span className="text-muted-foreground text-xs">{option.subtitle}</span>
+                          <IconComponent className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-medium truncate">{option.title}</span>
+                            <span className="text-muted-foreground text-xs truncate">{option.subtitle}</span>
                           </div>
                         </div>
                       </SelectItem>
@@ -185,10 +188,7 @@ export function GreetingContainer() {
                   })}
                 </SelectContent>
               </Select>
-            </div>
 
-            {/* Bottom Right Controls - Character Counter & Send Button */}
-            <div className="absolute right-3 bottom-3 flex items-center space-x-3">
               {/* Character Counter */}
               <span className="text-xs text-muted-foreground">
                 {prompt.length}/{maxLength}
