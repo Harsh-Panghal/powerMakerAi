@@ -21,14 +21,14 @@ export function AttributeDetailsDrawer({ isOpen, onClose, attribute }: Attribute
       <SheetContent side="right" className="w-[400px] sm:w-[500px]">
         <SheetHeader className="flex flex-row items-center justify-between">
           <SheetTitle className="text-lg font-semibold text-brand">Attribute Details</SheetTitle>
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
             className="h-8 w-8"
           >
             <X className="h-4 w-4" />
-          </Button>
+          </Button> */}
         </SheetHeader>
         
         <div className="space-y-6 py-6">
