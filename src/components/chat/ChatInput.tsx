@@ -47,9 +47,9 @@ export function ChatInput() {
   };
 
   return (
-    <div className="p-6 bg-layout-main">
+    <div className="mb-2 bg-layout-main">
       <div className="max-w-4xl mx-auto">
-        <div className="relative">
+        <div className="relative ">
           {/* Textarea */}
           <Textarea
             placeholder="Enter Prompt Here"

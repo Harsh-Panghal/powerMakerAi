@@ -11,11 +11,11 @@ export function PowerMakerLayout() {
       <div className="min-h-screen flex w-full bg-background">
         <PowerMakerSidebar />
         
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col h-[100dvh] overflow-hidden relative bg-layout-main">
           <div className="flex-shrink-0">
             <PowerMakerHeader />
           </div>
-          <div className="flex-1 min-h-0 bg-layout-main">
+          <div className="bg-layout-main h-[80%] overflow-y-auto overflow-x-hidden">
             <ChatArea />
           </div>
         </div>

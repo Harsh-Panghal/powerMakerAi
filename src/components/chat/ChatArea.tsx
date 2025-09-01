@@ -9,7 +9,7 @@ export function ChatArea() {
   const { showGreeting, currentThread } = useChatStore();
 
   return (
-    <div className="flex-1 flex flex-col bg-layout-main relative">
+    <div className="flex-1 flex flex-col bg-layout-main">
       <AnimatePresence mode="wait">
         {showGreeting ? (
           <motion.div
@@ -29,7 +29,7 @@ export function ChatArea() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col h-full relative"
+            className="flex-1 flex flex-col h-full"
           >
             {/* Chat Header */}
             <div className="p-4 border-b border-border bg-layout-main">
@@ -51,7 +51,7 @@ export function ChatArea() {
             </div>
             
             {/* Fixed Chat Input */}
-            <div className="border-t border-border bg-layout-main">
+            <div className=" bg-layout-main absolute w-full bottom-0 ">
               <ChatInput />
             </div>
           </motion.div>
