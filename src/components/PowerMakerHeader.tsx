@@ -65,44 +65,66 @@ export function PowerMakerHeader() {
 
   return (
     <>
-      <header className="h-14 flex items-center justify-between px-4 border-b border-border bg-background">
+      <header className="h-14 flex items-center justify-between px-2 sm:px-4 border-b border-border bg-background">
         {/* left section */}
         <div className="flex items-center">
           <Button
             variant="ghost"
             size="sm" 
             onClick={toggleSidebar}
-            className="mr-2"
+            className="mr-1 sm:mr-2"
           >
             <Menu className="w-5 h-5" />
           </Button>
         </div>
 
         {/* center section - model selector */}
-        <div className="flex items-center">
+        <div className="flex items-center flex-1 justify-center px-2 max-w-xs sm:max-w-sm">
           <Select value={selectedModel} onValueChange={setModel}>
-            <SelectTrigger className="w-[200px] h-8 border border-border/40 bg-background/80 backdrop-blur-sm hover:bg-muted/30 transition-colors duration-200 rounded-md shadow-sm">
+            <SelectTrigger className="w-full min-w-[140px] max-w-[200px] h-8 border border-border/40 bg-background/80 backdrop-blur-sm hover:bg-muted/30 transition-colors duration-200 rounded-md shadow-sm">
               <SelectValue>
-                <span className="text-sm font-medium text-brand">
-                  {selectedModel === 'model-0-1' ? '0.1 - CRM Customization' : 
-                   selectedModel === 'model-0-2' ? '0.2 - Plugin Tracing' :
-                   '0.3 - CRM Expert'}
+                <span className="text-xs sm:text-sm font-medium text-brand truncate">
+                  <span className="hidden sm:inline">
+                    {selectedModel === 'model-0-1' ? '0.1 - CRM Customization' : 
+                     selectedModel === 'model-0-2' ? '0.2 - Plugin Tracing' :
+                     '0.3 - CRM Expert'}
+                  </span>
+                  <span className="sm:hidden">
+                    {selectedModel === 'model-0-1' ? '0.1 - CRM' : 
+                     selectedModel === 'model-0-2' ? '0.2 - Plugin' :
+                     '0.3 - Expert'}
+                  </span>
                 </span>
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="min-w-[200px] border-border/40 bg-background/95 backdrop-blur-sm">
-              <SelectItem value="model-0-1" className="focus:bg-accent/50 focus:text-brand">0.1 - CRM Customization</SelectItem>
-              <SelectItem value="model-0-2" className="focus:bg-accent/50 focus:text-brand">0.2 - Plugin Tracing</SelectItem>
-              <SelectItem value="model-0-3" className="focus:bg-accent/50 focus:text-brand">0.3 - CRM Expert</SelectItem>
+            <SelectContent className="min-w-[140px] sm:min-w-[200px] border-border/40 bg-background/95 backdrop-blur-sm">
+              <SelectItem value="model-0-1" className="focus:bg-accent/50 focus:text-brand">
+                <span className="hidden sm:inline">0.1 - CRM Customization</span>
+                <span className="sm:hidden">0.1 - CRM</span>
+              </SelectItem>
+              <SelectItem value="model-0-2" className="focus:bg-accent/50 focus:text-brand">
+                <span className="hidden sm:inline">0.2 - Plugin Tracing</span>
+                <span className="sm:hidden">0.2 - Plugin</span>
+              </SelectItem>
+              <SelectItem value="model-0-3" className="focus:bg-accent/50 focus:text-brand">
+                <span className="hidden sm:inline">0.3 - CRM Expert</span>
+                <span className="sm:hidden">0.3 - Expert</span>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
          {/* right section */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-1 sm:space-x-4">
           {/* Connection Status */}
-          <div className="flex items-center space-x-2 text-sm">
+          <div className="hidden md:flex items-center space-x-2 text-sm">
             <CheckCircle className="w-4 h-4 text-success" />
-            <span className="text-success-dark">Connected to Dataverse Harsh</span>
+            <span className="text-success-dark hidden lg:inline">Connected to Dataverse Harsh</span>
+            <span className="text-success-dark lg:hidden">Connected</span>
+          </div>
+          
+          {/* Mobile Connection Status - Just icon */}
+          <div className="md:hidden">
+            <CheckCircle className="w-4 h-4 text-success" />
           </div>
 
           {/* Notification Bell */}
@@ -112,7 +134,7 @@ export function PowerMakerHeader() {
                 <Bell className="w-5 h-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-96">
+            <SheetContent side="right" className="w-[90vw] sm:w-96 max-w-md">
               <SheetHeader>
                 <SheetTitle className="flex items-center justify-between">
                   Notifications
@@ -201,13 +223,13 @@ export function PowerMakerHeader() {
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-2 p-2 h-auto">
-                <Avatar className="w-8 h-8">
-                  <AvatarFallback className="bg-warning text-white font-medium">
+              <Button variant="ghost" className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 h-auto">
+                <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
+                  <AvatarFallback className="bg-warning text-white font-medium text-xs sm:text-sm">
                     H
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium text-foreground">Harsh</span>
+                <span className="hidden sm:inline text-sm font-medium text-foreground">Harsh</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
