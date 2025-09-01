@@ -18,7 +18,7 @@ export function ChatArea() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 px-4 sm:px-6 lg:px-8"
+            className="flex-1 flex flex-col h-full px-4 sm:px-6 lg:px-8"
           >
             <GreetingContainer />
           </motion.div>
