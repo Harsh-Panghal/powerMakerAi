@@ -11,9 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { useChatStore } from "@/store/chatStore";
 
 export function PowerMakerHeader() {
   const { toggleSidebar } = useSidebar();
+  const { selectedModel, setModel } = useChatStore();
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
@@ -74,6 +76,26 @@ export function PowerMakerHeader() {
           >
             <Menu className="w-5 h-5" />
           </Button>
+        </div>
+
+        {/* center section - model selector */}
+        <div className="flex items-center">
+          <Select value={selectedModel} onValueChange={setModel}>
+            <SelectTrigger className="w-[220px] border-0 bg-transparent hover:bg-muted/50">
+              <SelectValue>
+                <span className="font-medium text-brand">
+                  {selectedModel === 'model-0-1' ? '0.1 - CRM Customization' : 
+                   selectedModel === 'model-0-2' ? '0.2 - Plugin Tracing' :
+                   '0.3 - CRM Expert'}
+                </span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="model-0-1">0.1 - CRM Customization</SelectItem>
+              <SelectItem value="model-0-2">0.2 - Plugin Tracing</SelectItem>
+              <SelectItem value="model-0-3">0.3 - CRM Expert</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
          {/* right section */}
         <div className="flex items-center space-x-4">
