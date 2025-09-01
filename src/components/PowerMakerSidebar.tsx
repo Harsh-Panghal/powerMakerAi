@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, ChevronDown, MoreHorizontal, HelpCircle, Settings, Star, Upload, Trash2, Check, ArrowLeft, X, MessageSquare } from "lucide-react";
 import { CrmConnectionDetail } from "@/components/CrmConnectionDetail";
 import { Button } from "@/components/ui/button";
@@ -54,21 +55,24 @@ export function PowerMakerSidebar() {
   const [connectionList, setConnectionList] = useState(connections);
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const navigate = useNavigate();
   
   // Chat store integration
   const { newChat, recentThreads, loadThread } = useChatStore();
 
   const handleLogoClick = () => {
-    // Navigate to default/landing page - reload greeting container
-    window.location.reload();
+    // Navigate to greeting page
+    navigate('/');
   };
 
   const handleNewChat = () => {
     newChat();
+    navigate('/');
   };
 
   const handleChatClick = (threadId: string) => {
     loadThread(threadId);
+    navigate('/chat');
   };
 
   const handleHelpClick = () => {

@@ -19,7 +19,6 @@ export interface ChatThread {
 
 interface ChatStore {
   // UI State
-  showGreeting: boolean;
   isPreviewOpen: boolean;
   previewContent: string;
   
@@ -44,7 +43,6 @@ interface ChatStore {
 
 export const useChatStore = create<ChatStore>((set, get) => ({
   // Initial UI State
-  showGreeting: true,
   isPreviewOpen: false,
   previewContent: '',
   
@@ -72,7 +70,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     };
     
     set({ 
-      showGreeting: false, 
       currentThread: newThread 
     });
     
@@ -114,7 +111,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     get().saveToRecentThreads();
     
     set({ 
-      showGreeting: true, 
       currentThread: null,
       isPreviewOpen: false,
       previewContent: '',
@@ -141,7 +137,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     
     set({ 
       selectedModel: model,
-      showGreeting: true,
       currentThread: null,
       isPreviewOpen: false,
       previewContent: '',
@@ -240,7 +235,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     
     if (threadToLoad) {
       set({ 
-        showGreeting: false,
         currentThread: threadToLoad 
       });
     }

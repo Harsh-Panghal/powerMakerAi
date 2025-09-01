@@ -1,7 +1,7 @@
+import { Outlet } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { PowerMakerSidebar } from "./PowerMakerSidebar";
 import { PowerMakerHeader } from "./PowerMakerHeader";
-import { ChatArea } from "./chat/ChatArea";
 
 export function PowerMakerLayout() {
   console.log("PowerMakerLayout rendering");
@@ -16,7 +16,7 @@ export function PowerMakerLayout() {
             <PowerMakerHeader />
           </div>
           <div className="bg-layout-main h-[77%] overflow-y-auto overflow-x-hidden">
-            <ChatArea />
+            <Outlet />
           </div>
         </div>
       </div>

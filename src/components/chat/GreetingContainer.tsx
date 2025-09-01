@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -87,6 +88,7 @@ const modelOptions = [
 
 export function GreetingContainer() {
   const [prompt, setPrompt] = useState("");
+  const navigate = useNavigate();
   const { selectedModel, setModel, startChat } = useChatStore();
   const maxLength = 1000;
 
@@ -102,6 +104,7 @@ export function GreetingContainer() {
     if (prompt.trim()) {
       startChat(prompt.trim());
       setPrompt("");
+      navigate('/chat');
     }
   };
 

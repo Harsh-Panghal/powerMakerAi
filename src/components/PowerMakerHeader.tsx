@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Menu, Bell, CheckCircle, User, UserPlus, LogOut, X, Camera, Filter, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -15,6 +16,7 @@ import { useChatStore } from "@/store/chatStore";
 
 export function PowerMakerHeader() {
   const { toggleSidebar } = useSidebar();
+  const navigate = useNavigate();
   const { selectedModel, setModel } = useChatStore();
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
@@ -80,7 +82,10 @@ export function PowerMakerHeader() {
 
         {/* center section - model selector */}
         <div className="flex items-center flex-1 justify-center px-2 max-w-[120px] sm:max-w-xs md:max-w-sm">
-          <Select value={selectedModel} onValueChange={setModel}>
+          <Select value={selectedModel} onValueChange={(value) => {
+            setModel(value);
+            navigate('/');
+          }}>
             <SelectTrigger className="w-full min-w-[100px] sm:min-w-[140px] max-w-[120px] sm:max-w-[200px] h-8 border border-border/40 bg-background/80 backdrop-blur-sm hover:bg-muted/30 transition-colors duration-200 rounded-md shadow-sm">
               <SelectValue>
                 <span className="text-xs sm:text-sm font-medium text-brand truncate">
