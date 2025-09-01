@@ -79,17 +79,17 @@ export function PowerMakerHeader() {
         </div>
 
         {/* center section - model selector */}
-        <div className="flex items-center flex-1 justify-center px-2 max-w-xs sm:max-w-sm">
+        <div className="flex items-center flex-1 justify-center px-2 max-w-[120px] sm:max-w-xs md:max-w-sm">
           <Select value={selectedModel} onValueChange={setModel}>
-            <SelectTrigger className="w-full min-w-[140px] max-w-[200px] h-8 border border-border/40 bg-background/80 backdrop-blur-sm hover:bg-muted/30 transition-colors duration-200 rounded-md shadow-sm">
+            <SelectTrigger className="w-full min-w-[100px] sm:min-w-[140px] max-w-[120px] sm:max-w-[200px] h-8 border border-border/40 bg-background/80 backdrop-blur-sm hover:bg-muted/30 transition-colors duration-200 rounded-md shadow-sm">
               <SelectValue>
                 <span className="text-xs sm:text-sm font-medium text-brand truncate">
-                  <span className="hidden sm:inline">
+                  <span className="hidden md:inline">
                     {selectedModel === 'model-0-1' ? '0.1 - CRM Customization' : 
                      selectedModel === 'model-0-2' ? '0.2 - Plugin Tracing' :
                      '0.3 - CRM Expert'}
                   </span>
-                  <span className="sm:hidden">
+                  <span className="md:hidden">
                     {selectedModel === 'model-0-1' ? '0.1 - CRM' : 
                      selectedModel === 'model-0-2' ? '0.2 - Plugin' :
                      '0.3 - Expert'}
@@ -97,18 +97,18 @@ export function PowerMakerHeader() {
                 </span>
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="min-w-[140px] sm:min-w-[200px] border-border/40 bg-background/95 backdrop-blur-sm">
+            <SelectContent className="min-w-[100px] sm:min-w-[140px] md:min-w-[200px] border-border/40 bg-background/95 backdrop-blur-sm">
               <SelectItem value="model-0-1" className="focus:bg-accent/50 focus:text-brand">
-                <span className="hidden sm:inline">0.1 - CRM Customization</span>
-                <span className="sm:hidden">0.1 - CRM</span>
+                <span className="hidden md:inline">0.1 - CRM Customization</span>
+                <span className="md:hidden">0.1 - CRM</span>
               </SelectItem>
               <SelectItem value="model-0-2" className="focus:bg-accent/50 focus:text-brand">
-                <span className="hidden sm:inline">0.2 - Plugin Tracing</span>
-                <span className="sm:hidden">0.2 - Plugin</span>
+                <span className="hidden md:inline">0.2 - Plugin Tracing</span>
+                <span className="md:hidden">0.2 - Plugin</span>
               </SelectItem>
               <SelectItem value="model-0-3" className="focus:bg-accent/50 focus:text-brand">
-                <span className="hidden sm:inline">0.3 - CRM Expert</span>
-                <span className="sm:hidden">0.3 - Expert</span>
+                <span className="hidden md:inline">0.3 - CRM Expert</span>
+                <span className="md:hidden">0.3 - Expert</span>
               </SelectItem>
             </SelectContent>
           </Select>
@@ -229,7 +229,7 @@ export function PowerMakerHeader() {
                     H
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden sm:inline text-sm font-medium text-foreground">Harsh</span>
+                <span className="hidden md:inline text-sm font-medium text-foreground">Harsh</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
