@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Database, Key, Settings } from 'lucide-react';
 import { useChatStore } from '@/store/chatStore';
+import { useNavigate } from 'react-router-dom';
 
 const modelOptions = [
   { 
@@ -30,7 +31,13 @@ const modelOptions = [
 export function ChatInput() {
   const [message, setMessage] = useState('');
   const { selectedModel, setModel, sendMessage } = useChatStore();
+  const navigate = useNavigate();
   const maxLength = 1000;
+
+  const handleModelChange = (newModel: string) => {
+    setModel(newModel);
+    navigate('/');
+  };
 
   const handleSend = () => {
     if (message.trim()) {
@@ -62,7 +69,7 @@ export function ChatInput() {
           {/* Bottom Controls - Model Selector, Character Counter & Send Button */}
           <div className="absolute right-2 sm:right-3 bottom-2 sm:bottom-3 flex items-center space-x-2 sm:space-x-3">
             {/* Model Selector */}
-            <Select value={selectedModel} onValueChange={setModel}>
+            <Select value={selectedModel} onValueChange={handleModelChange}>
               <SelectTrigger className="w-24 sm:w-32 h-6 sm:h-7 text-xs border-border focus:ring-0 focus:ring-offset-0">
                 <SelectValue>
                   <span className="truncate">
