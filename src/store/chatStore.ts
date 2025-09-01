@@ -136,7 +136,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
   
   setModel: (model: string) => {
-    set({ selectedModel: model });
+    // Save current thread to recent threads if it exists
+    get().saveToRecentThreads();
+    
+    set({ 
+      selectedModel: model,
+      showGreeting: true,
+      currentThread: null,
+      isPreviewOpen: false,
+      previewContent: '',
+    });
   },
   
   addAssistantMessage: (content: string, isStreaming = false) => {
