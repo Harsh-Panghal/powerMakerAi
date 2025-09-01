@@ -15,7 +15,7 @@ export function PowerMakerLayout() {
           <div className="flex-shrink-0">
             <PowerMakerHeader />
           </div>
-          <div className="bg-layout-main h-[80%] overflow-y-auto overflow-x-hidden">
+          <div className="bg-layout-main h-[77%] overflow-y-auto overflow-x-hidden">
             <ChatArea />
           </div>
         </div>

@@ -9,7 +9,7 @@ export function ChatArea() {
   const { showGreeting, currentThread } = useChatStore();
 
   return (
-    <div className="flex-1 flex flex-col bg-layout-main relative">
+    <div className="flex-1 flex flex-col bg-layout-main">
       <AnimatePresence mode="wait">
         {showGreeting ? (
           <motion.div
