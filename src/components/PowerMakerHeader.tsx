@@ -81,19 +81,19 @@ export function PowerMakerHeader() {
         {/* center section - model selector */}
         <div className="flex items-center">
           <Select value={selectedModel} onValueChange={setModel}>
-            <SelectTrigger className="w-[220px] border-0 bg-transparent hover:bg-muted/50">
+            <SelectTrigger className="w-[200px] h-8 border border-border/40 bg-background/80 backdrop-blur-sm hover:bg-muted/30 transition-colors duration-200 rounded-md shadow-sm">
               <SelectValue>
-                <span className="font-medium text-brand">
+                <span className="text-sm font-medium text-brand">
                   {selectedModel === 'model-0-1' ? '0.1 - CRM Customization' : 
                    selectedModel === 'model-0-2' ? '0.2 - Plugin Tracing' :
                    '0.3 - CRM Expert'}
                 </span>
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="model-0-1">0.1 - CRM Customization</SelectItem>
-              <SelectItem value="model-0-2">0.2 - Plugin Tracing</SelectItem>
-              <SelectItem value="model-0-3">0.3 - CRM Expert</SelectItem>
+            <SelectContent className="min-w-[200px] border-border/40 bg-background/95 backdrop-blur-sm">
+              <SelectItem value="model-0-1" className="focus:bg-accent/50 focus:text-brand">0.1 - CRM Customization</SelectItem>
+              <SelectItem value="model-0-2" className="focus:bg-accent/50 focus:text-brand">0.2 - Plugin Tracing</SelectItem>
+              <SelectItem value="model-0-3" className="focus:bg-accent/50 focus:text-brand">0.3 - CRM Expert</SelectItem>
             </SelectContent>
           </Select>
         </div>
