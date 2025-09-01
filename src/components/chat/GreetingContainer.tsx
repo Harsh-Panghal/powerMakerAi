@@ -134,7 +134,7 @@ export function GreetingContainer() {
           </div>
 
           {/* Prompt Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 transition-all duration-300">
+          <div className="flex gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible transition-all duration-300">
             {currentPromptSuggestions.map((suggestion, index) => (
               <PromptCard
                 key={`${selectedModel}-${index}`}
