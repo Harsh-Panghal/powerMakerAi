@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Menu,
@@ -13,6 +13,7 @@ import {
   Settings,
   Database,
   Key,
+  LogIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -49,6 +50,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useChatStore } from "@/store/chatStore";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const modelOptions = [
   {
@@ -75,11 +79,35 @@ export function PowerMakerHeader() {
   const { toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const { selectedModel, setModel } = useChatStore();
+  const { toast } = useToast();
+  
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+
+  // Check authentication state
+  useEffect(() => {
+    supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+  }, []);
+
+  const getUserInitials = (email?: string) => {
+    if (!email) return "U";
+    return email.charAt(0).toUpperCase();
+  };
+
+  const getUserDisplayName = (email?: string) => {
+    if (!email) return "User";
+    return email.split("@")[0];
+  };
 
   // Mock notification data
   const notifications = [
@@ -112,8 +140,29 @@ export function PowerMakerHeader() {
     },
   ];
 
-  const handleLogout = () => {
-    console.log("Logging out...");
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Successfully signed out!",
+        });
+        navigate("/");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
     setShowLogoutDialog(false);
   };
 
@@ -320,41 +369,53 @@ export function PowerMakerHeader() {
             </SheetContent>
           </Sheet>
 
-          {/* User Profile Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 h-auto"
-              >
-                <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
-                  <AvatarFallback className="bg-warning text-white font-medium text-xs sm:text-sm">
-                    H
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden md:inline text-sm font-medium text-foreground">
-                  Harsh
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setShowProfileDialog(true)}>
-                <User className="w-4 h-4 mr-2" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Invite
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setShowLogoutDialog(true)}
-                className="text-destructive"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Log Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* User Authentication Section */}
+          {user ? (
+            // Authenticated User - Show Profile Dropdown
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 h-auto"
+                >
+                  <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
+                    <AvatarFallback className="bg-brand text-white font-medium text-xs sm:text-sm">
+                      {getUserInitials(user.email)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden md:inline text-sm font-medium text-foreground">
+                    {getUserDisplayName(user.email)}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setShowProfileDialog(true)}>
+                  <User className="w-4 h-4 mr-2" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Invite
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setShowLogoutDialog(true)}
+                  className="text-destructive"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Log Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            // Unauthenticated - Show Sign In Button
+            <Button
+              onClick={() => navigate("/auth")}
+              className="bg-brand-light hover:bg-brand-light/90 text-white"
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign In
+            </Button>
+          )}
         </div>
       </header>
 
