@@ -102,7 +102,7 @@ export function PowerMakerHeader() {
         </div>
 
         {/* center section - model selector */}
-        <div className="flex items-center flex-1 justify-center px-2 max-w-[120px] sm:max-w-xs md:max-w-sm">
+        <div className="flex items-center flex-1 justify-start px-2 max-w-[120px] sm:max-w-xs md:max-w-sm">
           <Select value={selectedModel} onValueChange={(value) => {
             setModel(value);
             navigate('/');
