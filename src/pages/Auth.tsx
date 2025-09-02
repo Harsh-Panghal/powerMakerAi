@@ -16,7 +16,7 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -29,12 +29,15 @@ const Auth = () => {
     // Simulate loading for demo purposes
     setTimeout(() => {
       // Set demo user data in localStorage
-      localStorage.setItem('demoUser', JSON.stringify({
-        email: email,
-        name: email.split('@')[0], // Use part before @ as name
-        isLoggedIn: true
-      }));
-      
+      localStorage.setItem(
+        "demoUser",
+        JSON.stringify({
+          email: email,
+          name: email.split("@")[0], // Use part before @ as name
+          isLoggedIn: true,
+        })
+      );
+
       toast({
         title: "Success",
         description: "Successfully signed in! (Demo Mode)",
@@ -46,7 +49,7 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!acceptTerms) {
       toast({
         title: "Error",
@@ -94,7 +97,7 @@ const Auth = () => {
       {/* Left Panel - Promotional Area */}
       <div className="hidden lg:flex lg:flex-[5] bg-gradient-to-br from-brand-dark via-brand to-brand-medium relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-dark/90 via-brand/80 to-brand-medium/70" />
-        
+
         {/* Abstract Wave Shapes */}
         <div className="absolute inset-0">
           <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl" />
@@ -104,10 +107,12 @@ const Auth = () => {
 
         <div className="relative z-10 flex flex-col  items-start px-16 py-20">
           <h1 className="text-5xl font-bold text-white mb-6 leading-tight">
-            POWER UP YOUR<br />CRM WITH AI
+            POWER UP YOUR
+            <br />
+            CRM WITH AI
           </h1>
           <p className="text-xl text-white/90 leading-relaxed max-w-lg">
-            Discover Your Personal AI Assistant Built To Streamline Dynamics 
+            Discover Your Personal AI Assistant Built To Streamline Dynamics
             Customizations, Debug Logs, And Accelerate Development.
           </p>
         </div>
@@ -118,8 +123,12 @@ const Auth = () => {
         <div className="max-w-md mx-auto w-full">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-brand to-brand-light rounded-lg flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">A</span>
+            <div className="w-24 h-24 mx-auto mb-4  flex items-center justify-center">
+              <img
+                src="./logo.svg"
+                className="w-full h-full object-contain"
+                alt=""
+              />
             </div>
             <h2 className="text-2xl font-bold text-brand">
               {isSignUp ? "Sign up to continue" : "Sign in to continue"}
@@ -127,72 +136,120 @@ const Auth = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
+          <form
+            onSubmit={isSignUp ? handleSignUp : handleSignIn}
+            className="space-y-4"
+          >
             {/* Email Field */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-brand font-medium">
-                Enter Email
-              </Label>
-              <Input
-                id="email"
+            <div className="relative">
+              <input
                 type="email"
-                placeholder="your@email.com"
+                name="email"
+                id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
-                className="bg-muted border-border text-brand placeholder:text-muted-foreground"
+                placeholder=" " // 👈 important for peer-placeholder-shown to work
+                className={`
+      peer w-full min-h-[44px] rounded-md border px-4 pt-0.5 pb-1 text-sm
+      text-brand bg-white focus:outline-none
+      ${email ? "border-brand" : "border-border focus:border-brand"}
+    `}
               />
+              <label
+                htmlFor="email"
+                className={`
+      absolute left-3 px-1 bg-white text-muted-foreground transition-all duration-200
+      pointer-events-none
+      peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-sm
+      peer-focus:-top-2 peer-focus:left-3 peer-focus:text-xs
+      ${email ? "-top-2 left-2 text-xs" : "top-2.5 text-sm"}
+    `}
+              >
+                Enter Email
+              </label>
             </div>
 
             {/* Password Field */}
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-brand font-medium">
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+                placeholder=" " // 👈 same trick
+                className={`
+      peer w-full min-h-[44px] rounded-md border px-4 pt-0.5 pb-1 text-sm
+      text-brand bg-white focus:outline-none pr-10
+      ${password ? "border-brand" : "border-border focus:border-brand"}
+    `}
+              />
+              <label
+                htmlFor="password"
+                className={`
+      absolute left-3 px-1 bg-white text-muted-foreground transition-all duration-200
+      pointer-events-none
+      peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-sm
+      peer-focus:-top-2 peer-focus:left-3 peer-focus:text-xs
+      ${password ? "-top-2 left-2 text-xs" : "top-2.5 text-sm"}
+    `}
+              >
                 Password
-              </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-muted border-border text-brand placeholder:text-muted-foreground pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
 
             {/* Confirm Password Field (Sign Up only) */}
+            {/* Confirm Password Field (Sign Up only) */}
             {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-brand font-medium">
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  placeholder=" " // 👈 needed for floating label
+                  className={`
+        peer w-full min-h-[44px] rounded-md border px-4 pt-0.5 pb-1 text-sm
+        text-brand bg-white focus:outline-none pr-10
+        ${confirmPassword ? "border-brand" : "border-border focus:border-brand"}
+      `}
+                />
+                <label
+                  htmlFor="confirmPassword"
+                  className={`
+        absolute left-3 px-1 bg-white text-muted-foreground transition-all duration-200
+        pointer-events-none
+        peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-sm
+        peer-focus:-top-2 peer-focus:left-3 peer-focus:text-xs
+        ${confirmPassword ? "-top-2 left-2 text-xs" : "top-2.5 text-sm"}
+      `}
+                >
                   Confirm Password
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm your password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    className="bg-muted border-border text-brand placeholder:text-muted-foreground pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand"
-                  >
-                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
               </div>
             )}
 
@@ -202,10 +259,15 @@ const Auth = () => {
                 <Checkbox
                   id="terms"
                   checked={acceptTerms}
-                  onCheckedChange={(checked) => setAcceptTerms(checked === true)}
+                  onCheckedChange={(checked) =>
+                    setAcceptTerms(checked === true)
+                  }
                   className="mt-1"
                 />
-                <Label htmlFor="terms" className="text-sm text-brand leading-relaxed">
+                <Label
+                  htmlFor="terms"
+                  className="text-sm text-brand leading-relaxed"
+                >
                   Accept{" "}
                   <a href="#" className="text-brand-light hover:underline">
                     terms & conditions
@@ -218,7 +280,10 @@ const Auth = () => {
             {/* Forgot Password (Sign In only) */}
             {!isSignUp && (
               <div className="text-right">
-                <a href="#" className="text-brand-light hover:underline text-sm">
+                <a
+                  href="#"
+                  className="text-brand-light hover:underline text-sm"
+                >
                   Forgot Password?
                 </a>
               </div>
@@ -274,7 +339,9 @@ const Auth = () => {
             {/* Toggle Form */}
             <div className="text-center">
               <p className="text-brand">
-                {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+                {isSignUp
+                  ? "Already have an account?"
+                  : "Don't have an account?"}{" "}
                 <button
                   type="button"
                   onClick={() => setIsSignUp(!isSignUp)}
