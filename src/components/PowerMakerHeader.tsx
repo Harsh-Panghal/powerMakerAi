@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, Bell, CheckCircle, User, UserPlus, LogOut, X, Camera, Filter, Settings } from "lucide-react";
+import { Menu, Bell, CheckCircle, User, UserPlus, LogOut, X, Camera, Filter, Settings, Database, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -13,6 +13,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useChatStore } from "@/store/chatStore";
+
+const modelOptions = [
+  { 
+    value: "model-0-1", 
+    title: "Model 0.1", 
+    subtitle: "CRM Customization",
+    icon: Settings
+  },
+  { 
+    value: "model-0-2", 
+    title: "Model 0.2", 
+    subtitle: "Plugin Tracing",
+    icon: Database
+  },
+  { 
+    value: "model-0-3", 
+    title: "Model 0.3", 
+    subtitle: "CRM Expert",
+    icon: Key
+  }
+];
 
 export function PowerMakerHeader() {
   const { toggleSidebar } = useSidebar();
@@ -103,18 +124,20 @@ export function PowerMakerHeader() {
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="min-w-[100px] sm:min-w-[140px] lg:min-w-[200px] border-border/40 bg-background/95 backdrop-blur-sm">
-              <SelectItem value="model-0-1" className="focus:bg-accent/50 focus:text-brand">
-                <span className="hidden lg:inline">0.1 - CRM Customization</span>
-                <span className="lg:hidden">0.1 - CRM</span>
-              </SelectItem>
-              <SelectItem value="model-0-2" className="focus:bg-accent/50 focus:text-brand">
-                <span className="hidden lg:inline">0.2 - Plugin Tracing</span>
-                <span className="lg:hidden">0.2 - Plugin</span>
-              </SelectItem>
-              <SelectItem value="model-0-3" className="focus:bg-accent/50 focus:text-brand">
-                <span className="hidden lg:inline">0.3 - CRM Expert</span>
-                <span className="lg:hidden">0.3 - Expert</span>
-              </SelectItem>
+              {modelOptions.map((option) => {
+                const IconComponent = option.icon;
+                return (
+                  <SelectItem key={option.value} value={option.value} className="focus:bg-accent/50 focus:text-brand">
+                    <div className="flex items-center gap-2">
+                      <IconComponent className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-medium truncate">{option.title}</span>
+                        <span className="text-muted-foreground text-xs truncate">{option.subtitle}</span>
+                      </div>
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
