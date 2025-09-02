@@ -209,6 +209,7 @@ const Auth = () => {
             <form
               onSubmit={isSignUp ? handleSignUp : handleSignIn}
               className="space-y-4"
+              noValidate
             >
               {/* Email Field */}
               <FloatingInput
@@ -219,7 +220,6 @@ const Auth = () => {
                 onChange={(e) => handleFieldChange("email", e.target.value)}
                 onBlur={(e) => handleFieldBlur("email", e.target.value)}
                 autoComplete="email"
-                required
               />
 
               {/* Password Field */}
@@ -231,7 +231,6 @@ const Auth = () => {
                 onChange={(e) => handleFieldChange("password", e.target.value)}
                 onBlur={(e) => handleFieldBlur("password", e.target.value)}
                 autoComplete="current-password"
-                required
               />
 
               {/* Confirm Password Field (Sign Up only) */}
@@ -243,7 +242,6 @@ const Auth = () => {
                   error={fieldErrors.confirmPassword}
                   onChange={(e) => handleFieldChange("confirmPassword", e.target.value)}
                   onBlur={(e) => handleFieldBlur("confirmPassword", e.target.value)}
-                  required
                 />
               )}
 
