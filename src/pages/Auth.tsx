@@ -85,7 +85,7 @@ const Auth = () => {
   return (
     <div className="h-[100dvh] flex">
       {/* Left Panel - Promotional Area */}
-      <div className="hidden lg:flex lg:flex-[7] bg-gradient-to-br from-brand-dark via-brand to-brand-medium relative overflow-hidden">
+      <div className="hidden lg:flex lg:flex-[5] bg-gradient-to-br from-brand-dark via-brand to-brand-medium relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-dark/90 via-brand/80 to-brand-medium/70" />
         
         {/* Abstract Wave Shapes */}
