@@ -83,9 +83,9 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-[100dvh] flex">
       {/* Left Panel - Promotional Area */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-brand-dark via-brand to-brand-medium relative overflow-hidden">
+      <div className="border-4 border-red-500 hidden lg:flex lg:flex-1 bg-gradient-to-br from-brand-dark via-brand to-brand-medium relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-dark/90 via-brand/80 to-brand-medium/70" />
         
         {/* Abstract Wave Shapes */}
@@ -95,7 +95,7 @@ const Auth = () => {
           <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-white/15 rounded-full blur-lg" />
         </div>
 
-        <div className="relative z-10 flex flex-col justify-center items-start px-16 py-20">
+        <div className="relative z-10 flex flex-col  items-start px-16 py-20">
           <h1 className="text-5xl font-bold text-white mb-6 leading-tight">
             POWER UP YOUR<br />CRM WITH AI
           </h1>
@@ -107,7 +107,7 @@ const Auth = () => {
       </div>
 
       {/* Right Panel - Form Area */}
-      <div className="flex-1 lg:flex-1 flex flex-col justify-center px-8 lg:px-16 py-12 bg-white">
+      <div className="flex-1 lg:flex-2 flex flex-col justify-center px-8 lg:px-16 py-12 bg-white">
         <div className="max-w-md mx-auto w-full">
           {/* Logo */}
           <div className="text-center mb-8">
@@ -120,7 +120,7 @@ const Auth = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-6">
+          <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
             {/* Email Field */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-brand font-medium">
