@@ -82,9 +82,12 @@ export function TablesView({ isOpen, onClose }: TablesViewProps) {
 
             {/* Footer */}
             <div className="p-6 border-t border-border bg-muted/20">
-              <div className="flex justify-center">
-                <Button variant="outline" className="bg-background">
+              <div className="flex justify-between items-center">
+                <Button variant="default" className="bg-primary text-primary-foreground hover:bg-primary/90">
                   Start Customization
+                </Button>
+                <Button variant="outline" onClick={onClose} className="bg-background">
+                  Cancel
                 </Button>
               </div>
             </div>
