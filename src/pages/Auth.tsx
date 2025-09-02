@@ -1,26 +1,110 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Label } from "@/components/ui/label";
+import { FloatingInput } from "@/components/ui/floating-input";
+import {
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Field validation states
+  const [fieldErrors, setFieldErrors] = useState<{
+    [key: string]: { hasError: boolean; message: string; showError: boolean };
+  }>({});
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Remove auth checking for now - pure frontend demo
+  // Validation functions
+  const validateField = (field: string, value: string) => {
+    let hasError = false;
+    let message = "";
+    
+    switch (field) {
+      case "email":
+        if (!value.trim()) {
+          hasError = true;
+          message = "Email is required";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+          hasError = true;
+          message = "Please enter a valid email address";
+        }
+        break;
+      case "password":
+        if (!value.trim()) {
+          hasError = true;
+          message = "Password is required";
+        } else if (value.length < 8) {
+          hasError = true;
+          message = "Password must be at least 8 characters long";
+        }
+        break;
+      case "confirmPassword":
+        if (!value.trim()) {
+          hasError = true;
+          message = "Please confirm your password";
+        } else if (value !== password) {
+          hasError = true;
+          message = "Passwords do not match";
+        }
+        break;
+    }
+    
+    if (hasError) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [field]: { hasError: true, message, showError: true }
+      }));
+    } else {
+      setFieldErrors(prev => ({
+        ...prev,
+        [field]: { hasError: false, message: "", showError: false }
+      }));
+    }
+  };
+
+  const handleFieldChange = (field: string, value: string) => {
+    switch (field) {
+      case "email":
+        setEmail(value);
+        break;
+      case "password":
+        setPassword(value);
+        break;
+      case "confirmPassword":
+        setConfirmPassword(value);
+        break;
+    }
+    
+    // Validate field in real-time as user types
+    if (value.trim()) {
+      validateField(field, value);
+    } else {
+      // Show error immediately if field becomes empty (for required fields)
+      setFieldErrors(prev => ({
+        ...prev,
+        [field]: { 
+          hasError: true, 
+          message: `${field === "email" ? "Email" : field === "password" ? "Password" : "Confirm Password"} is required`,
+          showError: true 
+        }
+      }));
+    }
+  };
+
+  const handleFieldBlur = (field: string, value: string) => {
+    validateField(field, value);
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,222 +220,148 @@ const Auth = () => {
           </div>
 
           {/* Form */}
-          <form
-            onSubmit={isSignUp ? handleSignUp : handleSignIn}
-            className="space-y-4"
-          >
-            {/* Email Field */}
-            <div className="relative">
-              <input
+          <TooltipProvider>
+            <form
+              onSubmit={isSignUp ? handleSignUp : handleSignIn}
+              className="space-y-4"
+            >
+              {/* Email Field */}
+              <FloatingInput
+                label="Email *"
                 type="email"
-                name="email"
-                id="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                error={fieldErrors.email}
+                onChange={(e) => handleFieldChange("email", e.target.value)}
+                onBlur={(e) => handleFieldBlur("email", e.target.value)}
                 autoComplete="email"
                 required
-                placeholder=" " // 👈 important for peer-placeholder-shown to work
-                className={`
-      peer w-full min-h-[44px] rounded-md border px-4 pt-0.5 pb-1 text-sm
-      text-brand bg-white focus:outline-none
-      ${email ? "border-brand" : "border-border focus:border-brand"}
-    `}
               />
-              <label
-                htmlFor="email"
-                className={`
-      absolute left-3 px-1 bg-white text-muted-foreground transition-all duration-200
-      pointer-events-none
-      peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-sm
-      peer-focus:-top-2 peer-focus:left-3 peer-focus:text-xs
-      ${email ? "-top-2 left-2 text-xs" : "top-2.5 text-sm"}
-    `}
-              >
-                Enter Email
-              </label>
-            </div>
 
-            {/* Password Field */}
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                id="password"
+              {/* Password Field */}
+              <FloatingInput
+                label="Password *"
+                isPassword={true}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                error={fieldErrors.password}
+                onChange={(e) => handleFieldChange("password", e.target.value)}
+                onBlur={(e) => handleFieldBlur("password", e.target.value)}
                 autoComplete="current-password"
                 required
-                placeholder=" " // 👈 same trick
-                className={`
-      peer w-full min-h-[44px] rounded-md border px-4 pt-0.5 pb-1 text-sm
-      text-brand bg-white focus:outline-none pr-10
-      ${password ? "border-brand" : "border-border focus:border-brand"}
-    `}
               />
-              <label
-                htmlFor="password"
-                className={`
-      absolute left-3 px-1 bg-white text-muted-foreground transition-all duration-200
-      pointer-events-none
-      peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-sm
-      peer-focus:-top-2 peer-focus:left-3 peer-focus:text-xs
-      ${password ? "-top-2 left-2 text-xs" : "top-2.5 text-sm"}
-    `}
-              >
-                Password
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
 
-            {/* Confirm Password Field (Sign Up only) */}
-            {/* Confirm Password Field (Sign Up only) */}
-            {isSignUp && (
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  id="confirmPassword"
+              {/* Confirm Password Field (Sign Up only) */}
+              {isSignUp && (
+                <FloatingInput
+                  label="Confirm Password *"
+                  isPassword={true}
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  error={fieldErrors.confirmPassword}
+                  onChange={(e) => handleFieldChange("confirmPassword", e.target.value)}
+                  onBlur={(e) => handleFieldBlur("confirmPassword", e.target.value)}
                   required
-                  placeholder=" " // 👈 needed for floating label
-                  className={`
-        peer w-full min-h-[44px] rounded-md border px-4 pt-0.5 pb-1 text-sm
-        text-brand bg-white focus:outline-none pr-10
-        ${confirmPassword ? "border-brand" : "border-border focus:border-brand"}
-      `}
                 />
-                <label
-                  htmlFor="confirmPassword"
-                  className={`
-        absolute left-3 px-1 bg-white text-muted-foreground transition-all duration-200
-        pointer-events-none
-        peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-sm
-        peer-focus:-top-2 peer-focus:left-3 peer-focus:text-xs
-        ${confirmPassword ? "-top-2 left-2 text-xs" : "top-2.5 text-sm"}
-      `}
-                >
-                  Confirm Password
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-brand"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff size={20} />
-                  ) : (
-                    <Eye size={20} />
-                  )}
-                </button>
+              )}
+
+              {/* Terms & Conditions (Sign Up only) */}
+              {isSignUp && (
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={acceptTerms}
+                    onCheckedChange={(checked) =>
+                      setAcceptTerms(checked === true)
+                    }
+                    className="mt-1"
+                  />
+                  <Label
+                    htmlFor="terms"
+                    className="text-sm text-brand leading-relaxed"
+                  >
+                    Accept{" "}
+                    <a href="#" className="text-brand-light hover:underline">
+                      terms & conditions
+                    </a>{" "}
+                    page to get going
+                  </Label>
+                </div>
+              )}
+
+              {/* Forgot Password (Sign In only) */}
+              {!isSignUp && (
+                <div className="text-right">
+                  <a
+                    href="#"
+                    className="text-brand-light hover:underline text-sm"
+                  >
+                    Forgot Password?
+                  </a>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-brand-light hover:bg-brand-light/90 text-white font-medium py-3"
+              >
+                {loading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
+              </Button>
+
+              {/* Or Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-muted-foreground">Or</span>
+                </div>
               </div>
-            )}
 
-            {/* Terms & Conditions (Sign Up only) */}
-            {isSignUp && (
-              <div className="flex items-start space-x-2">
-                <Checkbox
-                  id="terms"
-                  checked={acceptTerms}
-                  onCheckedChange={(checked) =>
-                    setAcceptTerms(checked === true)
-                  }
-                  className="mt-1"
-                />
-                <Label
-                  htmlFor="terms"
-                  className="text-sm text-brand leading-relaxed"
-                >
-                  Accept{" "}
-                  <a href="#" className="text-brand-light hover:underline">
-                    terms & conditions
-                  </a>{" "}
-                  page to get going
-                </Label>
+              {/* Google Login - Demo Mode */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGoogleLogin}
+                className="w-full border-border text-brand hover:bg-muted"
+              >
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
+                Login with Google
+              </Button>
+
+              {/* Toggle Form */}
+              <div className="text-center">
+                <p className="text-brand">
+                  {isSignUp
+                    ? "Already have an account?"
+                    : "Don't have an account?"}{" "}
+                  <button
+                    type="button"
+                    onClick={() => setIsSignUp(!isSignUp)}
+                    className="text-brand-light hover:underline font-medium"
+                  >
+                    {isSignUp ? "Sign In" : "Sign Up"}
+                  </button>
+                </p>
               </div>
-            )}
-
-            {/* Forgot Password (Sign In only) */}
-            {!isSignUp && (
-              <div className="text-right">
-                <a
-                  href="#"
-                  className="text-brand-light hover:underline text-sm"
-                >
-                  Forgot Password?
-                </a>
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-brand-light hover:bg-brand-light/90 text-white font-medium py-3"
-            >
-              {loading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
-            </Button>
-
-            {/* Or Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-muted-foreground">Or</span>
-              </div>
-            </div>
-
-            {/* Google Login - Demo Mode */}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGoogleLogin}
-              className="w-full border-border text-brand hover:bg-muted"
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <path
-                  fill="currentColor"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              Login with Google
-            </Button>
-
-            {/* Toggle Form */}
-            <div className="text-center">
-              <p className="text-brand">
-                {isSignUp
-                  ? "Already have an account?"
-                  : "Don't have an account?"}{" "}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-brand-light hover:underline font-medium"
-                >
-                  {isSignUp ? "Sign In" : "Sign Up"}
-                </button>
-              </p>
-            </div>
-          </form>
+            </form>
+          </TooltipProvider>
         </div>
       </div>
     </div>
