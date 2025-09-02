@@ -178,34 +178,18 @@ const Auth = () => {
   };
 
   return (
-    <div className="h-[100dvh] flex">
-      {/* Left Panel - Promotional Area */}
-      <div className="hidden lg:flex lg:flex-[5] bg-gradient-to-br from-brand-dark via-brand to-brand-medium relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-dark/90 via-brand/80 to-brand-medium/70" />
-
-        {/* Abstract Wave Shapes */}
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl" />
-          <div className="absolute bottom-20 right-20 w-48 h-48 bg-white/5 rounded-full blur-2xl" />
-          <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-white/15 rounded-full blur-lg" />
-        </div>
-
-        <div className="relative z-10 flex flex-col  items-start px-16 py-20">
-          <h1 className="text-5xl font-bold text-white mb-6 leading-tight">
-            POWER UP YOUR
-            <br />
-            CRM WITH AI
-          </h1>
-          <p className="text-xl text-white/90 leading-relaxed max-w-lg">
-            Discover Your Personal AI Assistant Built To Streamline Dynamics
-            Customizations, Debug Logs, And Accelerate Development.
-          </p>
-        </div>
+    <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background relative overflow-hidden px-4 py-8">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
+        <div className="absolute bottom-32 right-32 w-48 h-48 bg-primary/3 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-primary/8 rounded-full blur-xl" />
       </div>
 
-      {/* Right Panel - Form Area */}
-      <div className="flex-1 lg:flex-[3] flex flex-col justify-center px-8 lg:px-16 py-12 bg-white">
-        <div className="max-w-md mx-auto w-full">
+      {/* Main form container */}
+      <div className="relative z-10 w-full max-w-md mx-auto">
+        {/* Card wrapper */}
+        <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl shadow-2xl p-8">
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="w-24 h-24 mx-auto mb-4  flex items-center justify-center">
@@ -314,7 +298,7 @@ const Auth = () => {
                   <span className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">Or</span>
+                  <span className="bg-card px-2 text-muted-foreground">Or</span>
                 </div>
               </div>
 
