@@ -292,11 +292,20 @@ const Auth = () => {
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background relative overflow-hidden px-4 py-8">
-      {/* Background decorative elements */}
+      {/* Flowing color animation background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 w-[200%] h-[200%] opacity-80 animate-flow-colors blur-3xl" />
+        <div className="absolute inset-0 w-[150%] h-[150%] opacity-60 animate-flow-colors blur-2xl" 
+             style={{ animationDelay: '-2s', animationDirection: 'reverse' }} />
+        <div className="absolute inset-0 w-[120%] h-[120%] opacity-40 animate-flow-colors blur-xl" 
+             style={{ animationDelay: '-4s' }} />
+      </div>
+      
+      {/* Static decorative elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
-        <div className="absolute bottom-32 right-32 w-48 h-48 bg-primary/3 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-primary/8 rounded-full blur-xl" />
+        <div className="absolute top-20 left-20 w-32 h-32 bg-brand/5 rounded-full blur-2xl" />
+        <div className="absolute bottom-32 right-32 w-48 h-48 bg-brand-light/3 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-brand-medium/8 rounded-full blur-xl" />
       </div>
 
       {/* Main form container */}

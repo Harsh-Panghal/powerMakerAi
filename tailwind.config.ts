@@ -122,11 +122,34 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'flow-colors': {
+					'0%': {
+						background: 'linear-gradient(45deg, hsl(var(--brand) / 0.1), hsl(var(--brand-light) / 0.15), hsl(var(--brand-medium) / 0.1))',
+						transform: 'translateX(-100%) scale(1.2)'
+					},
+					'25%': {
+						background: 'linear-gradient(45deg, hsl(var(--brand-light) / 0.15), hsl(var(--brand-medium) / 0.1), hsl(var(--brand-accent) / 0.12))',
+						transform: 'translateX(-50%) scale(1.5)'
+					},
+					'50%': {
+						background: 'linear-gradient(45deg, hsl(var(--brand-medium) / 0.1), hsl(var(--brand-accent) / 0.12), hsl(var(--brand) / 0.1))',
+						transform: 'translateX(0%) scale(1.8)'
+					},
+					'75%': {
+						background: 'linear-gradient(45deg, hsl(var(--brand-accent) / 0.12), hsl(var(--brand) / 0.1), hsl(var(--brand-light) / 0.15))',
+						transform: 'translateX(50%) scale(1.5)'
+					},
+					'100%': {
+						background: 'linear-gradient(45deg, hsl(var(--brand) / 0.1), hsl(var(--brand-light) / 0.15), hsl(var(--brand-medium) / 0.1))',
+						transform: 'translateX(100%) scale(1.2)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'flow-colors': 'flow-colors 8s ease-in-out infinite'
 			}
 		}
 	},
