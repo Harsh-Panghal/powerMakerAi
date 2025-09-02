@@ -50,9 +50,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useChatStore } from "@/store/chatStore";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const modelOptions = [
   {
@@ -81,33 +79,13 @@ export function PowerMakerHeader() {
   const { selectedModel, setModel } = useChatStore();
   const { toast } = useToast();
   
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+  // Remove auth for now - show hardcoded user or login button
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
-
-  // Check authentication state
-  useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-  }, []);
-
-  const getUserInitials = (email?: string) => {
-    if (!email) return "U";
-    return email.charAt(0).toUpperCase();
-  };
-
-  const getUserDisplayName = (email?: string) => {
-    if (!email) return "User";
-    return email.split("@")[0];
-  };
 
   // Mock notification data
   const notifications = [
@@ -140,29 +118,12 @@ export function PowerMakerHeader() {
     },
   ];
 
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Successfully signed out!",
-        });
-        navigate("/");
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-    }
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    toast({
+      title: "Success",
+      description: "Successfully signed out! (Demo Mode)",
+    });
     setShowLogoutDialog(false);
   };
 
@@ -369,9 +330,9 @@ export function PowerMakerHeader() {
             </SheetContent>
           </Sheet>
 
-          {/* User Authentication Section */}
-          {user ? (
-            // Authenticated User - Show Profile Dropdown
+          {/* User Authentication Section - Demo Mode */}
+          {isLoggedIn ? (
+            // Hardcoded logged in user
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -380,11 +341,11 @@ export function PowerMakerHeader() {
                 >
                   <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
                     <AvatarFallback className="bg-brand text-white font-medium text-xs sm:text-sm">
-                      {getUserInitials(user.email)}
+                      JD
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden md:inline text-sm font-medium text-foreground">
-                    {getUserDisplayName(user.email)}
+                    John Doe
                   </span>
                 </Button>
               </DropdownMenuTrigger>
@@ -407,7 +368,7 @@ export function PowerMakerHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            // Unauthenticated - Show Sign In Button
+            // Show Sign In Button
             <Button
               onClick={() => navigate("/auth")}
               className="bg-brand-light hover:bg-brand-light/90 text-white"

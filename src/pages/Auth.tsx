@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 const Auth = () => {
@@ -21,53 +20,21 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if user is already logged in
-  useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        navigate("/");
-      }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        navigate("/");
-      }
-    });
-  }, [navigate]);
+  // Remove auth checking for now - pure frontend demo
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Successfully signed in!",
-        });
-        navigate("/");
-      }
-    } catch (error) {
+    // Simulate loading for demo purposes
+    setTimeout(() => {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
+        title: "Success",
+        description: "Successfully signed in! (Demo Mode)",
       });
-    }
-    
-    setLoading(false);
+      setLoading(false);
+      navigate("/");
+    }, 1000);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -93,61 +60,26 @@ const Auth = () => {
 
     setLoading(true);
 
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-        },
-      });
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Check your email to confirm your account!",
-        });
-      }
-    } catch (error) {
+    // Simulate loading for demo purposes
+    setTimeout(() => {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
+        title: "Success",
+        description: "Account created successfully! (Demo Mode)",
       });
-    }
-    
-    setLoading(false);
+      setLoading(false);
+      // Switch to sign in form after successful signup
+      setIsSignUp(false);
+      setPassword("");
+      setConfirmPassword("");
+      setAcceptTerms(false);
+    }, 1000);
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-        },
-      });
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Demo Mode",
+      description: "Google login will be implemented later",
+    });
   };
 
   return (
@@ -304,13 +236,12 @@ const Auth = () => {
               </div>
             </div>
 
-            {/* Google Login - Disabled until configured */}
+            {/* Google Login - Demo Mode */}
             <Button
               type="button"
               variant="outline"
-              disabled
-              className="w-full border-border text-muted-foreground bg-muted cursor-not-allowed"
-              title="Google OAuth not configured yet"
+              onClick={handleGoogleLogin}
+              className="w-full border-border text-brand hover:bg-muted"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path
@@ -330,7 +261,7 @@ const Auth = () => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Login with Google (Setup Required)
+              Login with Google
             </Button>
 
             {/* Toggle Form */}
