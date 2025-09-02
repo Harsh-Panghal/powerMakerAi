@@ -109,6 +109,36 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate all fields before submission
+    let hasErrors = false;
+    
+    if (!email.trim()) {
+      setFieldErrors(prev => ({
+        ...prev,
+        email: { hasError: true, message: "Email is required", showError: true }
+      }));
+      hasErrors = true;
+    } else {
+      validateField("email", email);
+      if (fieldErrors.email?.hasError) hasErrors = true;
+    }
+    
+    if (!password.trim()) {
+      setFieldErrors(prev => ({
+        ...prev,
+        password: { hasError: true, message: "Password is required", showError: true }
+      }));
+      hasErrors = true;
+    } else {
+      validateField("password", password);
+      if (fieldErrors.password?.hasError) hasErrors = true;
+    }
+    
+    if (hasErrors) {
+      return;
+    }
+    
     setLoading(true);
 
     // Simulate loading for demo purposes
@@ -134,6 +164,42 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate all fields before submission
+    let hasErrors = false;
+    
+    if (!email.trim()) {
+      setFieldErrors(prev => ({
+        ...prev,
+        email: { hasError: true, message: "Email is required", showError: true }
+      }));
+      hasErrors = true;
+    } else {
+      validateField("email", email);
+      if (fieldErrors.email?.hasError) hasErrors = true;
+    }
+    
+    if (!password.trim()) {
+      setFieldErrors(prev => ({
+        ...prev,
+        password: { hasError: true, message: "Password is required", showError: true }
+      }));
+      hasErrors = true;
+    } else {
+      validateField("password", password);
+      if (fieldErrors.password?.hasError) hasErrors = true;
+    }
+    
+    if (!confirmPassword.trim()) {
+      setFieldErrors(prev => ({
+        ...prev,
+        confirmPassword: { hasError: true, message: "Please confirm your password", showError: true }
+      }));
+      hasErrors = true;
+    } else {
+      validateField("confirmPassword", confirmPassword);
+      if (fieldErrors.confirmPassword?.hasError) hasErrors = true;
+    }
 
     if (!acceptTerms) {
       toast({
@@ -141,15 +207,10 @@ const Auth = () => {
         description: "Please accept the terms and conditions",
         variant: "destructive",
       });
-      return;
+      hasErrors = true;
     }
 
-    if (password !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
+    if (hasErrors) {
       return;
     }
 
