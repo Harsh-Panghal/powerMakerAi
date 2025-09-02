@@ -28,6 +28,13 @@ const Auth = () => {
 
     // Simulate loading for demo purposes
     setTimeout(() => {
+      // Set demo user data in localStorage
+      localStorage.setItem('demoUser', JSON.stringify({
+        email: email,
+        name: email.split('@')[0], // Use part before @ as name
+        isLoggedIn: true
+      }));
+      
       toast({
         title: "Success",
         description: "Successfully signed in! (Demo Mode)",

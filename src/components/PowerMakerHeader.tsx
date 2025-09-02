@@ -79,13 +79,25 @@ export function PowerMakerHeader() {
   const { selectedModel, setModel } = useChatStore();
   const { toast } = useToast();
   
-  // Remove auth for now - show hardcoded user or login button
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [demoUser, setDemoUser] = useState<{email: string; name: string} | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+
+  // Check for demo user on component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('demoUser');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      if (userData.isLoggedIn) {
+        setIsLoggedIn(true);
+        setDemoUser(userData);
+      }
+    }
+  }, []);
 
   // Mock notification data
   const notifications = [
@@ -119,7 +131,9 @@ export function PowerMakerHeader() {
   ];
 
   const handleLogout = () => {
+    localStorage.removeItem('demoUser');
     setIsLoggedIn(false);
+    setDemoUser(null);
     toast({
       title: "Success",
       description: "Successfully signed out! (Demo Mode)",
@@ -341,11 +355,11 @@ export function PowerMakerHeader() {
                 >
                   <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
                     <AvatarFallback className="bg-brand text-white font-medium text-xs sm:text-sm">
-                      JD
+                      {demoUser?.name?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden md:inline text-sm font-medium text-foreground">
-                    John Doe
+                    {demoUser?.name || 'User'}
                   </span>
                 </Button>
               </DropdownMenuTrigger>
