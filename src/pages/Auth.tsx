@@ -292,13 +292,11 @@ const Auth = () => {
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background relative overflow-hidden px-4 py-8">
-      {/* Flowing color animation background */}
+      {/* Smooth flowing background animation */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 w-[200%] h-[200%] opacity-80 animate-flow-colors blur-3xl" />
-        <div className="absolute inset-0 w-[150%] h-[150%] opacity-60 animate-flow-colors blur-2xl" 
-             style={{ animationDelay: '-2s', animationDirection: 'reverse' }} />
-        <div className="absolute inset-0 w-[120%] h-[120%] opacity-40 animate-flow-colors blur-xl" 
-             style={{ animationDelay: '-4s' }} />
+        <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-brand-light/8 to-brand-medium/5 animate-flow-smooth" />
+        <div className="absolute inset-0 bg-gradient-to-tl from-brand-accent/3 via-transparent to-brand/4 animate-flow-smooth" 
+             style={{ animationDelay: '-3s' }} />
       </div>
       
       {/* Static decorative elements */}
