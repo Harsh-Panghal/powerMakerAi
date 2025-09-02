@@ -126,6 +126,8 @@ export function PowerMakerSidebar() {
       toast({
         title: "Chat renamed",
         description: "Chat title has been updated successfully.",
+        variant: "default",
+        className: "border-green-200 bg-green-50 text-green-900",
       });
     }
     setEditingChatId(null);
@@ -146,6 +148,7 @@ export function PowerMakerSidebar() {
       toast({
         title: "Chat deleted",
         description: "Chat has been removed successfully.",
+        variant: "destructive",
       });
       setDeletingChatId(null);
     }, 300);
