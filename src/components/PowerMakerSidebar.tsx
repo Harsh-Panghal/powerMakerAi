@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ChevronDown, MoreHorizontal, HelpCircle, Settings, Star, Upload, Trash2, Check, ArrowLeft, X, MessageSquare } from "lucide-react";
+import { Plus, ChevronDown, MoreHorizontal, HelpCircle, Settings, Star, Upload, Trash2, Check, ArrowLeft, X, MessageSquare, Pencil } from "lucide-react";
 import { CrmConnectionDetail } from "@/components/CrmConnectionDetail";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -23,6 +23,7 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { useChatStore } from "@/store/chatStore";
+import { useToast } from "@/hooks/use-toast";
 
 const recentChats = [
   "API Config Entity Design",
@@ -49,16 +50,21 @@ export function PowerMakerSidebar() {
   const [isCrmConnectionOpen, setIsCrmConnectionOpen] = useState(false);
   const [showConnectionForm, setShowConnectionForm] = useState(false);
   const [chatMenuOpen, setChatMenuOpen] = useState<number | null>(null);
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
   const [feedbackType, setFeedbackType] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [connectionList, setConnectionList] = useState(connections);
+  const editInputRef = useRef<HTMLInputElement>(null);
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Chat store integration
-  const { newChat, recentThreads, loadThread } = useChatStore();
+  const { newChat, recentThreads, loadThread, renameThread, deleteThread } = useChatStore();
 
   const handleLogoClick = () => {
     // Navigate to greeting page
@@ -107,6 +113,51 @@ export function PowerMakerSidebar() {
   const handleConnectionDelete = (id: number) => {
     setConnectionList(connections.filter(conn => conn.id !== id));
   };
+
+  const handleRenameChat = (threadId: string, currentTitle: string) => {
+    setEditingChatId(threadId);
+    setEditingTitle(currentTitle);
+    setChatMenuOpen(null);
+  };
+
+  const handleRenameConfirm = () => {
+    if (editingChatId && editingTitle.trim()) {
+      renameThread(editingChatId, editingTitle.trim());
+      toast({
+        title: "Chat renamed",
+        description: "Chat title has been updated successfully.",
+      });
+    }
+    setEditingChatId(null);
+    setEditingTitle("");
+  };
+
+  const handleRenameCancel = () => {
+    setEditingChatId(null);
+    setEditingTitle("");
+  };
+
+  const handleDeleteChat = (threadId: string) => {
+    setDeletingChatId(threadId);
+    setChatMenuOpen(null);
+    
+    setTimeout(() => {
+      deleteThread(threadId);
+      toast({
+        title: "Chat deleted",
+        description: "Chat has been removed successfully.",
+      });
+      setDeletingChatId(null);
+    }, 300);
+  };
+
+  // Focus input when editing starts
+  useEffect(() => {
+    if (editingChatId && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [editingChatId]);
 
   const renderStarRating = () => {
     return (
@@ -166,7 +217,12 @@ export function PowerMakerSidebar() {
               <SidebarMenu>
                 {recentThreads.length > 0 ? (
                   recentThreads.map((thread, index) => (
-                    <SidebarMenuItem key={thread.id}>
+                    <SidebarMenuItem 
+                      key={thread.id} 
+                      className={`transition-all duration-300 ${
+                        deletingChatId === thread.id ? 'opacity-0 translate-x-4 scale-95' : 'opacity-100 translate-x-0 scale-100'
+                      }`}
+                    >
                       <div
                         className="flex items-center justify-between px-4 py-1 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out"
                         onMouseEnter={() => setHoveredChat(index)}
@@ -174,49 +230,72 @@ export function PowerMakerSidebar() {
                       >
                         <SidebarMenuButton 
                           className="flex-1 justify-start p-0 h-auto cursor-pointer"
-                          onClick={() => handleChatClick(thread.id)}
+                          onClick={() => editingChatId !== thread.id ? handleChatClick(thread.id) : undefined}
                         >
                           <MessageSquare className="w-3 h-3 mr-2 text-muted-foreground flex-shrink-0" />
-                          <div className="flex flex-col items-start min-w-0">
-                            <span className="text-sm text-sidebar-foreground truncate">
-                              {thread.title}
-                            </span>
-                            <span className="text-xs text-muted-foreground truncate">
-                              {thread.messages.length} messages • {thread.createdAt.toLocaleDateString()}
-                            </span>
+                          <div className="flex flex-col items-start min-w-0 flex-1">
+                            {editingChatId === thread.id ? (
+                              <div className="flex items-center gap-1 w-full">
+                                <Input
+                                  ref={editInputRef}
+                                  value={editingTitle}
+                                  onChange={(e) => setEditingTitle(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleRenameConfirm();
+                                    if (e.key === 'Escape') handleRenameCancel();
+                                  }}
+                                  onBlur={handleRenameConfirm}
+                                  className="text-sm h-6 py-0 px-1 border-0 bg-transparent focus:ring-1 focus:ring-brand"
+                                  maxLength={50}
+                                />
+                              </div>
+                            ) : (
+                              <>
+                                <span className="text-sm text-sidebar-foreground truncate">
+                                  {thread.title}
+                                </span>
+                                <span className="text-xs text-muted-foreground truncate">
+                                  {thread.messages.length} messages • {thread.createdAt.toLocaleDateString()}
+                                </span>
+                              </>
+                            )}
                           </div>
                         </SidebarMenuButton>
-                        <Popover open={chatMenuOpen === index} onOpenChange={(open) => setChatMenuOpen(open ? index : null)}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
-                                hoveredChat === index ? 'opacity-100' : 'opacity-0'
-                              }`}
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-32 p-1" side="right" align="start">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-full justify-start text-xs"
-                              onClick={() => console.log("Rename chat:", thread.title)}
-                            >
-                              Rename
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
-                              onClick={() => console.log("Delete chat:", thread.title)}
-                            >
-                              Delete
-                            </Button>
-                          </PopoverContent>
-                        </Popover>
+                        {editingChatId !== thread.id && (
+                          <Popover open={chatMenuOpen === index} onOpenChange={(open) => setChatMenuOpen(open ? index : null)}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
+                                  hoveredChat === index ? 'opacity-100' : 'opacity-0'
+                                }`}
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-32 p-1" side="right" align="start">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full justify-start text-xs"
+                                onClick={() => handleRenameChat(thread.id, thread.title)}
+                              >
+                                <Pencil className="w-3 h-3 mr-2" />
+                                Rename
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
+                                onClick={() => handleDeleteChat(thread.id)}
+                              >
+                                <Trash2 className="w-3 h-3 mr-2" />
+                                Delete
+                              </Button>
+                            </PopoverContent>
+                          </Popover>
+                        )}
                       </div>
                     </SidebarMenuItem>
                   ))
