@@ -10,6 +10,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
+  // Form component with validation and error handling
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
