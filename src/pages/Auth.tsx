@@ -192,7 +192,7 @@ const Auth = () => {
         <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl shadow-2xl p-8">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="w-24 h-24 mx-auto mb-4  flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto mb-4  flex items-center justify-center">
               <img
                 src="./logo.svg"
                 className="w-full h-full object-contain"
