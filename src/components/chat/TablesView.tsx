@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EntityDetailsTable } from './EntityDetailsTable';
 import { AttributesTable } from './AttributesTable';
 import { RelationshipsTable } from './RelationshipsTable';
+import { useChatStore } from '@/store/chatStore';
 
 interface TablesViewProps {
   isOpen: boolean;
@@ -14,6 +15,25 @@ interface TablesViewProps {
 
 export function TablesView({ isOpen, onClose }: TablesViewProps) {
   const [activeTab, setActiveTab] = useState('entity');
+  const { addNotification } = useChatStore();
+
+  const handleStartCustomization = () => {
+    // Add notification about entity customization starting
+    const now = new Date();
+    const endTime = new Date(now.getTime() + 2 * 60 * 1000); // 2 minutes later
+    
+    addNotification({
+      type: "customization",
+      title: "Entity Customization Started",
+      startDate: now.toLocaleString(),
+      endDate: endTime.toLocaleString(),
+      plugin: "EntityCustomizer",
+      stage: "Initialize"
+    });
+    
+    // Close the tables modal
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -83,7 +103,11 @@ export function TablesView({ isOpen, onClose }: TablesViewProps) {
             {/* Footer */}
             <div className="p-6 border-t border-border bg-muted/20">
               <div className="flex justify-between items-center">
-                <Button variant="default" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button 
+                  variant="default" 
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={handleStartCustomization}
+                >
                   Start Customization
                 </Button>
                 <Button variant="outline" onClick={onClose} className="bg-background">

@@ -17,10 +17,24 @@ export interface ChatThread {
   model: string;
 }
 
+export interface Notification {
+  id: number;
+  type: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  plugin: string;
+  stage: string;
+}
+
 interface ChatStore {
   // UI State
   isPreviewOpen: boolean;
   previewContent: string;
+  
+  // Notification State
+  isNotificationOpen: boolean;
+  notifications: Notification[];
   
   // Chat State
   currentThread: ChatThread | null;
@@ -41,12 +55,49 @@ interface ChatStore {
   loadThread: (threadId: string) => void;
   renameThread: (threadId: string, newTitle: string) => void;
   deleteThread: (threadId: string) => void;
+  
+  // Notification Actions
+  openNotifications: () => void;
+  closeNotifications: () => void;
+  addNotification: (notification: Omit<Notification, 'id'>) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
   // Initial UI State
   isPreviewOpen: false,
   previewContent: '',
+  
+  // Initial Notification State
+  isNotificationOpen: false,
+  notifications: [
+    {
+      id: 1,
+      type: "trace",
+      title: "Plugin Execution Trace",
+      startDate: "2024-01-15 10:30",
+      endDate: "2024-01-15 10:35",
+      plugin: "ContactValidation",
+      stage: "PreOperation",
+    },
+    {
+      id: 2,
+      type: "activity",
+      title: "Entity Created Successfully",
+      startDate: "2024-01-15 09:45",
+      endDate: "2024-01-15 09:46",
+      plugin: "EntityCreation",
+      stage: "PostOperation",
+    },
+    {
+      id: 3,
+      type: "update",
+      title: "Configuration Updated",
+      startDate: "2024-01-15 08:20",
+      endDate: "2024-01-15 08:21",
+      plugin: "ConfigManager",
+      stage: "PreValidation",
+    },
+  ],
   
   // Initial Chat State
   currentThread: null,
@@ -273,5 +324,25 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     // Remove from recent threads
     const updatedRecentThreads = recentThreads.filter(thread => thread.id !== threadId);
     set({ recentThreads: updatedRecentThreads });
+  },
+  
+  // Notification Actions
+  openNotifications: () => {
+    set({ isNotificationOpen: true });
+  },
+  
+  closeNotifications: () => {
+    set({ isNotificationOpen: false });
+  },
+  
+  addNotification: (notification: Omit<Notification, 'id'>) => {
+    const notifications = get().notifications;
+    const newId = Math.max(...notifications.map(n => n.id), 0) + 1;
+    const newNotification = { ...notification, id: newId };
+    
+    set({ 
+      notifications: [newNotification, ...notifications],
+      isNotificationOpen: true 
+    });
   },
 }));

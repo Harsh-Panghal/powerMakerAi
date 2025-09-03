@@ -76,7 +76,7 @@ const modelOptions = [
 export function PowerMakerHeader() {
   const { toggleSidebar } = useSidebar();
   const navigate = useNavigate();
-  const { selectedModel, setModel } = useChatStore();
+  const { selectedModel, setModel, isNotificationOpen, notifications, openNotifications, closeNotifications } = useChatStore();
   const { toast } = useToast();
   
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -85,7 +85,6 @@ export function PowerMakerHeader() {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [notificationOpen, setNotificationOpen] = useState(false);
 
   // Check for demo user on component mount
   useEffect(() => {
@@ -98,37 +97,6 @@ export function PowerMakerHeader() {
       }
     }
   }, []);
-
-  // Mock notification data
-  const notifications = [
-    {
-      id: 1,
-      type: "trace",
-      title: "Plugin Execution Trace",
-      startDate: "2024-01-15 10:30",
-      endDate: "2024-01-15 10:35",
-      plugin: "ContactValidation",
-      stage: "PreOperation",
-    },
-    {
-      id: 2,
-      type: "activity",
-      title: "Entity Created Successfully",
-      startDate: "2024-01-15 09:45",
-      endDate: "2024-01-15 09:46",
-      plugin: "EntityCreation",
-      stage: "PostOperation",
-    },
-    {
-      id: 3,
-      type: "update",
-      title: "Configuration Updated",
-      startDate: "2024-01-15 08:20",
-      endDate: "2024-01-15 08:21",
-      plugin: "ConfigManager",
-      stage: "PreValidation",
-    },
-  ];
 
   const handleLogout = () => {
     localStorage.removeItem('demoUser');
@@ -233,7 +201,7 @@ export function PowerMakerHeader() {
           </div>
 
           {/* Notification Bell */}
-          <Sheet open={notificationOpen} onOpenChange={setNotificationOpen}>
+          <Sheet open={isNotificationOpen} onOpenChange={(open) => open ? openNotifications() : closeNotifications()}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm">
                 <Bell className="w-5 h-5" />
