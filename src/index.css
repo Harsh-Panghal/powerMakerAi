@@ -115,6 +115,17 @@
     @apply bg-background text-foreground;
   }
 }
+/* Firefox */
+.profile-dialog {
+  scrollbar-width: thin; /* reserve space */
+  scrollbar-color: transparent transparent; /* hidden */
+  transition: scrollbar-color 0.3s ease-in-out;
+}
+
+.profile-dialog:hover {
+  scrollbar-color: hsl(var(--brand) / 0.3) transparent; /* show on hover */
+}
+
 /* remove bluish bg on autofill */
 input:-webkit-autofill {
   -webkit-box-shadow: 0 0 0px 1000px white inset !important;
