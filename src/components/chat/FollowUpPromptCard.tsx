@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { ChevronRight } from "lucide-react";
 
 interface FollowUpPromptCardProps {
   title: string;
@@ -12,9 +13,12 @@ export function FollowUpPromptCard({ title, onClick }: FollowUpPromptCardProps) 
       onClick={onClick}
     >
       <CardContent className="px-3 py-2">
-        <p className="text-sm text-foreground leading-snug line-clamp-2 group-hover:text-primary/90 transition-colors">
-          {title}
-        </p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm text-foreground leading-snug line-clamp-2 group-hover:text-primary/90 transition-colors flex-1">
+            {title}
+          </p>
+          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary/70 transition-colors flex-shrink-0" />
+        </div>
       </CardContent>
     </Card>
   );
