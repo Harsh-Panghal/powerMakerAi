@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Sparkles, Plus, FileCode, Code, HelpCircle, Table2, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PromptCard } from '@/components/PromptCard';
 import { Message, useChatStore } from '@/store/chatStore';
 import { TablesView } from './TablesView';
 import { TraceLogFilters } from './TraceLogFilters';
@@ -13,29 +14,24 @@ interface AssistantActionsProps {
 
 const quickPrompts = [
   {
-    text: "Refine this",
+    text: "Create a new entity named 'API Configuration' with ownership type 'Organization' and a primary attribute called 'API Name' of type Text",
     icon: Sparkles,
-    variant: "outline" as const,
   },
   {
-    text: "Add columns",
+    text: "Add an attribute called 'API Endpoint URL' of type Text",
     icon: Plus,
-    variant: "outline" as const,
   },
   {
-    text: "Generate schema JSON",
+    text: "Add an attribute called 'Authentication Type' of type Picklist with options 'API Key' 'OAuth 2.0' 'Basic Authentication' and 'None'",
     icon: FileCode,
-    variant: "outline" as const,
   },
   {
-    text: "Show code sample",
+    text: "Add an attribute called 'Is Active' of type Boolean",
     icon: Code,
-    variant: "outline" as const,
   },
   {
-    text: "Explain step-by-step",
+    text: "Generate schema JSON for the complete API Configuration entity",
     icon: HelpCircle,
-    variant: "outline" as const,
   },
 ];
 
@@ -121,37 +117,35 @@ export function AssistantActions({ message }: AssistantActionsProps) {
           )}
         </div>
 
-      {/* Quick Prompts */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="flex flex-wrap gap-2"
-      >
-        {quickPrompts.map((prompt, index) => {
-          const IconComponent = prompt.icon;
-          return (
-            <motion.div
-              key={prompt.text}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5 + index * 0.1 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button
-                onClick={() => handleQuickPrompt(prompt.text)}
-                variant={prompt.variant}
-                size="sm"
-                className="h-8 text-xs bg-background hover:bg-muted border-border text-foreground hover:border-primary/20"
-              >
-                <IconComponent className="w-3 h-3 mr-1.5" />
-                {prompt.text}
-              </Button>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+        {/* Quick Prompts */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="space-y-2"
+        >
+          <h4 className="text-sm font-medium text-muted-foreground mb-3">Quick Prompts</h4>
+          <div className="grid gap-2">
+            {quickPrompts.map((prompt, index) => {
+              const IconComponent = prompt.icon;
+              return (
+                <motion.div
+                  key={prompt.text}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + index * 0.05 }}
+                  className="w-full"
+                >
+                  <PromptCard
+                    title={prompt.text}
+                    icon={IconComponent}
+                    onClick={() => handleQuickPrompt(prompt.text)}
+                  />
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
       </div>
       
       {/* Conditional Modals */}
