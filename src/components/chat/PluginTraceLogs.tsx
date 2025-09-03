@@ -105,6 +105,8 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
                     <TableHead>Duration</TableHead>
                     <TableHead>Plugin Name</TableHead>
                     <TableHead>Step Name</TableHead>
+                    <TableHead>Correlation ID</TableHead>
+                    <TableHead>Type Name</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
