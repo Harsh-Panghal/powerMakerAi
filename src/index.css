@@ -133,10 +133,16 @@ input:-webkit-autofill {
   -webkit-text-fill-color: #082343 !important;
 }
 
-/* Global scrollbar styles - Slim and themed */
+/* Global scrollbar styles - Hidden by default, show on hover */
 * {
   /* Firefox */
   scrollbar-width: thin;
+  scrollbar-color: transparent transparent; /* hidden by default */
+  transition: scrollbar-color 0.3s ease-in-out;
+}
+
+*:hover {
+  /* Firefox - show on hover */
   scrollbar-color: hsl(var(--brand) / 0.3) transparent;
 }
 
@@ -151,13 +157,17 @@ input:-webkit-autofill {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: hsl(var(--brand) / 0.3);
+  background: transparent; /* hidden by default */
   border-radius: 3px;
   transition: background 0.3s ease;
 }
 
+*:hover::-webkit-scrollbar-thumb {
+  background: hsl(var(--brand) / 0.3); /* show on hover */
+}
+
 *::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--brand) / 0.5);
+  background: hsl(var(--brand) / 0.5); /* darker when hovering thumb itself */
   cursor: pointer;
 }
 
