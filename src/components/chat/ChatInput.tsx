@@ -63,13 +63,13 @@ export function ChatInput() {
             value={message}
             onChange={(e) => setMessage(e.target.value.slice(0, maxLength))}
             onKeyDown={handleKeyDown}
-            className="w-full min-h-[80px] sm:min-h-[100px] pr-4 sm:pr-36 pb-12 sm:pb-14 resize-none border-brand-light focus:ring-brand-light text-sm sm:text-base align-top"
+            className="w-full min-h-[80px] sm:min-h-[100px] pr-28 sm:pr-32 pb-12 sm:pb-14 resize-none border-brand-light focus:ring-brand-light text-sm sm:text-base align-top"
           />
 
           {/* Bottom Controls - Character Counter & Send Button */}
           <div className="absolute right-2 sm:right-3 bottom-2 sm:bottom-3 flex items-center space-x-2 sm:space-x-3">
             {/* Character Counter */}
-            <span className="text-xs text-muted-foreground hidden sm:inline">
+            <span className="text-xs text-muted-foreground inline">
               {message.length}/{maxLength}
             </span>
 

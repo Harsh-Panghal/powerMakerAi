@@ -3,87 +3,109 @@ import { useNavigate } from "react-router-dom";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PromptCard } from "@/components/PromptCard";
-import { Database, Calendar, Key, Settings, Search, Clock, AlertTriangle, Timer, List, DollarSign, UserPlus, FileText } from "lucide-react";
+import {
+  Database,
+  Calendar,
+  Key,
+  Settings,
+  Search,
+  Clock,
+  AlertTriangle,
+  Timer,
+  List,
+  DollarSign,
+  UserPlus,
+  FileText,
+} from "lucide-react";
 import { useChatStore } from "@/store/chatStore";
 
 const promptSuggestionsByModel = {
   "model-0-1": [
     {
-      title: "Create a custom entity to store API configuration details and suggest relevant columns.",
-      icon: Database
+      title:
+        "Create a custom entity to store API configuration details and suggest relevant columns.",
+      icon: Database,
     },
     {
       title: "Add a boolean and a date field to the opportunity entity.",
-      icon: Calendar
+      icon: Calendar,
     },
     {
-      title: "I want to store 3rd party integration keys — create a config entity for that.!",
-      icon: Key
+      title:
+        "I want to store 3rd party integration keys — create a config entity for that.!",
+      icon: Key,
     },
     {
-      title: "Create a settings entity for storing SMTP details with column suggestions.",
-      icon: Settings
-    }
+      title:
+        "Create a settings entity for storing SMTP details with column suggestions.",
+      icon: Settings,
+    },
   ],
   "model-0-2": [
     {
       title: "Show all plugin trace logs for the account entity.",
-      icon: Search
+      icon: Search,
     },
     {
       title: "Filter trace logs generated in the last 1 hour.",
-      icon: Clock
+      icon: Clock,
     },
     {
       title: "Find plugin logs that contain a NullReferenceException.",
-      icon: AlertTriangle
+      icon: AlertTriangle,
     },
     {
       title: "List trace logs where execution time exceeded 60,000 ms.",
-      icon: Timer
-    }
+      icon: Timer,
+    },
   ],
   "model-0-3": [
     {
       title: "List all attributes of the Account entity..",
-      icon: List
+      icon: List,
     },
     {
       title: "Show opportunities with Estimated Revenue over 1 lakh.",
-      icon: DollarSign
+      icon: DollarSign,
     },
     {
       title: "Create a contact named John Doe.",
-      icon: UserPlus
+      icon: UserPlus,
     },
     {
       title: "Get all cases with 'refund' in the title.",
-      icon: FileText
-    }
-  ]
+      icon: FileText,
+    },
+  ],
 };
 
 const modelOptions = [
-  { 
-    value: "model-0-1", 
-    title: "Model 0.1", 
+  {
+    value: "model-0-1",
+    title: "Model 0.1",
     subtitle: "CRM Customization",
-    icon: Settings
+    icon: Settings,
   },
-  { 
-    value: "model-0-2", 
-    title: "Model 0.2", 
+  {
+    value: "model-0-2",
+    title: "Model 0.2",
     subtitle: "Plugin Tracing",
-    icon: Database
+    icon: Database,
   },
-  { 
-    value: "model-0-3", 
-    title: "Model 0.3", 
+  {
+    value: "model-0-3",
+    title: "Model 0.3",
     subtitle: "CRM Expert",
-    icon: Key
-  }
+    icon: Key,
+  },
 ];
 
 export function GreetingContainer() {
@@ -93,7 +115,11 @@ export function GreetingContainer() {
   const maxLength = 1000;
 
   const currentPromptSuggestions = useMemo(() => {
-    return promptSuggestionsByModel[selectedModel as keyof typeof promptSuggestionsByModel] || promptSuggestionsByModel["model-0-1"];
+    return (
+      promptSuggestionsByModel[
+        selectedModel as keyof typeof promptSuggestionsByModel
+      ] || promptSuggestionsByModel["model-0-1"]
+    );
   }, [selectedModel]);
 
   const handlePromptCardClick = (suggestion: string) => {
@@ -104,12 +130,12 @@ export function GreetingContainer() {
     if (prompt.trim()) {
       startChat(prompt.trim());
       setPrompt("");
-      navigate('/chat');
+      navigate("/chat");
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -122,9 +148,7 @@ export function GreetingContainer() {
         <div className="max-w-4xl w-full text-center space-y-8">
           {/* Greeting */}
           <div className="space-y-2">
-            <h1 className="text-4xl font-semibold text-brand">
-              Hello, Harsh!
-            </h1>
+            <h1 className="text-4xl font-semibold text-brand">Hello, Harsh!</h1>
             <h2 className="text-2xl text-brand">
               What would you like to make?
             </h2>
@@ -157,7 +181,7 @@ export function GreetingContainer() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value.slice(0, maxLength))}
               onKeyDown={handleKeyDown}
-              className="w-full min-h-[100px] pr-36 pb-14 resize-none border-brand-light focus:ring-brand-light align-top"
+              className="w-full min-h-[100px] pr-28 lg:pr-30 pb-14 resize-none border-brand-light focus:ring-brand-light leading-[1.4] align-top"
             />
 
             {/* Bottom Controls - Character Counter & Send Button */}
