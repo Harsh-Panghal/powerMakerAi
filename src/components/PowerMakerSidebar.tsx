@@ -64,7 +64,7 @@ export function PowerMakerSidebar() {
   const { toast } = useToast();
   
   // Chat store integration
-  const { newChat, recentThreads, loadThread, renameThread, deleteThread } = useChatStore();
+  const { newChat, recentThreads, loadThread, renameThread, deleteThread, setModel } = useChatStore();
 
   const handleLogoClick = () => {
     // Navigate to greeting page
