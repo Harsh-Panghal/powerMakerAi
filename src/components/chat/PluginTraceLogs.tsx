@@ -110,7 +110,7 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
                 <TableBody>
                   {mockData.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No trace logs found. Apply filters and click "Show Trace Logs" to view data.
                       </TableCell>
                     </TableRow>
