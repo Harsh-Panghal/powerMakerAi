@@ -39,6 +39,8 @@ interface ChatStore {
   finishStreaming: () => void;
   saveToRecentThreads: () => void;
   loadThread: (threadId: string) => void;
+  renameThread: (threadId: string, newTitle: string) => void;
+  deleteThread: (threadId: string) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -238,5 +240,38 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         currentThread: threadToLoad 
       });
     }
+  },
+  
+  renameThread: (threadId: string, newTitle: string) => {
+    const currentThread = get().currentThread;
+    const recentThreads = get().recentThreads;
+    
+    // Update current thread if it matches
+    if (currentThread && currentThread.id === threadId) {
+      set({ 
+        currentThread: { ...currentThread, title: newTitle }
+      });
+    }
+    
+    // Update in recent threads
+    const updatedRecentThreads = recentThreads.map(thread => 
+      thread.id === threadId ? { ...thread, title: newTitle } : thread
+    );
+    
+    set({ recentThreads: updatedRecentThreads });
+  },
+  
+  deleteThread: (threadId: string) => {
+    const currentThread = get().currentThread;
+    const recentThreads = get().recentThreads;
+    
+    // If current thread is being deleted, clear it
+    if (currentThread && currentThread.id === threadId) {
+      set({ currentThread: null });
+    }
+    
+    // Remove from recent threads
+    const updatedRecentThreads = recentThreads.filter(thread => thread.id !== threadId);
+    set({ recentThreads: updatedRecentThreads });
   },
 }));
