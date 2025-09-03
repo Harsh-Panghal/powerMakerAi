@@ -63,7 +63,7 @@ export function ChatInput() {
             value={message}
             onChange={(e) => setMessage(e.target.value.slice(0, maxLength))}
             onKeyDown={handleKeyDown}
-            className="min-h-[80px] sm:min-h-[100px] pr-4 sm:pr-36 pb-12 sm:pb-14 resize-none border-brand-light focus:ring-brand-light text-sm sm:text-base"
+            className="w-full min-h-[80px] sm:min-h-[100px] pr-4 sm:pr-36 pb-12 sm:pb-14 resize-none border-brand-light focus:ring-brand-light text-sm sm:text-base align-top"
           />
 
           {/* Bottom Controls - Character Counter & Send Button */}

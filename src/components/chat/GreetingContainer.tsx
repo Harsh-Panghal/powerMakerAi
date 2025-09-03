@@ -157,7 +157,7 @@ export function GreetingContainer() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value.slice(0, maxLength))}
               onKeyDown={handleKeyDown}
-              className="min-h-[100px] pr-36 pb-14 resize-none border-brand-light focus:ring-brand-light"
+              className="w-full min-h-[100px] pr-36 pb-14 resize-none border-brand-light focus:ring-brand-light align-top"
             />
 
             {/* Bottom Controls - Character Counter & Send Button */}
