@@ -12,6 +12,7 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ message, isLast }: MessageBubbleProps) {
   const [showTimestamp, setShowTimestamp] = useState(false);
+  const { currentThread } = useChatStore();
 
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -23,6 +24,17 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
 
   const isUser = message.type === 'user';
   const isStreaming = message.isStreaming && !message.content;
+
+  // Check if this is the last assistant message in the thread
+  const shouldShowActions = () => {
+    if (isUser || message.isStreaming || !message.content) return false;
+    
+    const messages = currentThread?.messages || [];
+    const lastMessage = messages[messages.length - 1];
+    
+    // Only show actions if this is the very last message and it's an assistant message
+    return lastMessage?.id === message.id && lastMessage.type === 'assistant';
+  };
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full px-2 sm:px-4`}>
@@ -123,7 +135,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
           </motion.div>
 
           {/* Assistant Actions */}
-          {!isUser && !message.isStreaming && message.content && (
+          {shouldShowActions() && (
             <div className="mt-3">
               <AssistantActions message={message} />
             </div>
