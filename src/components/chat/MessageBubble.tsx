@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Bot } from 'lucide-react';
-import { Message } from '@/store/chatStore';
+import { Message, useChatStore } from '@/store/chatStore';
 import { AssistantActions } from './AssistantActions';
 import { Skeleton } from '@/components/ui/skeleton';
 
