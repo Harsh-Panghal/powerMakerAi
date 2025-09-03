@@ -138,7 +138,6 @@ export function AssistantActions({ message }: AssistantActionsProps) {
                 >
                   <FollowUpPromptCard
                     title={prompt.text}
-                    icon={IconComponent}
                     onClick={() => handleQuickPrompt(prompt.text)}
                   />
                 </motion.div>
