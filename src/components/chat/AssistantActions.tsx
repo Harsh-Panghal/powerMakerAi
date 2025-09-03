@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Sparkles, Plus, FileCode, Code, HelpCircle, Table2, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PromptCard } from '@/components/PromptCard';
+import { FollowUpPromptCard } from './FollowUpPromptCard';
 import { Message, useChatStore } from '@/store/chatStore';
 import { TablesView } from './TablesView';
 import { TraceLogFilters } from './TraceLogFilters';
@@ -136,7 +136,7 @@ export function AssistantActions({ message }: AssistantActionsProps) {
                   transition={{ delay: 0.5 + index * 0.05 }}
                   className="w-full"
                 >
-                  <PromptCard
+                  <FollowUpPromptCard
                     title={prompt.text}
                     icon={IconComponent}
                     onClick={() => handleQuickPrompt(prompt.text)}
