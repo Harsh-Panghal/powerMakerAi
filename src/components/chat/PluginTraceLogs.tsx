@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { X, Search, Download, ArrowLeft } from 'lucide-react';
+import { TraceDetailsDrawer } from './TraceDetailsDrawer';
 
 interface PluginTraceLogsProps {
   isOpen: boolean;
@@ -15,11 +16,74 @@ interface PluginTraceLogsProps {
 export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProps) {
   const [groupBy, setGroupBy] = useState('correlation');
   const [recordsPerPage, setRecordsPerPage] = useState('5');
+  const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
   if (!isOpen) return null;
 
   // Mock data for demonstration
-  const mockData = [];
+  const mockData = [
+    {
+      id: 1,
+      createdOn: '2024-01-15 10:30:45',
+      executionStart: '2024-01-15 10:30:46',
+      duration: '00:00:02.345',
+      pluginName: 'Lorem Ipsum Is Simply Dummy Text Of The Printing And',
+      stepName: 'Lorem Ipsum is',
+      correlationId: 'corr-12345-abc',
+      typeName: 'ProcessingStep'
+    },
+    {
+      id: 2,
+      createdOn: '2024-01-15 10:32:15',
+      executionStart: '2024-01-15 10:32:16',
+      duration: '00:00:01.234',
+      pluginName: 'Lorem Ipsum Is Simply Dummy Text Of The Printing And',
+      stepName: 'Lorem Ipsum is',
+      correlationId: 'corr-12345-abc',
+      typeName: 'ValidationStep'
+    },
+    {
+      id: 3,
+      createdOn: '2024-01-15 10:34:22',
+      executionStart: '2024-01-15 10:34:23',
+      duration: '00:00:03.567',
+      pluginName: 'Lorem Ipsum Is Simply Dummy Text Of The Printing And',
+      stepName: 'Lorem Ipsum is',
+      correlationId: 'corr-12345-abc',
+      typeName: 'CompletionStep'
+    },
+    {
+      id: 4,
+      createdOn: '2024-01-15 10:36:10',
+      executionStart: '2024-01-15 10:36:11',
+      duration: '00:00:01.890',
+      pluginName: 'Lorem Ipsum Is Simply Dummy Text Of The Printing And',
+      stepName: 'Lorem Ipsum is',
+      correlationId: 'corr-67890-def',
+      typeName: 'ProcessingStep'
+    },
+    {
+      id: 5,
+      createdOn: '2024-01-15 10:38:05',
+      executionStart: '2024-01-15 10:38:06',
+      duration: '00:00:02.123',
+      pluginName: 'Lorem Ipsum Is Simply Dummy Text Of The Printing And',
+      stepName: 'Lorem Ipsum is',
+      correlationId: 'corr-67890-def',
+      typeName: 'ValidationStep'
+    }
+  ];
+
+  const handleViewDetails = (record: any) => {
+    setSelectedRecord(record);
+    setIsDetailsDrawerOpen(true);
+  };
+
+  const handleCloseDetailsDrawer = () => {
+    setIsDetailsDrawerOpen(false);
+    setSelectedRecord(null);
+  };
 
   return (
     <motion.div
@@ -113,6 +177,31 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {mockData.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell className="text-xs sm:text-sm">{record.createdOn}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{record.executionStart}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{record.duration}</TableCell>
+                      <TableCell className="text-xs sm:text-sm max-w-[200px] truncate" title={record.pluginName}>
+                        {record.pluginName}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate">{record.stepName}</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewDetails(record)}
+                            className="text-xs h-7 px-2 whitespace-nowrap"
+                          >
+                            View Details
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">{record.correlationId}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{record.typeName}</TableCell>
+                    </TableRow>
+                  ))}
                   {mockData.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-6 sm:py-8 text-muted-foreground text-xs sm:text-sm">
@@ -127,7 +216,7 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="text-xs sm:text-sm text-muted-foreground">
-                Page 1 of 0
+                Page 1 of 1 (Showing {mockData.length} records)
               </div>
               <div className="flex flex-col xs:flex-row items-start xs:items-center gap-4 w-full sm:w-auto">
                 <div className="flex items-center gap-2">
@@ -157,6 +246,13 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Trace Details Drawer */}
+      <TraceDetailsDrawer
+        isOpen={isDetailsDrawerOpen}
+        onClose={handleCloseDetailsDrawer}
+        selectedRecord={selectedRecord}
+      />
     </motion.div>
   );
 }
