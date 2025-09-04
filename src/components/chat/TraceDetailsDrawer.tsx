@@ -45,14 +45,6 @@ export function TraceDetailsDrawer({ isOpen, onClose, selectedRecord }: TraceDet
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <SheetTitle className="text-lg font-semibold">Details</SheetTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </SheetHeader>
 
         <Tabs defaultValue="message" className="h-full">
