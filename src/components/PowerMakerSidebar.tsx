@@ -151,6 +151,7 @@ export function PowerMakerSidebar() {
         variant: "destructive",
       });
       setDeletingChatId(null);
+      navigate('/');
     }, 300);
   };
 
