@@ -45,14 +45,14 @@ const connections = [
 
 export function PowerMakerSidebar() {
   const [showAllChats, setShowAllChats] = useState(false);
-  const [hoveredChat, setHoveredChat] = useState<number | null>(null);
+  const [hoveredChat, setHoveredChat] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isCleanChatOpen, setIsCleanChatOpen] = useState(false);
   const [isCrmConnectionOpen, setIsCrmConnectionOpen] = useState(false);
   const [showConnectionForm, setShowConnectionForm] = useState(false);
-  const [chatMenuOpen, setChatMenuOpen] = useState<number | null>(null);
+  const [chatMenuOpen, setChatMenuOpen] = useState<string | null>(null);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
@@ -236,7 +236,7 @@ export function PowerMakerSidebar() {
                     >
                       <div
                         className="flex items-center justify-between px-4 py-1 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out"
-                        onMouseEnter={() => setHoveredChat(index)}
+                        onMouseEnter={() => setHoveredChat(thread.id)}
                         onMouseLeave={() => setHoveredChat(null)}
                       >
                         <SidebarMenuButton 
@@ -273,13 +273,13 @@ export function PowerMakerSidebar() {
                           </div>
                         </SidebarMenuButton>
                         {editingChatId !== thread.id && (
-                          <Popover open={chatMenuOpen === index} onOpenChange={(open) => setChatMenuOpen(open ? index : null)}>
+                          <Popover open={chatMenuOpen === thread.id} onOpenChange={(open) => setChatMenuOpen(open ? thread.id : null)}>
                             <PopoverTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
-                                  hoveredChat === index || isMobile ? 'opacity-100' : 'opacity-0'
+                                  hoveredChat === thread.id || isMobile ? 'opacity-100' : 'opacity-0'
                                 }`}
                               >
                                 <MoreHorizontal className="w-4 h-4" />
