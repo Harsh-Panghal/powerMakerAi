@@ -38,7 +38,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full px-2 sm:px-4`}>
-      <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start gap-2 sm:gap-3 max-w-[95%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%]`}>
+      <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] md:max-w-[75%] lg:max-w-[70%]`}>
         {/* Avatar */}
         <div className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
           isUser 
@@ -57,7 +57,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
           <motion.div
             onHoverStart={() => setShowTimestamp(true)}
             onHoverEnd={() => setShowTimestamp(false)}
-            className={`relative rounded-2xl px-3 py-2 sm:px-4 sm:py-3 break-words word-wrap overflow-wrap-anywhere ${
+            className={`relative rounded-2xl px-3 py-2 sm:px-4 sm:py-3 break-words hyphens-auto overflow-hidden ${
               isUser
                 ? 'bg-primary text-primary-foreground ml-2 sm:ml-4'
                 : 'bg-muted text-foreground mr-2 sm:mr-4'
@@ -72,7 +72,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
               </div>
             ) : (
               /* Message Content */
-              <div className="prose prose-sm max-w-none dark:prose-invert text-sm sm:text-base">
+              <div className="prose prose-sm max-w-full dark:prose-invert text-sm sm:text-base overflow-hidden">
                 {message.content.split('\n').map((line, index) => {
                   // Handle table formatting
                   if (line.includes('|') && line.includes('---')) {
@@ -81,12 +81,14 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                   if (line.includes('|')) {
                     const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
                     return (
-                      <div key={index} className="flex flex-col sm:flex-row border-b border-border/20 py-1 gap-1 sm:gap-0">
-                        {cells.map((cell, cellIndex) => (
-                          <div key={cellIndex} className={`flex-1 px-1 sm:px-2 text-xs sm:text-sm break-words ${cellIndex === 0 ? 'font-medium' : ''}`}>
-                            {cell}
-                          </div>
-                        ))}
+                      <div key={index} className="w-full overflow-x-auto">
+                        <div className="flex flex-col sm:flex-row border-b border-border/20 py-1 gap-1 sm:gap-0 min-w-0">
+                          {cells.map((cell, cellIndex) => (
+                            <div key={cellIndex} className={`flex-1 px-1 sm:px-2 text-xs sm:text-sm break-words overflow-hidden text-ellipsis ${cellIndex === 0 ? 'font-medium' : ''}`}>
+                              {cell}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     );
                   }
@@ -95,7 +97,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                   if (line.includes('**')) {
                     const parts = line.split('**');
                     return (
-                      <p key={index} className="mb-2 break-words">
+                      <p key={index} className="mb-2 break-words overflow-wrap-anywhere">
                         {parts.map((part, partIndex) => 
                           partIndex % 2 === 1 ? 
                             <strong key={partIndex}>{part}</strong> : 
@@ -106,7 +108,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                   }
                   
                   // Regular text
-                  return line ? <p key={index} className="mb-2 break-words">{line}</p> : <br key={index} />;
+                  return line ? <p key={index} className="mb-2 break-words overflow-wrap-anywhere">{line}</p> : <br key={index} />;
                 })}
               </div>
             )}
