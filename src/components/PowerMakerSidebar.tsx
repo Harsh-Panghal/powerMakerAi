@@ -240,11 +240,11 @@ export function PowerMakerSidebar() {
                         onMouseLeave={() => setHoveredChat(null)}
                       >
                         <SidebarMenuButton 
-                          className="flex-1 justify-start p-0 h-auto cursor-pointer"
+                          className="flex-1 justify-start p-0 h-auto cursor-pointer min-w-0 pr-2"
                           onClick={() => editingChatId !== thread.id ? handleChatClick(thread.id) : undefined}
                         >
                           <MessageSquare className="w-3 h-3 mr-2 text-muted-foreground flex-shrink-0" />
-                          <div className="flex flex-col items-start min-w-0 flex-1">
+                          <div className="flex flex-col items-start min-w-0 flex-1 overflow-hidden">
                             {editingChatId === thread.id ? (
                               <div className="flex items-center gap-1 w-full">
                                 <Input
@@ -261,26 +261,26 @@ export function PowerMakerSidebar() {
                                 />
                               </div>
                             ) : (
-                              <>
-                                <span className="text-sm text-sidebar-foreground truncate">
-                                  {thread.title}
-                                </span>
-                                <span className="text-xs text-muted-foreground truncate">
-                                  {thread.messages.length} messages • {thread.createdAt.toLocaleDateString()}
-                                </span>
-                              </>
+                               <>
+                                 <span className="text-sm text-sidebar-foreground truncate w-full">
+                                   {thread.title}
+                                 </span>
+                                 <span className="text-xs text-muted-foreground truncate w-full">
+                                   {thread.messages.length} messages • {thread.createdAt.toLocaleDateString()}
+                                 </span>
+                               </>
                             )}
                           </div>
                         </SidebarMenuButton>
                         {editingChatId !== thread.id && (
                           <Popover open={chatMenuOpen === thread.id} onOpenChange={(open) => setChatMenuOpen(open ? thread.id : null)}>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
-                                  hoveredChat === thread.id || isMobile ? 'opacity-100' : 'opacity-0'
-                                }`}
+                             <PopoverTrigger asChild>
+                               <Button
+                                 variant="ghost"
+                                 size="sm"
+                                 className={`w-6 h-6 p-0 flex-shrink-0 transition-opacity duration-200 ease-in-out ${
+                                   hoveredChat === thread.id || isMobile ? 'opacity-100' : 'opacity-0'
+                                 }`}
                               >
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
