@@ -23,6 +23,7 @@ import {
   SidebarMenuButton,
   useSidebar
 } from "@/components/ui/sidebar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatStore } from "@/store/chatStore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -199,9 +200,9 @@ export function PowerMakerSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="flex-1 overflow-y-auto ">
-        {/* New Chat Button */}
-        <div className={`p-4 ${isCollapsed ? 'px-2' : ''}`}>
+      <SidebarContent className="flex-1 flex flex-col">
+        {/* New Chat Button - Fixed at top */}
+        <div className={`p-4 ${isCollapsed ? 'px-2' : ''} flex-shrink-0`}>
           <Button 
             className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-center'} bg-transparent border border-border hover:bg-sidebar-accent text-brand shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out`}
             variant="outline"
@@ -213,16 +214,20 @@ export function PowerMakerSidebar() {
           </Button>
         </div>
 
-        {/* Recent Chats */}
+        {/* Recent Chats - Scrollable area */}
         {!isCollapsed && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="px-4 text-sm font-medium text-muted-foreground">
-              Recent
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {recentThreads.length > 0 ? (
-                  recentThreads.map((thread, index) => (
+          <div className="flex-1 min-h-0">
+            <SidebarGroup>
+              <SidebarGroupLabel className="px-4 text-sm font-medium text-muted-foreground">
+                Recent
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <ScrollArea className="h-full">
+                  <SidebarMenu>
+                    {recentThreads.length > 0 ? (
+                      (() => {
+                        const visibleChats = showAllChats ? recentThreads : recentThreads.slice(0, 5);
+                        return visibleChats.map((thread, index) => (
                     <SidebarMenuItem 
                       key={thread.id} 
                       className={`transition-all duration-300 ${
@@ -310,30 +315,34 @@ export function PowerMakerSidebar() {
                           </Popover>
                         )}
                       </div>
-                    </SidebarMenuItem>
-                  ))
-                ) : (
-                  <div className="px-4 py-2 text-sm text-muted-foreground">
-                    No recent conversations
+                        </SidebarMenuItem>
+                        ));
+                      })()
+                    ) : (
+                      <div className="px-4 py-2 text-sm text-muted-foreground">
+                        No recent conversations
+                      </div>
+                    )}
+                  </SidebarMenu>
+                </ScrollArea>
+                
+                {/* More/Less button */}
+                {recentThreads.length > 5 && (
+                  <div className="px-4 py-2 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-brand hover:text-brand-accent flex items-center transition-all duration-200"
+                      onClick={() => setShowAllChats(!showAllChats)}
+                    >
+                      <ChevronDown className={`w-4 h-4 mr-1 transition-transform duration-200 ${showAllChats ? 'rotate-180' : ''}`} />
+                      {showAllChats ? 'Less' : `More (${recentThreads.length - 5})`}
+                    </Button>
                   </div>
                 )}
-              </SidebarMenu>
-            </SidebarGroupContent>
-
-            {!showAllChats && (
-              <div className="px-4 py-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-brand hover:text-brand-accent flex items-center"
-                  onClick={() => setShowAllChats(true)}
-                >
-                  <ChevronDown className="w-4 h-4 mr-0" />
-                  More
-                </Button>
-              </div>
-            )}
-          </SidebarGroup>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </div>
         )}
       </SidebarContent>
 
