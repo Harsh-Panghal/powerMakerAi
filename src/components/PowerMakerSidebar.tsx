@@ -235,12 +235,12 @@ export function PowerMakerSidebar() {
                       }`}
                     >
                       <div
-                        className="flex items-center justify-between px-4 py-1 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out"
+                        className="flex items-center px-4 py-1 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out"
                         onMouseEnter={() => setHoveredChat(thread.id)}
                         onMouseLeave={() => setHoveredChat(null)}
                       >
                         <SidebarMenuButton 
-                          className="flex-1 justify-start p-0 h-auto cursor-pointer min-w-0 pr-2"
+                          className="flex-1 justify-start p-0 h-auto cursor-pointer min-w-0 overflow-hidden"
                           onClick={() => editingChatId !== thread.id ? handleChatClick(thread.id) : undefined}
                         >
                           <MessageSquare className="w-3 h-3 mr-2 text-muted-foreground flex-shrink-0" />
@@ -273,49 +273,51 @@ export function PowerMakerSidebar() {
                           </div>
                         </SidebarMenuButton>
                         {editingChatId !== thread.id && (
-                          <Popover open={chatMenuOpen === thread.id} onOpenChange={(open) => setChatMenuOpen(open ? thread.id : null)}>
-                             <PopoverTrigger asChild>
-                               <Button
-                                 variant="ghost"
-                                 size="sm"
-                                 className={`w-6 h-6 p-0 flex-shrink-0 transition-opacity duration-200 ease-in-out ${
-                                   hoveredChat === thread.id || isMobile ? 'opacity-100' : 'opacity-0'
-                                 }`}
+                          <div className="ml-2 flex-shrink-0">
+                            <Popover open={chatMenuOpen === thread.id} onOpenChange={(open) => setChatMenuOpen(open ? thread.id : null)}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
+                                    hoveredChat === thread.id || isMobile ? 'opacity-100' : 'opacity-0'
+                                  }`}
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent 
+                                className="w-32 p-1 z-50" 
+                                side="right" 
+                                align="start"
+                                sideOffset={3}
+                                avoidCollisions={true}
+                                alignOffset={10}
                               >
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent 
-                              className="w-32 p-1 z-50" 
-                              side="right" 
-                              align="start"
-                              sideOffset={3}
-                              avoidCollisions={true}
-                              alignOffset={10}
-                            >
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="w-full justify-start text-xs"
-                                onClick={() => handleRenameChat(thread.id, thread.title)}
-                              >
-                                <Pencil className="w-3 h-3 mr-2" />
-                                Rename
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
-                                onClick={() => handleDeleteChat(thread.id)}
-                              >
-                                <Trash2 className="w-3 h-3 mr-2" />
-                                Delete
-                              </Button>
-                            </PopoverContent>
-                          </Popover>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start text-xs"
+                                  onClick={() => handleRenameChat(thread.id, thread.title)}
+                                >
+                                  <Pencil className="w-3 h-3 mr-2" />
+                                  Rename
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
+                                  onClick={() => handleDeleteChat(thread.id)}
+                                >
+                                  <Trash2 className="w-3 h-3 mr-2" />
+                                  Delete
+                                </Button>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
                         )}
                       </div>
-                        </SidebarMenuItem>
+                    </SidebarMenuItem>
                         ));
                       })()
                     ) : (
