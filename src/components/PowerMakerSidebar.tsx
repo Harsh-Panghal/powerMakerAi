@@ -23,7 +23,6 @@ import {
   SidebarMenuButton,
   useSidebar
 } from "@/components/ui/sidebar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatStore } from "@/store/chatStore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -45,14 +44,14 @@ const connections = [
 
 export function PowerMakerSidebar() {
   const [showAllChats, setShowAllChats] = useState(false);
-  const [hoveredChat, setHoveredChat] = useState<string | null>(null);
+  const [hoveredChat, setHoveredChat] = useState<number | null>(null);
   const isMobile = useIsMobile();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isCleanChatOpen, setIsCleanChatOpen] = useState(false);
   const [isCrmConnectionOpen, setIsCrmConnectionOpen] = useState(false);
   const [showConnectionForm, setShowConnectionForm] = useState(false);
-  const [chatMenuOpen, setChatMenuOpen] = useState<string | null>(null);
+  const [chatMenuOpen, setChatMenuOpen] = useState<number | null>(null);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
@@ -200,9 +199,9 @@ export function PowerMakerSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="flex-1 flex flex-col">
-        {/* New Chat Button - Fixed at top */}
-        <div className={`p-4 ${isCollapsed ? 'px-2' : ''} flex-shrink-0`}>
+      <SidebarContent className="flex-1 overflow-y-auto ">
+        {/* New Chat Button */}
+        <div className={`p-4 ${isCollapsed ? 'px-2' : ''}`}>
           <Button 
             className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-center'} bg-transparent border border-border hover:bg-sidebar-accent text-brand shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out`}
             variant="outline"
@@ -214,20 +213,16 @@ export function PowerMakerSidebar() {
           </Button>
         </div>
 
-        {/* Recent Chats - Scrollable area */}
+        {/* Recent Chats */}
         {!isCollapsed && (
-          <div className="flex-1 min-h-0">
-            <SidebarGroup>
-              <SidebarGroupLabel className="px-4 text-sm font-medium text-muted-foreground">
-                Recent
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <ScrollArea className="h-full">
-                  <SidebarMenu>
-                    {recentThreads.length > 0 ? (
-                      (() => {
-                        const visibleChats = showAllChats ? recentThreads : recentThreads.slice(0, 5);
-                        return visibleChats.map((thread, index) => (
+          <SidebarGroup>
+            <SidebarGroupLabel className="px-4 text-sm font-medium text-muted-foreground">
+              Recent
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {recentThreads.length > 0 ? (
+                  recentThreads.map((thread, index) => (
                     <SidebarMenuItem 
                       key={thread.id} 
                       className={`transition-all duration-300 ${
@@ -235,16 +230,16 @@ export function PowerMakerSidebar() {
                       }`}
                     >
                       <div
-                        className="flex items-center px-4 py-1 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out"
-                        onMouseEnter={() => setHoveredChat(thread.id)}
+                        className="flex items-center justify-between px-4 py-1 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out"
+                        onMouseEnter={() => setHoveredChat(index)}
                         onMouseLeave={() => setHoveredChat(null)}
                       >
                         <SidebarMenuButton 
-                          className="flex-1 justify-start p-0 h-auto cursor-pointer min-w-0 overflow-hidden"
+                          className="flex-1 justify-start p-0 h-auto cursor-pointer"
                           onClick={() => editingChatId !== thread.id ? handleChatClick(thread.id) : undefined}
                         >
                           <MessageSquare className="w-3 h-3 mr-2 text-muted-foreground flex-shrink-0" />
-                          <div className="flex flex-col items-start min-w-0 flex-1 overflow-hidden">
+                          <div className="flex flex-col items-start min-w-0 flex-1">
                             {editingChatId === thread.id ? (
                               <div className="flex items-center gap-1 w-full">
                                 <Input
@@ -261,90 +256,84 @@ export function PowerMakerSidebar() {
                                 />
                               </div>
                             ) : (
-                               <>
-                                 <span className="text-sm text-sidebar-foreground truncate w-full">
-                                   {thread.title}
-                                 </span>
-                                 <span className="text-xs text-muted-foreground truncate w-full">
-                                   {thread.messages.length} messages • {thread.createdAt.toLocaleDateString()}
-                                 </span>
-                               </>
+                              <>
+                                <span className="text-sm text-sidebar-foreground truncate">
+                                  {thread.title}
+                                </span>
+                                <span className="text-xs text-muted-foreground truncate">
+                                  {thread.messages.length} messages • {thread.createdAt.toLocaleDateString()}
+                                </span>
+                              </>
                             )}
                           </div>
                         </SidebarMenuButton>
                         {editingChatId !== thread.id && (
-                          <div className="ml-2 flex-shrink-0">
-                            <Popover open={chatMenuOpen === thread.id} onOpenChange={(open) => setChatMenuOpen(open ? thread.id : null)}>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
-                                    hoveredChat === thread.id || isMobile ? 'opacity-100' : 'opacity-0'
-                                  }`}
-                                >
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent 
-                                className="w-32 p-1 z-50" 
-                                side="right" 
-                                align="start"
-                                sideOffset={3}
-                                avoidCollisions={true}
-                                alignOffset={10}
+                          <Popover open={chatMenuOpen === index} onOpenChange={(open) => setChatMenuOpen(open ? index : null)}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
+                                  hoveredChat === index || isMobile ? 'opacity-100' : 'opacity-0'
+                                }`}
                               >
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full justify-start text-xs"
-                                  onClick={() => handleRenameChat(thread.id, thread.title)}
-                                >
-                                  <Pencil className="w-3 h-3 mr-2" />
-                                  Rename
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
-                                  onClick={() => handleDeleteChat(thread.id)}
-                                >
-                                  <Trash2 className="w-3 h-3 mr-2" />
-                                  Delete
-                                </Button>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent 
+                              className="w-32 p-1 z-50" 
+                              side="right" 
+                              align="start"
+                              sideOffset={3}
+                              avoidCollisions={true}
+                              alignOffset={10}
+                            >
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full justify-start text-xs"
+                                onClick={() => handleRenameChat(thread.id, thread.title)}
+                              >
+                                <Pencil className="w-3 h-3 mr-2" />
+                                Rename
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
+                                onClick={() => handleDeleteChat(thread.id)}
+                              >
+                                <Trash2 className="w-3 h-3 mr-2" />
+                                Delete
+                              </Button>
+                            </PopoverContent>
+                          </Popover>
                         )}
                       </div>
                     </SidebarMenuItem>
-                        ));
-                      })()
-                    ) : (
-                      <div className="px-4 py-2 text-sm text-muted-foreground">
-                        No recent conversations
-                      </div>
-                    )}
-                  </SidebarMenu>
-                </ScrollArea>
-                
-                {/* More/Less button */}
-                {recentThreads.length > 5 && (
-                  <div className="px-4 py-2 flex-shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-brand hover:text-brand-accent flex items-center transition-all duration-200"
-                      onClick={() => setShowAllChats(!showAllChats)}
-                    >
-                      <ChevronDown className={`w-4 h-4 mr-1 transition-transform duration-200 ${showAllChats ? 'rotate-180' : ''}`} />
-                      {showAllChats ? 'Less' : `More (${recentThreads.length - 5})`}
-                    </Button>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-sm text-muted-foreground">
+                    No recent conversations
                   </div>
                 )}
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </div>
+              </SidebarMenu>
+            </SidebarGroupContent>
+
+            {!showAllChats && (
+              <div className="px-4 py-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-brand hover:text-brand-accent flex items-center"
+                  onClick={() => setShowAllChats(true)}
+                >
+                  <ChevronDown className="w-4 h-4 mr-0" />
+                  More
+                </Button>
+              </div>
+            )}
+          </SidebarGroup>
         )}
       </SidebarContent>
 
