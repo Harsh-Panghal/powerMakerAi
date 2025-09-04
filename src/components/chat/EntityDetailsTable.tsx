@@ -8,12 +8,12 @@ import { useState } from 'react';
 export function EntityDetailsTable() {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [entityData, setEntityData] = useState({
-    schemaName: 'dev_apiconfiguration',
-    displayName: 'API Configuration',
-    pluralName: 'API Configurations',
-    action: 'create',
-    ownershipType: 'OrganizationOwned',
-    description: '(value not provided)'
+    schemaName: '',
+    displayName: '',
+    pluralName: '',
+    action: '',
+    ownershipType: '',
+    description: ''
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -53,6 +53,7 @@ export function EntityDetailsTable() {
               id="schema-name" 
               value={entityData.schemaName}
               onChange={(e) => handleInputChange('schemaName', e.target.value)}
+              placeholder="Enter schema name (e.g., dev_tablename)"
               className="mt-1"
             />
           </div>
@@ -62,6 +63,7 @@ export function EntityDetailsTable() {
               id="display-name" 
               value={entityData.displayName}
               onChange={(e) => handleInputChange('displayName', e.target.value)}
+              placeholder="Enter display name for entity"
               className="mt-1"
             />
           </div>
@@ -71,6 +73,7 @@ export function EntityDetailsTable() {
               id="plural-name" 
               value={entityData.pluralName}
               onChange={(e) => handleInputChange('pluralName', e.target.value)}
+              placeholder="Enter plural form of entity name"
               className="mt-1"
             />
           </div>
@@ -80,6 +83,7 @@ export function EntityDetailsTable() {
               id="action" 
               value={entityData.action}
               onChange={(e) => handleInputChange('action', e.target.value)}
+              placeholder="Enter action type (e.g., create, update)"
               className="mt-1"
             />
           </div>
@@ -93,6 +97,7 @@ export function EntityDetailsTable() {
               id="ownership-type" 
               value={entityData.ownershipType}
               onChange={(e) => handleInputChange('ownershipType', e.target.value)}
+              placeholder="Enter ownership type (e.g., OrganizationOwned)"
               className="mt-1"
             />
           </div>
