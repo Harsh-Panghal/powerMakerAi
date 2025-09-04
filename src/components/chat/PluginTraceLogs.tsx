@@ -64,16 +64,16 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
           </CardHeader>
           <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
             {/* Controls */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-4 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-x-8 gap-y-2 flex-wrap">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
                 <Button 
                   variant={groupBy === 'correlation' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setGroupBy('correlation')}
                   className={`text-xs sm:text-sm w-full xs:w-auto ${groupBy === 'correlation' ? 'bg-primary text-primary-foreground' : ''}`}
                 >
-                  <span className="hidden sm:inline">Group by Correlation ID</span>
-                  <span className="sm:hidden">Correlation ID</span>
+                  <span className="inline">Group by Correlation ID</span>
+                  {/* <span className="sm:hidden">Correlation ID</span> */}
                 </Button>
                 <Button 
                   variant={groupBy === 'type' ? 'default' : 'outline'}
@@ -81,19 +81,19 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
                   onClick={() => setGroupBy('type')}
                   className={`text-xs sm:text-sm w-full xs:w-auto ${groupBy === 'type' ? 'bg-primary text-primary-foreground' : ''}`}
                 >
-                  <span className="hidden sm:inline">Group by Type Name</span>
-                  <span className="sm:hidden">Type Name</span>
+                  <span className="inline">Group by Type Name</span>
+                  {/* <span className="sm:hidden">Type Name</span> */}
                 </Button>
               </div>
-              <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-4 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
                 <Button variant="outline" size="sm" className="text-xs sm:text-sm w-full xs:w-auto">
                   <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Search
                 </Button>
                 <Button variant="outline" size="sm" className="text-xs sm:text-sm w-full xs:w-auto">
                   <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Export CSV</span>
-                  <span className="sm:hidden">Export</span>
+                  <span className="inline">Export CSV</span>
+                  {/* <span className="sm:hidden">Export</span> */}
                 </Button>
               </div>
             </div>
