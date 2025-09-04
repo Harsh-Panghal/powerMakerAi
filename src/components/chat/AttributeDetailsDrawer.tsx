@@ -18,20 +18,12 @@ export function AttributeDetailsDrawer({ isOpen, onClose, attribute }: Attribute
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[400px] sm:w-[500px]">
-        <SheetHeader className="flex flex-row items-center justify-between">
-          <SheetTitle className="text-lg font-semibold text-brand">Attribute Details</SheetTitle>
-          {/* <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button> */}
+      <SheetContent side="right" className="w-full sm:w-[400px] lg:w-[500px] max-w-[90vw] sm:max-w-none">
+        <SheetHeader className="flex flex-row items-center justify-between pb-4">
+          <SheetTitle className="text-base sm:text-lg font-semibold text-brand">Attribute Details</SheetTitle>
         </SheetHeader>
         
-        <div className="space-y-6 py-6">
+        <div className="space-y-4 sm:space-y-6 py-2 sm:py-6 overflow-y-auto max-h-[calc(100vh-120px)]">
           {/* Display Name */}
           <div className="space-y-2">
             <Label htmlFor="displayName" className="text-sm font-medium">
@@ -46,7 +38,7 @@ export function AttributeDetailsDrawer({ isOpen, onClose, attribute }: Attribute
           </div>
 
           {/* Checkboxes */}
-          <div className="flex items-center space-x-6">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6">
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="searchable" 
@@ -120,7 +112,7 @@ export function AttributeDetailsDrawer({ isOpen, onClose, attribute }: Attribute
             {(attribute.dataType === 'Single Line of Text' || 
               attribute.dataType === 'Multiple Lines of Text' || 
               attribute.dataType === 'Whole Number') && attribute.maxLength && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="maxLength" className="text-sm font-medium">
                     Max Length
