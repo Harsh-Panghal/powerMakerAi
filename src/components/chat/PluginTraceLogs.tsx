@@ -26,8 +26,8 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
 
   if (!isOpen) return null;
 
-  // Enhanced mock data for demonstration
-  const generateMockData = () => {
+  // Enhanced mock data for demonstration - moved outside component to prevent re-creation
+  const mockData = useMemo(() => {
     const plugins = [
       'CRM Entity Processor Plugin',
       'Data Validation Plugin',
@@ -102,9 +102,7 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
       });
     }
     return data;
-  };
-
-  const mockData = useMemo(() => generateMockData(), []);
+  }, []);
 
   // Filter and search data
   const filteredData = useMemo(() => {
