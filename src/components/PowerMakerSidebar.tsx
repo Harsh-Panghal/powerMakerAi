@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Plus, ChevronDown, MoreHorizontal, HelpCircle, Settings, Star, Upload, Trash2, Check, ArrowLeft, X, MessageSquare, Pencil } from "lucide-react";
 import { CrmConnectionDetail } from "@/components/CrmConnectionDetail";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ const connections = [
 export function PowerMakerSidebar() {
   const [showAllChats, setShowAllChats] = useState(false);
   const [hoveredChat, setHoveredChat] = useState<number | null>(null);
+  const isMobile = useIsMobile();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isCleanChatOpen, setIsCleanChatOpen] = useState(false);
@@ -272,7 +274,7 @@ export function PowerMakerSidebar() {
                                 variant="ghost"
                                 size="sm"
                                 className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
-                                  hoveredChat === index ? 'opacity-100' : 'opacity-0'
+                                  hoveredChat === index || isMobile ? 'opacity-100' : 'opacity-0'
                                 }`}
                               >
                                 <MoreHorizontal className="w-4 h-4" />
