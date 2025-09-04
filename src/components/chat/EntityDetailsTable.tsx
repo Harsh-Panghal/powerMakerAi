@@ -7,6 +7,21 @@ import { useState } from 'react';
 
 export function EntityDetailsTable() {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [entityData, setEntityData] = useState({
+    schemaName: 'dev_apiconfiguration',
+    displayName: 'API Configuration',
+    pluralName: 'API Configurations',
+    action: 'create',
+    ownershipType: 'OrganizationOwned',
+    description: '(value not provided)'
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setEntityData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => 
@@ -36,8 +51,8 @@ export function EntityDetailsTable() {
             <Label htmlFor="schema-name" className="text-sm font-medium">Schema Name</Label>
             <Input 
               id="schema-name" 
-              value="dev_apiconfiguration" 
-              readOnly 
+              value={entityData.schemaName}
+              onChange={(e) => handleInputChange('schemaName', e.target.value)}
               className="mt-1"
             />
           </div>
@@ -45,8 +60,8 @@ export function EntityDetailsTable() {
             <Label htmlFor="display-name" className="text-sm font-medium">Display Name</Label>
             <Input 
               id="display-name" 
-              value="API Configuration" 
-              readOnly 
+              value={entityData.displayName}
+              onChange={(e) => handleInputChange('displayName', e.target.value)}
               className="mt-1"
             />
           </div>
@@ -54,8 +69,8 @@ export function EntityDetailsTable() {
             <Label htmlFor="plural-name" className="text-sm font-medium">Plural Name</Label>
             <Input 
               id="plural-name" 
-              value="API Configurations" 
-              readOnly 
+              value={entityData.pluralName}
+              onChange={(e) => handleInputChange('pluralName', e.target.value)}
               className="mt-1"
             />
           </div>
@@ -63,8 +78,8 @@ export function EntityDetailsTable() {
             <Label htmlFor="action" className="text-sm font-medium">Action</Label>
             <Input 
               id="action" 
-              value="create" 
-              readOnly 
+              value={entityData.action}
+              onChange={(e) => handleInputChange('action', e.target.value)}
               className="mt-1"
             />
           </div>
@@ -76,8 +91,8 @@ export function EntityDetailsTable() {
             <Label htmlFor="ownership-type" className="text-sm font-medium">Ownership Type</Label>
             <Input 
               id="ownership-type" 
-              value="OrganizationOwned" 
-              readOnly 
+              value={entityData.ownershipType}
+              onChange={(e) => handleInputChange('ownershipType', e.target.value)}
               className="mt-1"
             />
           </div>
@@ -85,9 +100,10 @@ export function EntityDetailsTable() {
             <Label htmlFor="description" className="text-sm font-medium">Description</Label>
             <Input 
               id="description" 
-              value="(value not provided)" 
-              readOnly 
-              className="mt-1 text-muted-foreground"
+              value={entityData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              className="mt-1"
+              placeholder="Enter description..."
             />
           </div>
         </div>
