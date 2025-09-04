@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { X, Search, Download, ArrowLeft } from 'lucide-react';
 import { TraceDetailsDrawer } from './TraceDetailsDrawer';
 
@@ -18,62 +20,130 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
   const [recordsPerPage, setRecordsPerPage] = useState('5');
   const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   if (!isOpen) return null;
 
-  // Mock data for demonstration
-  const mockData = [
-    {
-      id: 1,
-      createdOn: '2024-01-15 10:30:45',
-      executionStart: '2024-01-15 10:30:46',
-      duration: '00:00:02.345',
-      pluginName: 'Lorem Ipsum Is Simply Dummy Text Of The Printing And',
-      stepName: 'Lorem Ipsum is',
-      correlationId: 'corr-12345-abc',
-      typeName: 'ProcessingStep'
-    },
-    {
-      id: 2,
-      createdOn: '2024-01-15 10:32:15',
-      executionStart: '2024-01-15 10:32:16',
-      duration: '00:00:01.234',
-      pluginName: 'Lorem Ipsum Is Simply Dummy Text Of The Printing And',
-      stepName: 'Lorem Ipsum is',
-      correlationId: 'corr-12345-abc',
-      typeName: 'ValidationStep'
-    },
-    {
-      id: 3,
-      createdOn: '2024-01-15 10:34:22',
-      executionStart: '2024-01-15 10:34:23',
-      duration: '00:00:03.567',
-      pluginName: 'Lorem Ipsum Is Simply Dummy Text Of The Printing And',
-      stepName: 'Lorem Ipsum is',
-      correlationId: 'corr-12345-abc',
-      typeName: 'CompletionStep'
-    },
-    {
-      id: 4,
-      createdOn: '2024-01-15 10:36:10',
-      executionStart: '2024-01-15 10:36:11',
-      duration: '00:00:01.890',
-      pluginName: 'Lorem Ipsum Is Simply Dummy Text Of The Printing And',
-      stepName: 'Lorem Ipsum is',
-      correlationId: 'corr-67890-def',
-      typeName: 'ProcessingStep'
-    },
-    {
-      id: 5,
-      createdOn: '2024-01-15 10:38:05',
-      executionStart: '2024-01-15 10:38:06',
-      duration: '00:00:02.123',
-      pluginName: 'Lorem Ipsum Is Simply Dummy Text Of The Printing And',
-      stepName: 'Lorem Ipsum is',
-      correlationId: 'corr-67890-def',
-      typeName: 'ValidationStep'
+  // Enhanced mock data for demonstration
+  const generateMockData = () => {
+    const plugins = [
+      'CRM Entity Processor Plugin',
+      'Data Validation Plugin',
+      'Workflow Automation Plugin',
+      'Email Notification Plugin',
+      'Report Generator Plugin',
+      'Integration Manager Plugin',
+      'Security Audit Plugin',
+      'Performance Monitor Plugin'
+    ];
+    
+    const stepNames = [
+      'Entity Creation',
+      'Data Validation',
+      'Workflow Trigger',
+      'Email Send',
+      'Report Generation',
+      'API Integration',
+      'Security Check',
+      'Performance Analysis'
+    ];
+    
+    const typeNames = [
+      'ProcessingStep',
+      'ValidationStep',
+      'CompletionStep',
+      'IntegrationStep',
+      'SecurityStep',
+      'AnalysisStep'
+    ];
+    
+    const correlationIds = [
+      'corr-12345-abc',
+      'corr-67890-def',
+      'corr-11111-ghi',
+      'corr-22222-jkl',
+      'corr-33333-mno',
+      'corr-44444-pqr'
+    ];
+
+    const data = [];
+    for (let i = 1; i <= 52; i++) {
+      const baseDate = new Date(2024, 0, 15, 10, 0, 0); // Jan 15, 2024
+      const createdDate = new Date(baseDate.getTime() + (i * 3 * 60 * 1000)); // 3 min intervals
+      const executionDate = new Date(createdDate.getTime() + 1000); // 1 sec after creation
+      
+      data.push({
+        id: i,
+        createdOn: createdDate.toLocaleString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }),
+        executionStart: executionDate.toLocaleString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }),
+        duration: `00:00:0${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 900) + 100}`,
+        pluginName: plugins[Math.floor(Math.random() * plugins.length)],
+        stepName: stepNames[Math.floor(Math.random() * stepNames.length)],
+        correlationId: correlationIds[Math.floor(Math.random() * correlationIds.length)],
+        typeName: typeNames[Math.floor(Math.random() * typeNames.length)]
+      });
     }
-  ];
+    return data;
+  };
+
+  const mockData = useMemo(() => generateMockData(), []);
+
+  // Filter and search data
+  const filteredData = useMemo(() => {
+    let filtered = [...mockData];
+    
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(record => 
+        record.pluginName.toLowerCase().includes(search) ||
+        record.stepName.toLowerCase().includes(search) ||
+        record.correlationId.toLowerCase().includes(search) ||
+        record.typeName.toLowerCase().includes(search) ||
+        record.createdOn.toLowerCase().includes(search) ||
+        record.executionStart.toLowerCase().includes(search)
+      );
+    }
+    
+    // Apply grouping sort
+    if (groupBy === 'correlation') {
+      filtered.sort((a, b) => a.correlationId.localeCompare(b.correlationId));
+    } else if (groupBy === 'type') {
+      filtered.sort((a, b) => a.typeName.localeCompare(b.typeName));
+    }
+    
+    return filtered;
+  }, [mockData, searchTerm, groupBy]);
+
+  // Pagination calculations
+  const recordsPerPageNum = parseInt(recordsPerPage);
+  const totalPages = Math.ceil(filteredData.length / recordsPerPageNum);
+  const startIndex = (currentPage - 1) * recordsPerPageNum;
+  const endIndex = startIndex + recordsPerPageNum;
+  const currentPageData = filteredData.slice(startIndex, endIndex);
+
+  // Reset pagination when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [searchTerm, groupBy, recordsPerPage]);
 
   const handleViewDetails = (record: any) => {
     setSelectedRecord(record);
@@ -83,6 +153,44 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
   const handleCloseDetailsDrawer = () => {
     setIsDetailsDrawerOpen(false);
     setSelectedRecord(null);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Created On', 'Execution Start', 'Duration', 'Plugin Name', 'Step Name', 'Correlation ID', 'Type Name'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredData.map(record => [
+        `"${record.createdOn}"`,
+        `"${record.executionStart}"`,
+        `"${record.duration}"`,
+        `"${record.pluginName}"`,
+        `"${record.stepName}"`,
+        `"${record.correlationId}"`,
+        `"${record.typeName}"`
+      ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `plugin-trace-logs-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -150,14 +258,46 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
                 </Button>
               </div>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
-                <Button variant="outline" size="sm" className="text-xs sm:text-sm w-full xs:w-auto">
-                  <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  Search
-                </Button>
-                <Button variant="outline" size="sm" className="text-xs sm:text-sm w-full xs:w-auto">
+                <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs sm:text-sm w-full xs:w-auto">
+                      <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      Search
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Search Trace Logs</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <Input
+                        placeholder="Search by plugin name, step name, correlation ID, type..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => {
+                          setSearchTerm('');
+                          setIsSearchOpen(false);
+                        }}>
+                          Clear
+                        </Button>
+                        <Button onClick={() => setIsSearchOpen(false)}>
+                          Search
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleExportCSV}
+                  className="text-xs sm:text-sm w-full xs:w-auto"
+                >
                   <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   <span className="inline">Export CSV</span>
-                  {/* <span className="sm:hidden">Export</span> */}
                 </Button>
               </div>
             </div>
@@ -177,7 +317,7 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockData.map((record) => (
+                  {currentPageData.map((record) => (
                     <TableRow key={record.id}>
                       <TableCell className="text-xs sm:text-sm">{record.createdOn}</TableCell>
                       <TableCell className="text-xs sm:text-sm">{record.executionStart}</TableCell>
@@ -202,10 +342,10 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
                       <TableCell className="text-xs sm:text-sm">{record.typeName}</TableCell>
                     </TableRow>
                   ))}
-                  {mockData.length === 0 && (
+                  {currentPageData.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-6 sm:py-8 text-muted-foreground text-xs sm:text-sm">
-                        No trace logs found. Apply filters and click "Show Trace Logs" to view data.
+                        {searchTerm ? 'No matching records found.' : 'No trace logs found. Apply filters and click "Show Trace Logs" to view data.'}
                       </TableCell>
                     </TableRow>
                   )}
@@ -216,14 +356,26 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="text-xs sm:text-sm text-muted-foreground">
-                Page 1 of 1 (Showing {mockData.length} records)
+                Page {currentPage} of {totalPages} (Showing {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of {filteredData.length} records)
               </div>
               <div className="flex flex-col xs:flex-row items-start xs:items-center gap-4 w-full sm:w-auto">
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" disabled className="text-xs sm:text-sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handlePrevPage}
+                    disabled={currentPage <= 1}
+                    className="text-xs sm:text-sm"
+                  >
                     Prev
                   </Button>
-                  <Button variant="outline" size="sm" disabled className="text-xs sm:text-sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleNextPage}
+                    disabled={currentPage >= totalPages}
+                    className="text-xs sm:text-sm"
+                  >
                     Next
                   </Button>
                 </div>
