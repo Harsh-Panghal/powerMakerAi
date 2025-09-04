@@ -282,9 +282,9 @@ export function PowerMakerSidebar() {
                               className="w-32 p-1 z-50" 
                               side="right" 
                               align="start"
-                              sideOffset={4}
+                              sideOffset={3}
                               avoidCollisions={true}
-                              alignOffset={-10}
+                              alignOffset={10}
                             >
                               <Button
                                 variant="ghost"
