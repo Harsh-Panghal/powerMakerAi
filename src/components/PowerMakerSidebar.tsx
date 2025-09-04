@@ -279,11 +279,12 @@ export function PowerMakerSidebar() {
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent 
-                              className="w-32 p-1" 
+                              className="w-32 p-1 z-50" 
                               side="right" 
                               align="start"
                               sideOffset={4}
-                              avoidCollisions={false}
+                              avoidCollisions={true}
+                              alignOffset={-10}
                             >
                               <Button
                                 variant="ghost"
