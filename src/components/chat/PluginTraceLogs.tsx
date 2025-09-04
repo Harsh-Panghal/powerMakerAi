@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -141,7 +141,7 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
   const currentPageData = filteredData.slice(startIndex, endIndex);
 
   // Reset pagination when filters change
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, groupBy, recordsPerPage]);
 
