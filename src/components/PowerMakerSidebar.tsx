@@ -327,16 +327,16 @@ export function PowerMakerSidebar() {
               </SidebarMenu>
             </SidebarGroupContent>
 
-            {hasMoreChats && !showAllChats && (
+            {hasMoreChats && (
               <div className="px-4 py-2 flex-shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-brand hover:text-brand-accent flex items-center"
-                  onClick={() => setShowAllChats(true)}
+                  onClick={() => setShowAllChats(!showAllChats)}
                 >
-                  <ChevronDown className="w-4 h-4 mr-0" />
-                  More
+                  <ChevronDown className={`w-4 h-4 mr-0 transition-transform ${showAllChats ? 'rotate-180' : ''}`} />
+                  {showAllChats ? 'Less' : 'More'}
                 </Button>
               </div>
             )}
