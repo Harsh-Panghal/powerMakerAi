@@ -24,8 +24,6 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
   const [currentPage, setCurrentPage] = useState(1);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  if (!isOpen) return null;
-
   // Enhanced mock data for demonstration - moved outside component to prevent re-creation
   const mockData = useMemo(() => {
     const plugins = [
@@ -190,6 +188,8 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
     link.click();
     document.body.removeChild(link);
   };
+
+  if (!isOpen) return null;
 
   return (
     <motion.div
