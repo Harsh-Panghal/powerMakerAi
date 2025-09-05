@@ -5,6 +5,7 @@ import { Plus, ChevronDown, MoreHorizontal, HelpCircle, Settings, Star, Upload, 
 import { CrmConnectionDetail } from "@/components/CrmConnectionDetail";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -187,6 +188,61 @@ export function PowerMakerSidebar() {
     );
   };
 
+  // Reusable settings content
+  const renderSettingsContent = () => (
+    <div className="space-y-2">
+      <Button
+        variant="ghost"
+        className="w-full justify-start"
+        onClick={() => {
+          setIsSettingsOpen(false);
+          setIsFeedbackOpen(true);
+        }}
+      >
+        <span className="mr-2">💬</span>
+        Feedback
+      </Button>
+      <Button
+        variant="ghost"
+        className="w-full justify-start"
+        onClick={() => {
+          setIsSettingsOpen(false);
+          setIsCleanChatOpen(true);
+        }}
+      >
+        <span className="mr-2">🧹</span>
+        Clean Chat
+      </Button>
+      <Button
+        variant="ghost"
+        className="w-full justify-start"
+        onClick={() => {
+          setIsSettingsOpen(false);
+          setIsCrmConnectionOpen(true);
+        }}
+      >
+        <span className="mr-2">🔗</span>
+        CRM Connection Details
+      </Button>
+      <Button
+        variant="ghost"
+        className="w-full justify-start"
+        onClick={() => window.open("/privacy-policy", "_blank")}
+      >
+        <span className="mr-2">🔒</span>
+        Privacy Policy
+      </Button>
+      <Button
+        variant="ghost"
+        className="w-full justify-start"
+        onClick={() => window.open("/terms-of-use", "_blank")}
+      >
+        <span className="mr-2">📋</span>
+        Terms of Use
+      </Button>
+    </div>
+  );
+
   return (
     <Sidebar collapsible="icon" className="h-screen border-r border-border/30 shadow-[inset_-8px_0_16px_rgba(0,0,0,0.08)] data-[state=collapsed]:w-16 flex flex-col">
       <SidebarHeader className={`p-4 flex-shrink-0 ${isCollapsed ? 'flex justify-center' : ''}`}>
@@ -363,65 +419,28 @@ export function PowerMakerSidebar() {
         </div>
       </SidebarFooter>
 
-      {/* Settings Dialog */}
-      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => {
-                setIsSettingsOpen(false);
-                setIsFeedbackOpen(true);
-              }}
-            >
-              <span className="mr-2">💬</span>
-              Feedback
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => {
-                setIsSettingsOpen(false);
-                setIsCleanChatOpen(true);
-              }}
-            >
-              <span className="mr-2">🧹</span>
-              Clean Chat
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => {
-                setIsSettingsOpen(false);
-                setIsCrmConnectionOpen(true);
-              }}
-            >
-              <span className="mr-2">🔗</span>
-              CRM Connection Details
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => window.open("/privacy-policy", "_blank")}
-            >
-              <span className="mr-2">🔒</span>
-              Privacy Policy
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => window.open("/terms-of-use", "_blank")}
-            >
-              <span className="mr-2">📋</span>
-              Terms of Use
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Responsive Settings - Drawer for mobile, Dialog for desktop */}
+      {isMobile ? (
+        <Drawer open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+          <DrawerContent className="max-h-[80vh]">
+            <DrawerHeader className="px-4 pt-4 pb-2">
+              <DrawerTitle>Settings</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-4">
+              {renderSettingsContent()}
+            </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Settings</DialogTitle>
+            </DialogHeader>
+            {renderSettingsContent()}
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Feedback Dialog */}
       <Dialog open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
