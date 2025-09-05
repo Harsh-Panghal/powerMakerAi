@@ -32,12 +32,20 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
+import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -78,6 +86,7 @@ export function PowerMakerHeader() {
   const navigate = useNavigate();
   const { selectedModel, setModel, isNotificationOpen, notifications, openNotifications, closeNotifications } = useChatStore();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [demoUser, setDemoUser] = useState<{email: string; name: string} | null>(null);
@@ -362,190 +371,383 @@ export function PowerMakerHeader() {
         </div>
       </header>
 
-      {/* Profile Dialog */}
-      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-        <DialogContent className="profile-dialog sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-center text-lg">Profile</DialogTitle>
-            <div className="flex justify-end">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <span>Tokens</span>
-                <span className="ml-2 flex items-center">
-                  <span className="w-2 h-2 bg-warning rounded-full mr-1"></span>
-                  569
-                </span>
+      {/* Profile Dialog/Drawer */}
+      {isMobile ? (
+        <Drawer open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+          <DrawerContent className="max-h-[95vh]">
+            <DrawerHeader>
+              <DrawerTitle className="text-center text-lg">Profile</DrawerTitle>
+              <div className="flex justify-center">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <span>Tokens</span>
+                  <span className="ml-2 flex items-center">
+                    <span className="w-2 h-2 bg-warning rounded-full mr-1"></span>
+                    569
+                  </span>
+                </div>
               </div>
-            </div>
-          </DialogHeader>
+            </DrawerHeader>
 
-          <div className="space-y-6">
-            {/* Profile Image */}
-            <div className="flex justify-center">
-              <div className="relative">
-                <Avatar className="w-24 h-24 bg-muted">
-                  <AvatarFallback className="text-2xl">H</AvatarFallback>
-                </Avatar>
+            <div className="p-4 space-y-6 overflow-y-auto">
+              {/* Profile Image */}
+              <div className="flex justify-center">
+                <div className="relative">
+                  <Avatar className="w-20 h-20 bg-muted">
+                    <AvatarFallback className="text-xl">H</AvatarFallback>
+                  </Avatar>
+                  <Button
+                    size="sm"
+                    className="absolute -bottom-1 -right-1 rounded-full w-7 h-7 p-0 bg-brand hover:bg-brand/90"
+                  >
+                    <Camera className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" defaultValue="Alessio" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-Mail</Label>
+                  <Input id="email" defaultValue="yoroka1002@gmail.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company Name</Label>
+                  <Input id="company" defaultValue="Lorem Ipsum is simpl" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="position">Position</Label>
+                  <Select defaultValue="manager">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select position" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="developer">Developer</SelectItem>
+                      <SelectItem value="analyst">Analyst</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address1">Address Line 1</Label>
+                  <Input id="address1" placeholder="Enter" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address2">Address Line 2</Label>
+                  <Input id="address2" placeholder="Enter" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input id="city" placeholder="Enter" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="zip">Zip Code</Label>
+                  <Input id="zip" placeholder="Enter" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input id="country" placeholder="Enter" />
+                </div>
+              </div>
+
+              <div className="flex flex-col space-y-3 pb-4">
+                <Button className="w-full h-12 bg-brand hover:bg-brand/90 text-white text-base">
+                  Update
+                </Button>
                 <Button
-                  size="sm"
-                  className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0 bg-brand hover:bg-brand/90"
+                  variant="ghost"
+                  className="w-full h-12 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 text-base"
+                  onClick={() => setShowDeleteDialog(true)}
                 >
-                  <Camera className="w-4 h-4" />
+                  Delete Account
                 </Button>
               </div>
             </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+          <DialogContent className="profile-dialog sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-center text-lg">Profile</DialogTitle>
+              <div className="flex justify-end">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <span>Tokens</span>
+                  <span className="ml-2 flex items-center">
+                    <span className="w-2 h-2 bg-warning rounded-full mr-1"></span>
+                    569
+                  </span>
+                </div>
+              </div>
+            </DialogHeader>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue="Alessio" />
+            <div className="space-y-6">
+              {/* Profile Image */}
+              <div className="flex justify-center">
+                <div className="relative">
+                  <Avatar className="w-24 h-24 bg-muted">
+                    <AvatarFallback className="text-2xl">H</AvatarFallback>
+                  </Avatar>
+                  <Button
+                    size="sm"
+                    className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0 bg-brand hover:bg-brand/90"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">E-Mail</Label>
-                <Input id="email" defaultValue="yoroka1002@gmail.com" />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" defaultValue="Alessio" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-Mail</Label>
+                  <Input id="email" defaultValue="yoroka1002@gmail.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company Name</Label>
+                  <Input id="company" defaultValue="Lorem Ipsum is simpl" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="position">Position</Label>
+                  <Select defaultValue="manager">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select position" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="developer">Developer</SelectItem>
+                      <SelectItem value="analyst">Analyst</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address1">Address Line 1</Label>
+                  <Input id="address1" placeholder="Enter" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address2">Address Line 2</Label>
+                  <Input id="address2" placeholder="Enter" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input id="city" placeholder="Enter" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="zip">Zip Code</Label>
+                  <Input id="zip" placeholder="Enter" />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input id="country" placeholder="Enter" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="company">Company Name</Label>
-                <Input id="company" defaultValue="Lorem Ipsum is simpl" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="position">Position</Label>
-                <Select defaultValue="manager">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select position" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="developer">Developer</SelectItem>
-                    <SelectItem value="analyst">Analyst</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="address1">Address Line 1</Label>
-                <Input id="address1" placeholder="Enter" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="address2">Address Line 2</Label>
-                <Input id="address2" placeholder="Enter" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input id="city" placeholder="Enter" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="zip">Zip Code</Label>
-                <Input id="zip" placeholder="Enter" />
-              </div>
-              <div className="space-y-2 col-span-2">
-                <Label htmlFor="country">Country</Label>
-                <Input id="country" placeholder="Enter" />
+
+              <div className="flex flex-col space-y-2">
+                <Button className="w-full bg-brand hover:bg-brand/90 text-white">
+                  Update
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  Delete Account
+                </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
-            <div className="flex flex-col space-y-2">
-              <Button className="w-full bg-brand hover:bg-brand/90 text-white">
-                Update
+      {/* Invite Dialog/Drawer */}
+      {isMobile ? (
+        <Drawer open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Invite people</DrawerTitle>
+              <DrawerDescription>
+                Lorem Ipsum is simply dummy text of the printing
+              </DrawerDescription>
+            </DrawerHeader>
+
+            <div className="p-4 space-y-6">
+              <div className="flex flex-col space-y-3">
+                <Button className="w-full h-12 bg-brand hover:bg-brand/90 text-white text-base">
+                  Invite with email
+                </Button>
+                <Button variant="outline" className="w-full h-12 text-base">
+                  Invite with link
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-base">Add Team</Label>
+                <div className="flex flex-col space-y-3">
+                  <Input placeholder="Enter email" className="h-12 text-base" />
+                  <Button className="w-full h-12 bg-brand hover:bg-brand/90 text-white text-base">
+                    Send
+                  </Button>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Lorem Ipsum is simply dummy text of the printing
+              </p>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Invite people</DialogTitle>
+              <DialogDescription>
+                Lorem Ipsum is simply dummy text of the printing
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="flex space-x-2">
+                <Button className="bg-brand hover:bg-brand/90 text-white">
+                  Invite with email
+                </Button>
+                <Button variant="outline">Invite with link</Button>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Add Team</Label>
+                <div className="flex space-x-2">
+                  <Input placeholder="Enter email" className="flex-1" />
+                  <Button className="bg-brand hover:bg-brand/90 text-white">
+                    Send
+                  </Button>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Lorem Ipsum is simply dummy text of the printing
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Logout Confirmation Dialog/Drawer */}
+      {isMobile ? (
+        <Drawer open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Are you sure?</DrawerTitle>
+              <DrawerDescription>
+                Are you sure you want to Log Out?
+              </DrawerDescription>
+            </DrawerHeader>
+
+            <div className="p-4 flex flex-col space-y-3 pb-8">
+              <Button
+                variant="outline"
+                className="w-full h-12 text-base"
+                onClick={() => setShowLogoutDialog(false)}
+              >
+                Stay
               </Button>
               <Button
-                variant="ghost"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200"
-                onClick={() => setShowDeleteDialog(true)}
+                className="w-full h-12 bg-red-600 hover:bg-red-700 text-white text-base"
+                onClick={handleLogout}
               >
-                Delete Account
+                Log Out
               </Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Are you sure?</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to Log Out?
+              </DialogDescription>
+            </DialogHeader>
 
-      {/* Invite Dialog */}
-      <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Invite people</DialogTitle>
-            <DialogDescription>
-              Lorem Ipsum is simply dummy text of the printing
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="flex space-x-2">
-              <Button className="bg-brand hover:bg-brand/90 text-white">
-                Invite with email
+            <div className="flex space-x-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowLogoutDialog(false)}
+              >
+                Stay
               </Button>
-              <Button variant="outline">Invite with link</Button>
+              <Button
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={handleLogout}
+              >
+                Log Out
+              </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
-            <div className="space-y-2">
-              <Label>Add Team</Label>
-              <div className="flex space-x-2">
-                <Input placeholder="Enter email" className="flex-1" />
-                <Button className="bg-brand hover:bg-brand/90 text-white">
-                  Send
-                </Button>
-              </div>
+      {/* Delete Account Confirmation Dialog/Drawer */}
+      {isMobile ? (
+        <Drawer open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Are you sure?</DrawerTitle>
+              <DrawerDescription>
+                Are you sure you want to delete your account?
+              </DrawerDescription>
+            </DrawerHeader>
+
+            <div className="p-4 flex flex-col space-y-3 pb-8">
+              <Button
+                variant="outline"
+                className="w-full h-12 text-base"
+                onClick={() => setShowDeleteDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="w-full h-12 bg-red-600 hover:bg-red-700 text-white text-base"
+                onClick={handleDeleteAccount}
+              >
+                Yes
+              </Button>
             </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Are you sure?</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete your account?
+              </DialogDescription>
+            </DialogHeader>
 
-            <p className="text-sm text-muted-foreground">
-              Lorem Ipsum is simply dummy text of the printing
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Logout Confirmation Dialog */}
-      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Are you sure?</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to Log Out?
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex space-x-2 justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setShowLogoutDialog(false)}
-            >
-              Stay
-            </Button>
-            <Button
-              className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={handleLogout}
-            >
-              Log Out
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Account Confirmation Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Are you sure?</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete your account?
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex space-x-2 justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={handleDeleteAccount}
-            >
-              Yes
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            <div className="flex space-x-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={handleDeleteAccount}
+              >
+                Yes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
