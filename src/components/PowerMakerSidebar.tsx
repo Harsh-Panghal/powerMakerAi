@@ -188,8 +188,8 @@ export function PowerMakerSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/30 shadow-[inset_-8px_0_16px_rgba(0,0,0,0.08)] data-[state=collapsed]:w-16">
-      <SidebarHeader className={`p-4 ${isCollapsed ? 'flex justify-center' : ''}`}>
+    <Sidebar collapsible="icon" className="h-screen border-r border-border/30 shadow-[inset_-8px_0_16px_rgba(0,0,0,0.08)] data-[state=collapsed]:w-16 flex flex-col">
+      <SidebarHeader className={`p-4 flex-shrink-0 ${isCollapsed ? 'flex justify-center' : ''}`}>
         <div 
           className={`flex items-center cursor-pointer ${isCollapsed ? 'justify-center' : 'space-x-2'}`}
           onClick={handleLogoClick}
@@ -205,7 +205,7 @@ export function PowerMakerSidebar() {
       </SidebarHeader>
 
       {/* New Chat Button - Fixed position */}
-      <div className={`p-4 border-b border-border/30 ${isCollapsed ? 'px-2' : ''}`}>
+      <div className={`p-4 border-b border-border/30 flex-shrink-0 ${isCollapsed ? 'px-2' : ''}`}>
         <Button 
           className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-center'} bg-transparent border border-border hover:bg-sidebar-accent text-brand shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out`}
           variant="outline"
@@ -217,14 +217,14 @@ export function PowerMakerSidebar() {
         </Button>
       </div>
 
-      <SidebarContent className="flex-1 flex flex-col overflow-hidden">
+      <SidebarContent className="flex-1 flex flex-col min-h-0">
         {/* Recent Chats */}
         {!isCollapsed && (
-          <SidebarGroup className="flex-1 overflow-hidden">
+          <SidebarGroup className="flex-1 flex flex-col min-h-0">
             <SidebarGroupLabel className="px-4 text-sm font-medium text-muted-foreground flex-shrink-0">
               Recent
             </SidebarGroupLabel>
-            <SidebarGroupContent className="flex-1 overflow-y-auto">
+            <SidebarGroupContent className="flex-1 min-h-0 overflow-y-auto">
               <SidebarMenu>
                 {displayedChats.length > 0 ? (
                   displayedChats.map((thread, index) => (
