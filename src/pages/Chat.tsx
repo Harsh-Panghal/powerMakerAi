@@ -17,7 +17,7 @@ const Chat = () => {
       >
         {/* Chat Header */}
         <div className="p-2  border-b border-border bg-layout-main">
-          <div className="max-w-4xl mx-auto px-4 sm:px-0">
+          <div className="max-w-4xl px-4">
             <h2 className="text-md sm:text-md font-semibold text-brand break-words">
               {currentThread?.title || 'New Conversation'}
             </h2>
