@@ -8,7 +8,7 @@ const Chat = () => {
   const { currentThread } = useChatStore();
 
   return (
-    <div className="flex-1 flex flex-col bg-layout-main">
+    <div className="flex-1 flex flex-col bg-layout-main h-[82%] ">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -16,9 +16,9 @@ const Chat = () => {
         className="flex-1 flex flex-col h-full"
       >
         {/* Chat Header */}
-        <div className="p-4 sm:p-6 border-b border-border bg-layout-main">
+        <div className="p-2  border-b border-border bg-layout-main">
           <div className="max-w-4xl mx-auto px-4 sm:px-0">
-            <h2 className="text-lg sm:text-xl font-semibold text-brand break-words">
+            <h2 className="text-md sm:text-md font-semibold text-brand break-words">
               {currentThread?.title || 'New Conversation'}
             </h2>
             <p className="text-sm text-muted-foreground">

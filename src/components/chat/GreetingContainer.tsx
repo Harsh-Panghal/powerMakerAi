@@ -144,7 +144,7 @@ export function GreetingContainer() {
   return (
     <>
       {/* Greeting Container */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-8 lg:mt-12">
         <div className="max-w-4xl w-full text-center space-y-8">
           {/* Greeting */}
           <div className="space-y-2">
