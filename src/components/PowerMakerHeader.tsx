@@ -683,7 +683,8 @@ export function PowerMakerHeader() {
               <div className="flex space-x-2">
                 <Button 
                   onClick={handleInviteWithEmail}
-                  className={`${inviteMode === 'email' ? 'bg-brand hover:bg-brand/90 text-white' : 'bg-muted text-muted-foreground'}`}
+                  variant={inviteMode === 'email' ? 'default' : 'outline'}
+                  className={inviteMode === 'email' ? 'bg-brand hover:bg-brand/90 text-white' : ''}
                 >
                   Invite with email
                 </Button>
