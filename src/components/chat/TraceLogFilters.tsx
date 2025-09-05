@@ -255,10 +255,10 @@ export function TraceLogFilters({ isOpen, onClose, onShowTraceLogs }: TraceLogFi
             </div>
 
             {/* Actions */}
-            <div className="flex justify-between items-center pt-4">
-              <Button variant="link" className="text-primary">
+            <div className="flex justify-end items-center pt-4">
+              {/* <Button variant="link" className="text-primary">
                 See Less
-              </Button>
+              </Button> */}
               <Button 
                 onClick={onShowTraceLogs}
                 className="bg-primary hover:bg-primary/90"
