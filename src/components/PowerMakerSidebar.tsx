@@ -44,7 +44,7 @@ const connections = [
 
 export function PowerMakerSidebar() {
   const [showAllChats, setShowAllChats] = useState(false);
-  const INITIAL_CHAT_LIMIT = 5;
+  const INITIAL_CHAT_LIMIT = 9;
   const [hoveredChat, setHoveredChat] = useState<number | null>(null);
   const isMobile = useIsMobile();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
