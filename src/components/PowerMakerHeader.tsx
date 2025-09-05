@@ -92,6 +92,8 @@ export function PowerMakerHeader() {
   const [demoUser, setDemoUser] = useState<{email: string; name: string} | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [inviteMode, setInviteMode] = useState<'email' | 'link'>('email');
+  const [inviteEmail, setInviteEmail] = useState('');
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -116,6 +118,44 @@ export function PowerMakerHeader() {
       description: "Successfully signed out! (Demo Mode)",
     });
     setShowLogoutDialog(false);
+  };
+
+  const handleInviteWithLink = () => {
+    setInviteMode('link');
+    setInviteEmail('https://powermaker.com/invite/abc123def456');
+  };
+
+  const handleInviteWithEmail = () => {
+    setInviteMode('email');
+    setInviteEmail('');
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteEmail);
+      toast({
+        title: "Link copied!",
+        description: "Invite link has been copied to clipboard",
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy link to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSendInvite = () => {
+    if (inviteMode === 'link') {
+      handleCopyLink();
+    } else {
+      toast({
+        title: "Invite sent!",
+        description: `Invitation sent to ${inviteEmail}`,
+      });
+      setInviteEmail('');
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -566,7 +606,13 @@ export function PowerMakerHeader() {
 
       {/* Invite Dialog/Drawer */}
       {isMobile ? (
-        <Drawer open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+        <Drawer open={showInviteDialog} onOpenChange={(open) => {
+          setShowInviteDialog(open);
+          if (!open) {
+            setInviteMode('email');
+            setInviteEmail('');
+          }
+        }}>
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle>Invite people</DrawerTitle>
@@ -577,10 +623,17 @@ export function PowerMakerHeader() {
 
             <div className="p-4 space-y-6">
               <div className="flex flex-col space-y-3">
-                <Button className="w-full h-12 bg-brand hover:bg-brand/90 text-white text-base">
+                <Button 
+                  onClick={handleInviteWithEmail}
+                  className={`w-full h-12 text-base ${inviteMode === 'email' ? 'bg-brand hover:bg-brand/90 text-white' : 'bg-muted text-muted-foreground'}`}
+                >
                   Invite with email
                 </Button>
-                <Button variant="outline" className="w-full h-12 text-base">
+                <Button 
+                  onClick={handleInviteWithLink}
+                  variant={inviteMode === 'link' ? 'default' : 'outline'} 
+                  className={`w-full h-12 text-base ${inviteMode === 'link' ? 'bg-brand hover:bg-brand/90 text-white' : ''}`}
+                >
                   Invite with link
                 </Button>
               </div>
@@ -588,9 +641,18 @@ export function PowerMakerHeader() {
               <div className="space-y-3">
                 <Label className="text-base">Add Team</Label>
                 <div className="flex flex-col space-y-3">
-                  <Input placeholder="Enter email" className="h-12 text-base" />
-                  <Button className="w-full h-12 bg-brand hover:bg-brand/90 text-white text-base">
-                    Send
+                  <Input 
+                    placeholder={inviteMode === 'email' ? "Enter email" : "Invite link"} 
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="h-12 text-base" 
+                    readOnly={inviteMode === 'link'}
+                  />
+                  <Button 
+                    onClick={handleSendInvite}
+                    className="w-full h-12 bg-brand hover:bg-brand/90 text-white text-base"
+                  >
+                    {inviteMode === 'link' ? 'Copy Link' : 'Send'}
                   </Button>
                 </div>
               </div>
@@ -602,7 +664,13 @@ export function PowerMakerHeader() {
           </DrawerContent>
         </Drawer>
       ) : (
-        <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+        <Dialog open={showInviteDialog} onOpenChange={(open) => {
+          setShowInviteDialog(open);
+          if (!open) {
+            setInviteMode('email');
+            setInviteEmail('');
+          }
+        }}>
           <DialogContent className="sm:max-w-[400px]">
             <DialogHeader>
               <DialogTitle>Invite people</DialogTitle>
@@ -613,18 +681,36 @@ export function PowerMakerHeader() {
 
             <div className="space-y-4">
               <div className="flex space-x-2">
-                <Button className="bg-brand hover:bg-brand/90 text-white">
+                <Button 
+                  onClick={handleInviteWithEmail}
+                  className={`${inviteMode === 'email' ? 'bg-brand hover:bg-brand/90 text-white' : 'bg-muted text-muted-foreground'}`}
+                >
                   Invite with email
                 </Button>
-                <Button variant="outline">Invite with link</Button>
+                <Button 
+                  onClick={handleInviteWithLink}
+                  variant={inviteMode === 'link' ? 'default' : 'outline'}
+                  className={inviteMode === 'link' ? 'bg-brand hover:bg-brand/90 text-white' : ''}
+                >
+                  Invite with link
+                </Button>
               </div>
 
               <div className="space-y-2">
                 <Label>Add Team</Label>
                 <div className="flex space-x-2">
-                  <Input placeholder="Enter email" className="flex-1" />
-                  <Button className="bg-brand hover:bg-brand/90 text-white">
-                    Send
+                  <Input 
+                    placeholder={inviteMode === 'email' ? "Enter email" : "Invite link"} 
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="flex-1" 
+                    readOnly={inviteMode === 'link'}
+                  />
+                  <Button 
+                    onClick={handleSendInvite}
+                    className="bg-brand hover:bg-brand/90 text-white"
+                  >
+                    {inviteMode === 'link' ? 'Copy Link' : 'Send'}
                   </Button>
                 </div>
               </div>
