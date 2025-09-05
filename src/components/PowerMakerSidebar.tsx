@@ -224,7 +224,7 @@ export function PowerMakerSidebar() {
             <SidebarGroupLabel className="px-4 text-sm font-medium text-muted-foreground flex-shrink-0">
               Recent
             </SidebarGroupLabel>
-            <SidebarGroupContent className="overflow-y-auto" style={{ height: 'calc(100vh - 340px)' }}>
+            <SidebarGroupContent className="overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 340px)' }}>
               <SidebarMenu>
                 {displayedChats.length > 0 ? (
                   displayedChats.map((thread, index) => (
