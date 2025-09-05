@@ -442,74 +442,147 @@ export function PowerMakerSidebar() {
         </Dialog>
       )}
 
-      {/* Feedback Dialog */}
-      <Dialog open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Send Feedback</DialogTitle>
-            <DialogDescription>
-              We'd love to hear your thoughts about our application.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="feedback-type">Feedback Type</Label>
-              <Select value={feedbackType} onValueChange={setFeedbackType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select feedback type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="compliment">Compliment</SelectItem>
-                  <SelectItem value="suggestion">Suggestion</SelectItem>
-                  <SelectItem value="issue">Issue</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+      {/* Responsive Feedback - Drawer for mobile, Dialog for desktop */}
+      {isMobile ? (
+        <Drawer open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
+          <DrawerContent className="max-h-[90vh]">
+            <DrawerHeader className="px-4 pt-4 pb-2">
+              <DrawerTitle>Send Feedback</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-4 space-y-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                We'd love to hear your thoughts about our application.
+              </p>
+              <div>
+                <Label htmlFor="feedback-type">Feedback Type</Label>
+                <Select value={feedbackType} onValueChange={setFeedbackType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select feedback type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="compliment">Compliment</SelectItem>
+                    <SelectItem value="suggestion">Suggestion</SelectItem>
+                    <SelectItem value="issue">Issue</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="feedback-text">Your Feedback</Label>
+                <Textarea
+                  id="feedback-text"
+                  placeholder="Tell us what you think..."
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  rows={4}
+                />
+              </div>
+              <div>
+                <Label>Rating</Label>
+                {renderStarRating()}
+              </div>
+              <div>
+                <Label htmlFor="feedback-image">Upload Image (optional)</Label>
+                <Input id="feedback-image" type="file" accept="image/*" />
+              </div>
+              <Button onClick={handleFeedbackSubmit} className="w-full">
+                Send Feedback
+              </Button>
             </div>
-            <div>
-              <Label htmlFor="feedback-text">Your Feedback</Label>
-              <Textarea
-                id="feedback-text"
-                placeholder="Tell us what you think..."
-                value={feedbackText}
-                onChange={(e) => setFeedbackText(e.target.value)}
-                rows={4}
-              />
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Send Feedback</DialogTitle>
+              <DialogDescription>
+                We'd love to hear your thoughts about our application.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="feedback-type">Feedback Type</Label>
+                <Select value={feedbackType} onValueChange={setFeedbackType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select feedback type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="compliment">Compliment</SelectItem>
+                    <SelectItem value="suggestion">Suggestion</SelectItem>
+                    <SelectItem value="issue">Issue</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="feedback-text">Your Feedback</Label>
+                <Textarea
+                  id="feedback-text"
+                  placeholder="Tell us what you think..."
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  rows={4}
+                />
+              </div>
+              <div>
+                <Label>Rating</Label>
+                {renderStarRating()}
+              </div>
+              <div>
+                <Label htmlFor="feedback-image">Upload Image (optional)</Label>
+                <Input id="feedback-image" type="file" accept="image/*" />
+              </div>
+              <Button onClick={handleFeedbackSubmit} className="w-full">
+                Send Feedback
+              </Button>
             </div>
-            <div>
-              <Label>Rating</Label>
-              {renderStarRating()}
-            </div>
-            <div>
-              <Label htmlFor="feedback-image">Upload Image (optional)</Label>
-              <Input id="feedback-image" type="file" accept="image/*" />
-            </div>
-            <Button onClick={handleFeedbackSubmit} className="w-full">
-              Send Feedback
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
 
-      {/* Clean Chat Confirmation Dialog */}
-      <Dialog open={isCleanChatOpen} onOpenChange={setIsCleanChatOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Are you sure?</DialogTitle>
-            <DialogDescription>
-              Do you really want to delete all chats? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsCleanChatOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleCleanChatConfirm}>
-              Yes
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Responsive Clean Chat - Drawer for mobile, Dialog for desktop */}
+      {isMobile ? (
+        <Drawer open={isCleanChatOpen} onOpenChange={setIsCleanChatOpen}>
+          <DrawerContent className="max-h-[40vh]">
+            <DrawerHeader className="px-4 pt-4 pb-2">
+              <DrawerTitle>Are you sure?</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-4">
+              <p className="text-sm text-muted-foreground mb-6">
+                Do you really want to delete all chats? This action cannot be undone.
+              </p>
+              <div className="flex flex-col gap-3">
+                <Button variant="destructive" onClick={handleCleanChatConfirm} className="w-full">
+                  Yes, Delete All
+                </Button>
+                <Button variant="outline" onClick={() => setIsCleanChatOpen(false)} className="w-full">
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isCleanChatOpen} onOpenChange={setIsCleanChatOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Are you sure?</DialogTitle>
+              <DialogDescription>
+                Do you really want to delete all chats? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsCleanChatOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleCleanChatConfirm}>
+                Yes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* CRM Connection Details Dialog */}
       <CrmConnectionDetail 
