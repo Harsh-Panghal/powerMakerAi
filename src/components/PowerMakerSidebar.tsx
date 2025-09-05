@@ -217,14 +217,14 @@ export function PowerMakerSidebar() {
         </Button>
       </div>
 
-      <SidebarContent className="flex-1 flex flex-col min-h-0">
+      <SidebarContent className="flex-1 flex flex-col">
         {/* Recent Chats */}
         {!isCollapsed && (
-          <SidebarGroup className="flex-1 flex flex-col min-h-0">
+          <SidebarGroup className="flex-1 flex flex-col">
             <SidebarGroupLabel className="px-4 text-sm font-medium text-muted-foreground flex-shrink-0">
               Recent
             </SidebarGroupLabel>
-            <SidebarGroupContent className="flex-1 min-h-0 overflow-y-auto">
+            <SidebarGroupContent className="overflow-y-auto" style={{ height: 'calc(100vh - 280px)' }}>
               <SidebarMenu>
                 {displayedChats.length > 0 ? (
                   displayedChats.map((thread, index) => (
