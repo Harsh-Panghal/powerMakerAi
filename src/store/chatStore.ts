@@ -275,7 +275,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         updatedRecentThreads[existingIndex] = currentThread;
       } else {
         // Add new thread to the beginning
-        updatedRecentThreads = [currentThread, ...recentThreads.slice(0, 9)]; // Keep last 10
+        updatedRecentThreads = [currentThread, ...recentThreads.slice(0, 16)]; // Keep last 17 threads
       }
       
       set({ recentThreads: updatedRecentThreads });
