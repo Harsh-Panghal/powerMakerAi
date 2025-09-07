@@ -2,9 +2,12 @@ import { Outlet } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { PowerMakerSidebar } from "./PowerMakerSidebar";
 import { PowerMakerHeader } from "./PowerMakerHeader";
+import { OnboardingChecklist, useOnboardingChecklist } from "./OnboardingChecklist";
 
 export function PowerMakerLayout() {
   console.log("PowerMakerLayout rendering");
+  
+  const { isChecklistOpen, shouldShowChecklist, closeChecklist } = useOnboardingChecklist();
   
   return (
     <SidebarProvider>
@@ -20,6 +23,12 @@ export function PowerMakerLayout() {
           </div>
         </div>
       </div>
+      
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist
+        isOpen={isChecklistOpen}
+        onClose={closeChecklist}
+      />
     </SidebarProvider>
   );
 }

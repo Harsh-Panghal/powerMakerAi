@@ -93,10 +93,10 @@ const guideSteps: UserGuideStep[] = [
   },
   {
     id: 6,
-    title: "Explore Settings",
-    description: "Access advanced options",
+    title: "Explore Settings & CRM Setup",
+    description: "Access advanced options and connect your CRM",
     icon: <Settings className="h-6 w-6" />,
-    content: "Use the settings option in the sidebar to access feedback, CRM connections, privacy policy, and other advanced features.",
+    content: "Use the settings option in the sidebar to access feedback, CRM connections, privacy policy, and other advanced features. Setting up CRM connections allows you to sync data and automate workflows with your existing systems.",
     target: '[data-guide="settings-button"]',
     interactive: true,
     validationText: "Click the settings button in the sidebar"
@@ -138,9 +138,13 @@ interface UserGuideWizardProps {
 }
 
 export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(() => {
+    const savedStep = localStorage.getItem('userGuideCurrentStep');
+    return savedStep ? parseInt(savedStep, 10) : 1;
+  });
   const [isCompleted, setIsCompleted] = useState(false);
   const [waitingForInteraction, setWaitingForInteraction] = useState(false);
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
   const isMobile = useIsMobile();
   
   const {
@@ -167,11 +171,14 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
     setWaitingForInteraction(false);
     
     if (currentStep < guideSteps.length) {
-      setCurrentStep(currentStep + 1);
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      localStorage.setItem('userGuideCurrentStep', nextStep.toString());
     } else {
       setIsCompleted(true);
       resetAll();
       localStorage.setItem('userGuideCompleted', 'true');
+      localStorage.removeItem('userGuideCurrentStep');
     }
   };
 
@@ -179,7 +186,9 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
     stopValidation(currentStep);
     setWaitingForInteraction(false);
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      localStorage.setItem('userGuideCurrentStep', prevStep.toString());
     }
   };
 
@@ -189,20 +198,79 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
     setWaitingForInteraction(false);
     setIsCompleted(true);
     localStorage.setItem('userGuideCompleted', 'true');
+    localStorage.removeItem('userGuideCurrentStep');
     onClose();
   };
 
   const handleFinish = () => {
     resetAll();
     localStorage.setItem('userGuideCompleted', 'true');
+    localStorage.removeItem('userGuideCurrentStep');
     onClose();
     setIsCompleted(false);
     setCurrentStep(1);
     setWaitingForInteraction(false);
   };
 
+  const handleResumeGuide = () => {
+    setShowResumePrompt(false);
+  };
+
+  const handleStartOver = () => {
+    setCurrentStep(1);
+    localStorage.removeItem('userGuideCurrentStep');
+    setShowResumePrompt(false);
+  };
+
   const currentStepData = guideSteps.find(step => step.id === currentStep);
   
+  // Check for resume prompt on mount
+  useEffect(() => {
+    const savedStep = localStorage.getItem('userGuideCurrentStep');
+    const isCompleted = localStorage.getItem('userGuideCompleted') === 'true';
+    
+    if (savedStep && !isCompleted && parseInt(savedStep, 10) > 1) {
+      setShowResumePrompt(true);
+    }
+  }, []);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen || showResumePrompt) return;
+      
+      switch (e.key) {
+        case 'Escape':
+          e.preventDefault();
+          onClose();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (currentStep > 1) handlePrevious();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          if (!waitingForInteraction) handleNext();
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (isCompleted) {
+            handleFinish();
+          } else if (currentStepData?.interactive && !isStepCompleted(currentStep) && !waitingForInteraction) {
+            handleNext(); // Start "Try It" mode
+          } else if (!waitingForInteraction) {
+            handleNext();
+          }
+          break;
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, currentStep, waitingForInteraction, isCompleted, showResumePrompt]);
+
   // Auto-advance when interactive step is completed
   useEffect(() => {
     if (currentStepData?.interactive && isStepCompleted(currentStep) && waitingForInteraction) {
@@ -211,6 +279,32 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
       }, 1000); // Small delay to show completion
     }
   }, [currentStep, isStepCompleted, waitingForInteraction, currentStepData?.interactive]);
+
+  const renderResumePrompt = () => (
+    <div className="text-center py-6">
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        className="flex justify-center mb-4"
+      >
+        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+          <HelpCircle className="h-8 w-8 text-primary" />
+        </div>
+      </motion.div>
+      <h3 className="text-lg font-semibold mb-2">Resume Your Tour?</h3>
+      <p className="text-muted-foreground mb-6">
+        You were on step {currentStep} of {guideSteps.length}. Would you like to continue where you left off?
+      </p>
+      <div className="flex gap-3 justify-center">
+        <Button variant="outline" onClick={handleStartOver}>
+          Start Over
+        </Button>
+        <Button onClick={handleResumeGuide}>
+          Resume Tour
+        </Button>
+      </div>
+    </div>
+  );
 
   const renderStepContent = () => {
     if (isCompleted) {
@@ -361,16 +455,8 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
     <div className="max-w-md mx-auto">
       <div className="flex justify-between items-center mb-4">
         <div />
-        {/* <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="h-8 w-8 p-0"
-        >
-          <X className="h-4 w-4" />
-        </Button> */}
       </div>
-      {renderStepContent()}
+      {showResumePrompt ? renderResumePrompt() : renderStepContent()}
     </div>
   );
 
@@ -379,19 +465,21 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
       <>
         <Drawer open={isOpen} onOpenChange={onClose}>
           <DrawerContent className="max-h-[90vh]">
-            <DrawerHeader className="text-center">
-              <DrawerTitle>User Guide</DrawerTitle>
-            </DrawerHeader>
-            <div className="px-4 pb-6">
-              {renderStepContent()}
-            </div>
+          <DrawerHeader className="text-center">
+            <DrawerTitle className="sr-only">
+              {showResumePrompt ? "Resume User Guide" : `User Guide - Step ${currentStep} of ${guideSteps.length}`}
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 pb-6">
+            {showResumePrompt ? renderResumePrompt() : renderStepContent()}
+          </div>
           </DrawerContent>
         </Drawer>
         
         {/* Spotlight for highlighting elements */}
         <Spotlight
           target={currentStepData?.target || ''}
-          isActive={isOpen && !!currentStepData?.target && waitingForInteraction}
+          isActive={isOpen && !!currentStepData?.target && waitingForInteraction && !showResumePrompt}
           onTargetClick={() => {
             if (currentStepData?.interactive) {
               completeStep(currentStep);
@@ -407,7 +495,9 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>User Guide</DialogTitle>
+            <DialogTitle className="sr-only">
+              {showResumePrompt ? "Resume User Guide" : `User Guide - Step ${currentStep} of ${guideSteps.length}`}
+            </DialogTitle>
           </DialogHeader>
           {dialogContent}
         </DialogContent>
@@ -416,7 +506,7 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
       {/* Spotlight for highlighting elements */}
       <Spotlight
         target={currentStepData?.target || ''}
-        isActive={isOpen && !!currentStepData?.target && waitingForInteraction}
+        isActive={isOpen && !!currentStepData?.target && waitingForInteraction && !showResumePrompt}
         onTargetClick={() => {
           if (currentStepData?.interactive) {
             completeStep(currentStep);
@@ -438,6 +528,8 @@ export function useUserGuide() {
 
   const resetGuide = () => {
     localStorage.removeItem('userGuideCompleted');
+    localStorage.removeItem('userGuideCurrentStep');
+    localStorage.removeItem('onboardingChecklistDismissed');
     setHasCompletedGuide(false);
   };
 
