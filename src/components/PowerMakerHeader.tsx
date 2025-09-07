@@ -218,7 +218,7 @@ export function PowerMakerHeader() {
             <Menu className="w-5 h-5" />
           </Button>
           {/* model selector */}
-          <div className="flex items-center flex-1 justify-start px-2 max-w-[120px] sm:max-w-xs md:max-w-sm">
+          <div className="flex items-center flex-1 justify-start px-2 max-w-[120px] sm:max-w-xs md:max-w-sm" data-tour="model-selector">
             <Select
               value={selectedModel}
               onValueChange={(value) => {
@@ -278,7 +278,7 @@ export function PowerMakerHeader() {
         {/* right section */}
         <div className="flex items-center space-x-1 sm:space-x-4">
           {/* Take a Tour Button */}
-          <Button
+          {/* <Button
             variant="ghost"
             size="sm"
             onClick={() => {
@@ -289,7 +289,7 @@ export function PowerMakerHeader() {
           >
             <HelpCircle className="w-4 h-4 mr-1" />
             Take a Tour
-          </Button>
+          </Button> */}
           
           {/* Connection Status */}
           <div className="hidden md:flex items-center space-x-2 text-sm" data-tour="connection-status">
@@ -440,7 +440,7 @@ export function PowerMakerHeader() {
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48" data-guide="user-menu">
                 <DropdownMenuItem onClick={() => setShowProfileDialog(true)}>
                   <User className="w-4 h-4 mr-2" />
                   Profile
@@ -451,7 +451,7 @@ export function PowerMakerHeader() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                   resetTour();
-                  setShowTour(true);
+                                    
                 }}>
                   <HelpCircle className="w-4 h-4 mr-2" />
                   Take a Tour

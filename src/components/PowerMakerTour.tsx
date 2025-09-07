@@ -24,8 +24,24 @@ interface TourStep {
   title: string;
   description: string;
   target: string; // CSS selector
-  position: 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-  arrow: 'up' | 'down' | 'left' | 'right' | 'up-left' | 'up-right' | 'down-left' | 'down-right';
+  position:
+    | "top"
+    | "bottom"
+    | "left"
+    | "right"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
+  arrow:
+    | "up"
+    | "down"
+    | "left"
+    | "right"
+    | "up-left"
+    | "up-right"
+    | "down-left"
+    | "down-right";
   autoAdvance?: number; // seconds to auto-advance
   autoPopup?: {
     trigger: string; // selector to trigger popup
@@ -38,194 +54,191 @@ const tourSteps: TourStep[] = [
   {
     id: 1,
     title: "Welcome & Sidebar Overview",
-    description: "Welcome to PowerMaker AI! This is your Sidebar – your navigation hub on the left for chats and settings.",
+    description:
+      "Welcome to PowerMaker AI! This is your Sidebar – your navigation hub on the left for chats and settings.",
     target: '[data-sidebar="true"]',
-    position: 'top-left',
-    arrow: 'right',
-    autoAdvance: 5
+    position: "right",
+    arrow: "left",
+    autoAdvance: 5,
   },
   {
     id: 2,
     title: "Logo",
-    description: "Click the Logo to return to the landing page. It's your home button!",
+    description:
+      "Click the Logo to return to the landing page. It's your home button!",
     target: '[data-tour="logo"]',
-    position: 'bottom',
-    arrow: 'up',
-    autoAdvance: 4
+    position: "bottom",
+    arrow: "up",
+    autoAdvance: 4,
   },
   {
     id: 3,
     title: "New Chat Button",
-    description: "Click '+ New Chat' to start a new conversation. It loads a greeting in the chat area.",
+    description:
+      "Click '+ New Chat' to start a new conversation. It loads a greeting in the chat area.",
     target: '[data-guide="new-chat-button"]',
-    position: 'bottom-right',
-    arrow: 'up-left',
-    autoAdvance: 4
+    position: "bottom-right",
+    arrow: "up-left",
+    autoAdvance: 4,
   },
   {
     id: 4,
     title: "Recent Chats Area",
-    description: "See your Recent Chats here. Click a title to reopen or hover for Rename/Delete.",
+    description:
+      "See your Recent Chats here. Click a title to reopen or hover for Rename/Delete.",
     target: '[data-tour="recent-chats"]',
-    position: 'right',
-    arrow: 'left',
-    autoAdvance: 4
+    position: "right",
+    arrow: "left",
+    autoAdvance: 4,
   },
   {
     id: 5,
-    title: "More Option",
-    description: "Expand 'More' for extra prompt categories or settings. It's your extra toolbox!",
-    target: '[data-tour="more-menu"]',
-    position: 'bottom',
-    arrow: 'up',
-    autoAdvance: 4
+    title: "Header Overview",
+    description:
+      "This is the Header – it shows model selection, connection status, notifications, and your profile. Let's explore!",
+    target: '[data-tour="header"]',
+    position: "bottom",
+    arrow: "up",
+    autoAdvance: 4,
   },
   {
     id: 6,
-    title: "Header Overview",
-    description: "This is the Header – it shows connection status, notifications, and your profile. Let's explore!",
-    target: '[data-tour="header"]',
-    position: 'bottom',
-    arrow: 'up',
-    autoAdvance: 4
-  },
-  {
-    id: 7,
     title: "Hamburger Icon",
     description: "Click the Hamburger ☰ to toggle the Sidebar open or closed.",
     target: '[data-tour="hamburger"]',
-    position: 'right',
-    arrow: 'left',
-    autoAdvance: 4
+    position: "right",
+    arrow: "left",
+    autoAdvance: 4,
+  },
+  {
+    id: 7,
+    title: "Model Selector",
+    description: "Select the AI model you want to use. It's your AI companion!",
+    target: '[data-tour="model-selector"]',
+    position: "bottom",
+    arrow: "up",
+    autoAdvance: 4,
   },
   {
     id: 8,
     title: "Connection Status",
-    description: "This shows your CRM connection status. It updates dynamically.",
+    description:
+      "This shows your CRM connection status. It updates dynamically.",
     target: '[data-tour="connection-status"]',
-    position: 'bottom',
-    arrow: 'up',
-    autoAdvance: 4
+    position: "bottom",
+    arrow: "up",
+    autoAdvance: 4,
   },
   {
     id: 9,
     title: "Bell Icon",
-    description: "Click the Bell to see notifications. We'll open it to show alerts.",
+    description:
+      "Click the Bell to see notifications. We'll open it to show alerts.",
     target: '[data-guide="notifications-bell"]',
-    position: 'right',
-    arrow: 'left',
-    autoAdvance: 6,
-    autoPopup: {
-      trigger: '[data-guide="notifications-bell"]',
-      delay: 1000,
-      duration: 5000
-    }
+    position: "bottom",
+    arrow: "up",
+    autoAdvance: 4
   },
   {
     id: 10,
     title: "Profile Picture & Username",
-    description: "Click your Profile Picture to Invite or Logout. It's your personal hub.",
+    description:
+      "Click your Profile Picture to Invite or Logout. It's your personal hub.",
     target: '[data-guide="user-menu"]',
-    position: 'bottom',
-    arrow: 'up',
+    position: "left",
+    arrow: "right",
     autoAdvance: 4
   },
   {
     id: 11,
     title: "Chat Area & Greeting Container",
-    description: "This is the Chat Area – where you interact with AI! It starts with a Greeting.",
+    description:
+      "This is the Chat Area – where you interact with AI! It starts with a Greeting.",
     target: '[data-tour="chat-area"]',
-    position: 'right',
-    arrow: 'left',
-    autoAdvance: 4
+    position: "right",
+    arrow: "left",
+    autoAdvance: 4,
   },
   {
     id: 12,
     title: "Prompt Cards",
-    description: "Click these Prompt Cards for tasks like creating entities or fields. Quick starts await!",
+    description:
+      "Click these Prompt Cards for tasks like creating entities or fields. Quick starts await!",
     target: '[data-tour="prompt-cards"]',
-    position: 'bottom',
-    arrow: 'up',
-    autoAdvance: 4
+    position: "bottom",
+    arrow: "up",
+    autoAdvance: 4,
   },
   {
     id: 13,
     title: "Input Area",
-    description: "Type your prompt here (up to 1000 chars) and pick a Model (e.g., Model 0.1) to start chatting!",
+    description:
+      "Type your prompt here (up to 1000 chars). It's your typing area.",
     target: '[data-tour="input-area"]',
-    position: 'bottom-right',
-    arrow: 'up-left',
-    autoAdvance: 5
+    position: "top-right",
+    arrow: "down-left",
+    autoAdvance: 5,
   },
   {
     id: 14,
     title: "Settings Icon",
-    description: "Click Settings (gear icon) for options like Feedback. Let's see them!",
+    description:
+      "Click Settings (gear icon) for options like Feedback, Clean Chat, CRM Connections, and Privacy Policy/Terms of Use. Let's see them!",
     target: '[data-guide="settings-button"]',
-    position: 'right',
-    arrow: 'left',
-    autoAdvance: 4
+    position: "top-right",
+    arrow: "down-left",
+    autoAdvance: 6
   },
   {
     id: 15,
     title: "Feedback Option",
-    description: "Send Feedback here. We'll open it to show text, type, image, and star fields.",
+    description:
+      "Send Feedback here. We'll open it to show text, type, image, and star fields.",
     target: '[data-tour="feedback-option"]',
-    position: 'bottom',
-    arrow: 'up',
-    autoAdvance: 6,
-    autoPopup: {
-      trigger: '[data-tour="feedback-option"]',
-      delay: 1000,
-      duration: 5000
-    }
+    position: "bottom",
+    arrow: "up",
+    autoAdvance: 4
   },
   {
     id: 16,
     title: "Clean Chat Option",
-    description: "Clean Chat deletes all chats. We'll open it to show the confirmation.",
+    description:
+      "Clean Chat deletes all chats. We'll open it to show the confirmation.",
     target: '[data-tour="clean-chat-option"]',
-    position: 'right',
-    arrow: 'left',
-    autoAdvance: 6,
-    autoPopup: {
-      trigger: '[data-tour="clean-chat-option"]',
-      delay: 1000,
-      duration: 5000
-    }
+    position: "right",
+    arrow: "left",
+    autoAdvance: 4   
   },
   {
     id: 17,
     title: "CRM Connection Details - List",
-    description: "Manage CRM Connections here. We'll open it to show your list.",
+    description:
+      "Manage CRM Connections here. We'll open it to show the list.",
     target: '[data-tour="crm-connections"]',
-    position: 'bottom',
-    arrow: 'up',
-    autoAdvance: 6,
-    autoPopup: {
-      trigger: '[data-tour="crm-connections"]',
-      delay: 1000,
-      duration: 5000
-    }
+    position: "bottom",
+    arrow: "up",
+    autoAdvance: 4
   },
   {
     id: 18,
     title: "Privacy Policy & Terms of Use",
-    description: "Privacy Policy and Terms open in new tabs. Read them for app rules.",
+    description:
+      "Privacy Policy and Terms open in new tabs. Read them for app rules.",
     target: '[data-tour="privacy-terms"]',
-    position: 'bottom',
-    arrow: 'up',
-    autoAdvance: 4
+    position: "bottom",
+    arrow: "up",
+    autoAdvance: 4,
   },
   {
     id: 19,
     title: "Help Icon",
-    description: "Click Help (?) for Documentation. Tour complete – explore freely!",
+    description:
+      "Click Help (?) for Documentation. Tour complete – explore freely!",
     target: '[data-tour="help-icon"]',
-    position: 'right',
-    arrow: 'left',
-    autoAdvance: 5
-  }
+    position: "top-right",
+    arrow: "down-left",
+    autoAdvance: 5,
+  },
 ];
 
 interface PowerMakerTourProps {
@@ -235,17 +248,23 @@ interface PowerMakerTourProps {
 
 export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
   const [currentStep, setCurrentStep] = useState(() => {
-    const saved = localStorage.getItem('powermaker-tour-step');
+    const saved = localStorage.getItem("powermaker-tour-step");
     return saved ? parseInt(saved, 10) : 1;
   });
   const [isCompleted, setIsCompleted] = useState(false);
   const [cardPosition, setCardPosition] = useState({ x: 0, y: 0 });
-  const [targetPosition, setTargetPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [targetPosition, setTargetPosition] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
+  const [autoAdvanceTimer, setAutoAdvanceTimer] =
+    useState<NodeJS.Timeout | null>(null);
   const [popupTimer, setPopupTimer] = useState<NodeJS.Timeout | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const currentStepData = tourSteps.find(step => step.id === currentStep);
+  const currentStepData = tourSteps.find((step) => step.id === currentStep);
 
   // Calculate positions
   useEffect(() => {
@@ -264,42 +283,42 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
         x: targetRect.left,
         y: targetRect.top,
         width: targetRect.width,
-        height: targetRect.height
+        height: targetRect.height,
       });
 
       let x = 0;
       let y = 0;
 
       switch (currentStepData.position) {
-        case 'top':
+        case "top":
           x = targetRect.left + targetRect.width / 2 - cardWidth / 2;
           y = targetRect.top - cardHeight - offset;
           break;
-        case 'bottom':
+        case "bottom":
           x = targetRect.left + targetRect.width / 2 - cardWidth / 2;
           y = targetRect.bottom + offset;
           break;
-        case 'left':
+        case "left":
           x = targetRect.left - cardWidth - offset;
           y = targetRect.top + targetRect.height / 2 - cardHeight / 2;
           break;
-        case 'right':
+        case "right":
           x = targetRect.right + offset;
           y = targetRect.top + targetRect.height / 2 - cardHeight / 2;
           break;
-        case 'top-left':
+        case "top-left":
           x = targetRect.left - cardWidth - offset;
           y = targetRect.top - cardHeight - offset;
           break;
-        case 'top-right':
+        case "top-right":
           x = targetRect.right + offset;
           y = targetRect.top - cardHeight - offset;
           break;
-        case 'bottom-left':
+        case "bottom-left":
           x = targetRect.left - cardWidth - offset;
           y = targetRect.bottom + offset;
           break;
-        case 'bottom-right':
+        case "bottom-right":
           x = targetRect.right + offset;
           y = targetRect.bottom + offset;
           break;
@@ -307,19 +326,25 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
 
       // Ensure card stays within viewport
       const padding = 16;
-      x = Math.max(padding, Math.min(x, window.innerWidth - cardWidth - padding));
-      y = Math.max(padding, Math.min(y, window.innerHeight - cardHeight - padding));
+      x = Math.max(
+        padding,
+        Math.min(x, window.innerWidth - cardWidth - padding)
+      );
+      y = Math.max(
+        padding,
+        Math.min(y, window.innerHeight - cardHeight - padding)
+      );
 
       setCardPosition({ x, y });
     };
 
     updatePositions();
-    window.addEventListener('scroll', updatePositions, true);
-    window.addEventListener('resize', updatePositions);
+    window.addEventListener("scroll", updatePositions, true);
+    window.addEventListener("resize", updatePositions);
 
     return () => {
-      window.removeEventListener('scroll', updatePositions, true);
-      window.removeEventListener('resize', updatePositions);
+      window.removeEventListener("scroll", updatePositions, true);
+      window.removeEventListener("resize", updatePositions);
     };
   }, [currentStep, isOpen, currentStepData]);
 
@@ -351,21 +376,35 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
     }
 
     const timer = setTimeout(() => {
-      const triggerElement = document.querySelector(currentStepData.autoPopup!.trigger);
+      const triggerElement = document.querySelector(
+        currentStepData.autoPopup!.trigger
+      );
       if (triggerElement) {
         // Simulate click to open popup
         (triggerElement as HTMLElement).click();
-        
+
         // Close popup after duration
         setTimeout(() => {
-          // Try to close popup by pressing Escape or clicking close button
+          // 1. Try to close dialogs
           const closeButton = document.querySelector('[role="dialog"] button');
           if (closeButton) {
             (closeButton as HTMLElement).click();
-          } else {
-            // Fallback to Escape key
-            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+            return;
           }
+
+          // 2. Try to close dropdowns (by toggling trigger again)
+          const triggerElement = document.querySelector(
+            currentStepData.autoPopup!.trigger
+          );
+          if (triggerElement) {
+            (triggerElement as HTMLElement).click();
+            return;
+          }
+
+          // 3. Fallback to Escape key
+          document.dispatchEvent(
+            new KeyboardEvent("keydown", { key: "Escape" })
+          );
         }, currentStepData.autoPopup!.duration);
       }
     }, currentStepData.autoPopup.delay);
@@ -386,11 +425,11 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
     if (currentStep < tourSteps.length) {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
-      localStorage.setItem('powermaker-tour-step', nextStep.toString());
+      localStorage.setItem("powermaker-tour-step", nextStep.toString());
     } else {
       setIsCompleted(true);
-      localStorage.setItem('powermaker-tour-completed', 'true');
-      localStorage.removeItem('powermaker-tour-step');
+      localStorage.setItem("powermaker-tour-completed", "true");
+      localStorage.removeItem("powermaker-tour-step");
     }
   };
 
@@ -403,23 +442,23 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
     if (currentStep > 1) {
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
-      localStorage.setItem('powermaker-tour-step', prevStep.toString());
+      localStorage.setItem("powermaker-tour-step", prevStep.toString());
     }
   };
 
   const handleSkip = () => {
     if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
     if (popupTimer) clearTimeout(popupTimer);
-    
+
     setIsCompleted(true);
-    localStorage.setItem('powermaker-tour-completed', 'true');
-    localStorage.removeItem('powermaker-tour-step');
+    localStorage.setItem("powermaker-tour-completed", "true");
+    localStorage.removeItem("powermaker-tour-step");
     onClose();
   };
 
   const handleFinish = () => {
-    localStorage.setItem('powermaker-tour-completed', 'true');
-    localStorage.removeItem('powermaker-tour-step');
+    localStorage.setItem("powermaker-tour-completed", "true");
+    localStorage.removeItem("powermaker-tour-step");
     onClose();
     setIsCompleted(false);
     setCurrentStep(1);
@@ -429,21 +468,21 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
-      
+
       switch (e.key) {
-        case 'Escape':
+        case "Escape":
           e.preventDefault();
           handleSkip();
           break;
-        case 'ArrowLeft':
+        case "ArrowLeft":
           e.preventDefault();
           if (currentStep > 1) handlePrevious();
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           e.preventDefault();
           handleNext();
           break;
-        case 'Tab':
+        case "Tab":
           e.preventDefault();
           handleNext();
           break;
@@ -451,22 +490,31 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
     }
   }, [isOpen, currentStep]);
 
   const getArrowIcon = (direction: string) => {
     switch (direction) {
-      case 'up': return <ArrowUp className="h-4 w-4" />;
-      case 'down': return <ArrowDown className="h-4 w-4" />;
-      case 'left': return <ArrowLeft className="h-4 w-4" />;
-      case 'right': return <ArrowRight className="h-4 w-4" />;
-      case 'up-left': return <ArrowUpLeft className="h-4 w-4" />;
-      case 'up-right': return <ArrowUpRight className="h-4 w-4" />;
-      case 'down-left': return <ArrowDownLeft className="h-4 w-4" />;
-      case 'down-right': return <ArrowDownRight className="h-4 w-4" />;
-      default: return <ArrowRight className="h-4 w-4" />;
+      case "up":
+        return <ArrowUp className="h-4 w-4" />;
+      case "down":
+        return <ArrowDown className="h-4 w-4" />;
+      case "left":
+        return <ArrowLeft className="h-4 w-4" />;
+      case "right":
+        return <ArrowRight className="h-4 w-4" />;
+      case "up-left":
+        return <ArrowUpLeft className="h-4 w-4" />;
+      case "up-right":
+        return <ArrowUpRight className="h-4 w-4" />;
+      case "down-left":
+        return <ArrowDownLeft className="h-4 w-4" />;
+      case "down-right":
+        return <ArrowDownRight className="h-4 w-4" />;
+      default:
+        return <ArrowRight className="h-4 w-4" />;
     }
   };
 
@@ -476,7 +524,7 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
     <>
       {/* Dark overlay */}
       <div className="fixed inset-0 bg-black/60 z-[9998]" />
-      
+
       {/* Target highlight */}
       {currentStepData && (
         <motion.div
@@ -490,8 +538,10 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
             height: targetPosition.height + 8,
           }}
         >
-          <div className="w-full h-full rounded-lg border-2 border-primary shadow-lg bg-transparent" 
-               style={{ boxShadow: '0 0 20px hsl(var(--primary) / 0.5)' }} />
+          <div
+            className="w-full h-full rounded-lg border-2 border-primary shadow-lg bg-transparent"
+            style={{ boxShadow: "0 0 20px hsl(var(--primary) / 0.5)" }}
+          />
           <motion.div
             animate={{
               scale: [1, 1.05, 1],
@@ -506,7 +556,7 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
           />
         </motion.div>
       )}
-      
+
       {/* Tour card */}
       {currentStepData && (
         <motion.div
@@ -541,31 +591,39 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               {/* Progress bar */}
               <div className="w-full bg-muted rounded-full h-1 mb-3">
                 <motion.div
                   className="bg-primary h-1 rounded-full"
                   initial={{ width: 0 }}
-                  animate={{ width: `${(currentStep / tourSteps.length) * 100}%` }}
+                  animate={{
+                    width: `${(currentStep / tourSteps.length) * 100}%`,
+                  }}
                   transition={{ duration: 0.3 }}
                 />
               </div>
-              
+
               {/* Content */}
               <div className="mb-4">
-                <h3 className="font-semibold text-sm mb-2">{currentStepData.title}</h3>
+                <h3 className="font-semibold text-sm mb-2">
+                  {currentStepData.title}
+                </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {currentStepData.description}
                 </p>
               </div>
-              
+
               {/* Auto-advance indicator */}
               {currentStepData.autoAdvance && (
                 <div className="flex items-center gap-1 text-xs text-primary mb-3">
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
                     className="w-3 h-3"
                   >
                     <div className="w-full h-full border border-primary rounded-full border-t-transparent" />
@@ -573,7 +631,7 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
                   Auto-advancing in {currentStepData.autoAdvance}s
                 </div>
               )}
-              
+
               {/* Navigation buttons */}
               <div className="flex justify-between gap-2">
                 <div className="flex gap-1">
@@ -602,7 +660,7 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
                   size="sm"
                   className="text-xs h-7 px-2"
                 >
-                  {currentStep === tourSteps.length ? 'Finish' : 'Next'}
+                  {currentStep === tourSteps.length ? "Finish" : "Next"}
                   <ChevronRight className="h-3 w-3 ml-1" />
                 </Button>
               </div>
@@ -617,22 +675,25 @@ export function PowerMakerTour({ isOpen, onClose }: PowerMakerTourProps) {
 
 // Hook for tour management
 export function usePowerMakerTour() {
-  const [hasCompletedTour, setHasCompletedTour] = useState<boolean | null>(null);
+  const [hasCompletedTour, setHasCompletedTour] = useState<boolean | null>(
+    null
+  );
 
   useEffect(() => {
-    const completed = localStorage.getItem('powermaker-tour-completed') === 'true';
+    const completed =
+      localStorage.getItem("powermaker-tour-completed") === "true";
     setHasCompletedTour(completed);
   }, []);
 
   const resetTour = () => {
-    localStorage.removeItem('powermaker-tour-completed');
-    localStorage.removeItem('powermaker-tour-step');
+    localStorage.removeItem("powermaker-tour-completed");
+    localStorage.removeItem("powermaker-tour-step");
     setHasCompletedTour(false);
   };
 
   const startTour = () => {
-    localStorage.removeItem('powermaker-tour-completed');
-    localStorage.removeItem('powermaker-tour-step');
+    localStorage.removeItem("powermaker-tour-completed");
+    localStorage.removeItem("powermaker-tour-step");
     setHasCompletedTour(false);
   };
 
