@@ -22,12 +22,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { FloatingInput } from "@/components/ui/floating-input";
-
-interface Connection {
-  id: string;
-  name: string;
-  isSelected: boolean;
-}
+import { useChatStore, type Connection } from "@/store/chatStore";
 
 interface CrmConnectionDetailProps {
   isOpen: boolean;
@@ -39,6 +34,7 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
   onClose,
 }) => {
   const isMobile = useIsMobile();
+  const { activeConnection, setActiveConnection } = useChatStore();
   const [connections, setConnections] = useState<Connection[]>([
     { id: "1", name: "CRM Dev", isSelected: true },
     { id: "2", name: "CRM UAT", isSelected: false },
@@ -74,12 +70,20 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
   }>({});
 
   const handleSelectConnection = (id: string) => {
-    setConnections((prev) =>
-      prev.map((conn) => ({
+    setConnections((prev) => {
+      const updatedConnections = prev.map((conn) => ({
         ...conn,
         isSelected: conn.id === id,
-      }))
-    );
+      }));
+      
+      // Find the newly selected connection and update the global state
+      const selectedConnection = updatedConnections.find(conn => conn.id === id);
+      if (selectedConnection) {
+        setActiveConnection(selectedConnection);
+      }
+      
+      return updatedConnections;
+    });
   };
 
   const handleDeleteConnection = (id: string) => {
@@ -92,8 +96,11 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
     }
 
     // If we deleted the selected connection, auto-select the first remaining
-    if (connectionToDelete?.isSelected) {
+    if (connectionToDelete?.isSelected && newConnections.length > 0) {
       newConnections[0].isSelected = true;
+      setActiveConnection(newConnections[0]);
+    } else if (newConnections.length === 0) {
+      setActiveConnection(null);
     }
 
     setConnections(newConnections);
@@ -209,13 +216,22 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
         isSelected: connections.length === 0,
       };
 
-      setConnections((prev) => [
-        ...prev.map((conn) => ({
-          ...conn,
-          isSelected: connections.length === 0 ? false : conn.isSelected,
-        })),
-        newConnection,
-      ]);
+      setConnections((prev) => {
+        const updatedConnections = [
+          ...prev.map((conn) => ({
+            ...conn,
+            isSelected: connections.length === 0 ? false : conn.isSelected,
+          })),
+          newConnection,
+        ];
+        
+        // If this is the first connection, set it as active
+        if (connections.length === 0) {
+          setActiveConnection(newConnection);
+        }
+        
+        return updatedConnections;
+      });
 
       handleBackToConnections();
     }
