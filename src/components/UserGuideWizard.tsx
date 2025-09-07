@@ -10,6 +10,7 @@ import {
   Users,
   Database,
   CheckCircle,
+  Plug,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,13 +60,20 @@ const guideSteps: UserGuideStep[] = [
   },
   {
     id: 4,
+    title: "CRM Connections",
+    description: "Set up and manage your CRM integrations",
+    icon: <Plug className="h-6 w-6" />,
+    content: "Create new CRM connections by navigating to the connections section. You can add multiple CRM systems, configure authentication, and manage data sync settings. Each connection allows you to access customer data, leads, and analytics directly through the AI assistant."
+  },
+  {
+    id: 5,
     title: "Collaborate & Share",
     description: "Invite team members and share insights",
     icon: <Users className="h-6 w-6" />,
     content: "Invite team members to collaborate on projects. Share conversations, insights, and findings with your colleagues to work together more effectively."
   },
   {
-    id: 5,
+    id: 6,
     title: "Customize Settings",
     description: "Personalize your experience",
     icon: <Settings className="h-6 w-6" />,
