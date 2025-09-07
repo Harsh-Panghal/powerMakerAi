@@ -15,6 +15,8 @@ import {
   Key,
   LogIn,
   HelpCircle,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -99,8 +101,30 @@ export function PowerMakerHeader() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showUserGuide, setShowUserGuide] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'failed' | 'connected'>('connected');
   
   const { hasCompletedGuide, resetGuide } = useUserGuide();
+
+  // Connection status configuration
+  const connectionConfig = {
+    connecting: {
+      icon: <Loader2 className="w-4 h-4 text-warning animate-spin" />,
+      text: 'Connecting...',
+      textColor: 'text-warning'
+    },
+    failed: {
+      icon: <AlertCircle className="w-4 h-4 text-destructive" />,
+      text: 'Dataverse Harsh',
+      textColor: 'text-destructive'
+    },
+    connected: {
+      icon: <CheckCircle className="w-4 h-4 text-success" />,
+      text: 'Dataverse Harsh',
+      textColor: 'text-success-dark'
+    }
+  };
+
+  const currentConnection = connectionConfig[connectionStatus];
 
   // Check for demo user on component mount
   useEffect(() => {
@@ -253,16 +277,19 @@ export function PowerMakerHeader() {
         <div className="flex items-center space-x-1 sm:space-x-4">
           {/* Connection Status */}
           <div className="hidden md:flex items-center space-x-2 text-sm">
-            <CheckCircle className="w-4 h-4 text-success" />
-            <span className="text-success-dark hidden lg:inline">
-              Connected to Dataverse Harsh
+            {currentConnection.icon}
+            <span className={`${currentConnection.textColor} hidden lg:inline`}>
+              {currentConnection.text}
             </span>
-            <span className="text-success-dark lg:hidden">Connected</span>
+            <span className={`${currentConnection.textColor} lg:hidden`}>
+              {connectionStatus === 'connecting' ? 'Connecting...' : 
+               connectionStatus === 'failed' ? 'Failed' : 'Connected'}
+            </span>
           </div>
 
           {/* Mobile Connection Status - Just icon */}
           <div className="md:hidden">
-            <CheckCircle className="w-4 h-4 text-success" />
+            {currentConnection.icon}
           </div>
 
           {/* Notification Bell */}
