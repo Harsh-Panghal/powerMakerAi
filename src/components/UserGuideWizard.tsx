@@ -157,19 +157,32 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
   } = useStepValidation(validationRules);
 
   const handleNext = () => {
-    console.log('UserGuide: handleNext called, currentStep:', currentStep);
     const currentStepData = guideSteps.find(step => step.id === currentStep);
     
     // If current step is interactive and not completed, start validation
-    if (currentStepData?.interactive && !isStepCompleted(currentStep)) {
-      console.log('UserGuide: Starting validation for step', currentStep);
+    if (currentStepData?.interactive && !isStepCompleted(currentStep) && !waitingForInteraction) {
       setWaitingForInteraction(true);
       startValidation(currentStep);
       return;
     }
     
     // Move to next step
-    console.log('UserGuide: Moving to next step');
+    stopValidation(currentStep);
+    setWaitingForInteraction(false);
+    
+    if (currentStep < guideSteps.length) {
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      localStorage.setItem('userGuideCurrentStep', nextStep.toString());
+    } else {
+      setIsCompleted(true);
+      resetAll();
+      localStorage.setItem('userGuideCompleted', 'true');
+      localStorage.removeItem('userGuideCurrentStep');
+    }
+  };
+
+  const handleSkipStep = () => {
     stopValidation(currentStep);
     setWaitingForInteraction(false);
     
@@ -438,17 +451,30 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
             </Button>
           </div>
           
-          <Button
-            onClick={handleNext}
-            size={isMobile ? "sm" : "default"}
-            disabled={currentStepData?.interactive && !isStepCompleted(currentStep) && !waitingForInteraction}
-          >
-            {currentStepData?.interactive && !isStepCompleted(currentStep) ? 
-              (waitingForInteraction ? "Waiting..." : "Try It") :
-              (currentStep === guideSteps.length ? "Finish" : "Next")
-            }
-            <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
+          <div className="flex gap-2">
+            {/* Skip Step button for interactive steps */}
+            {currentStepData?.interactive && waitingForInteraction && (
+              <Button
+                variant="outline"
+                onClick={handleSkipStep}
+                size={isMobile ? "sm" : "default"}
+              >
+                Skip Step
+              </Button>
+            )}
+            
+            <Button
+              onClick={handleNext}
+              size={isMobile ? "sm" : "default"}
+              disabled={waitingForInteraction}
+            >
+              {currentStepData?.interactive && !isStepCompleted(currentStep) ? 
+                (waitingForInteraction ? "Waiting..." : "Try It") :
+                (currentStep === guideSteps.length ? "Finish" : "Next")
+              }
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -484,10 +510,9 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
           target={currentStepData?.target || ''}
           isActive={isOpen && !!currentStepData?.target && waitingForInteraction && !showResumePrompt}
           onTargetClick={() => {
-            console.log('Spotlight: Target clicked for step', currentStep);
             if (currentStepData?.interactive) {
-              console.log('Spotlight: Completing step', currentStep);
               completeStep(currentStep);
+              setWaitingForInteraction(false);
             }
           }}
         />
@@ -513,10 +538,9 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
         target={currentStepData?.target || ''}
         isActive={isOpen && !!currentStepData?.target && waitingForInteraction && !showResumePrompt}
         onTargetClick={() => {
-          console.log('Spotlight: Target clicked for step', currentStep);
           if (currentStepData?.interactive) {
-            console.log('Spotlight: Completing step', currentStep);
             completeStep(currentStep);
+            setWaitingForInteraction(false);
           }
         }}
       />

@@ -20,35 +20,51 @@ export function useStepValidation(rules: ValidationRules) {
   const [activeValidations, setActiveValidations] = useState<Set<number>>(new Set());
 
   const startValidation = useCallback((stepId: number) => {
-    console.log('Validation: Starting validation for step', stepId);
     const rule = rules[stepId];
     if (!rule) {
-      console.log('Validation: No rule found for step', stepId);
       return;
     }
 
     setActiveValidations(prev => new Set(prev).add(stepId));
-    console.log('Validation: Added step to active validations', stepId);
 
     // Set up validation based on type
     switch (rule.type) {
       case 'click':
         if (rule.target) {
           const element = document.querySelector(rule.target);
-          console.log('Validation: Found element for', rule.target, element);
           if (element) {
-            const handleClick = () => {
-              console.log('Validation: Click detected for step', stepId);
+            // Create multiple event listeners for better compatibility
+            const handleInteraction = () => {
               setCompletedSteps(prev => new Set(prev).add(stepId));
               setActiveValidations(prev => {
                 const next = new Set(prev);
                 next.delete(stepId);
                 return next;
               });
-              element.removeEventListener('click', handleClick);
+              // Remove all listeners
+              element.removeEventListener('click', handleInteraction);
+              element.removeEventListener('mousedown', handleInteraction);
+              element.removeEventListener('focus', handleInteraction);
             };
-            element.addEventListener('click', handleClick);
-            console.log('Validation: Added click listener to element');
+            
+            // Add multiple event types for better compatibility
+            element.addEventListener('click', handleInteraction);
+            element.addEventListener('mousedown', handleInteraction);
+            element.addEventListener('focus', handleInteraction);
+            
+            // Fallback timeout - auto-complete after 30 seconds
+            setTimeout(() => {
+              if (activeValidations.has(stepId)) {
+                handleInteraction();
+              }
+            }, 30000);
+          } else {
+            // Element not found, try again in a moment
+            setTimeout(() => {
+              if (activeValidations.has(stepId)) {
+                startValidation(stepId);
+              }
+            }, 1000);
           }
         }
         break;
