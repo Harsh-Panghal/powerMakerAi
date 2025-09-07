@@ -14,6 +14,7 @@ import {
   Database,
   Key,
   LogIn,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -59,6 +60,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useChatStore } from "@/store/chatStore";
 import { useToast } from "@/components/ui/use-toast";
+import { UserGuideWizard, useUserGuide } from "./UserGuideWizard";
 
 const modelOptions = [
   {
@@ -96,6 +98,9 @@ export function PowerMakerHeader() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showUserGuide, setShowUserGuide] = useState(false);
+  
+  const { hasCompletedGuide, resetGuide } = useUserGuide();
 
   // Check for demo user on component mount
   useEffect(() => {
@@ -108,6 +113,17 @@ export function PowerMakerHeader() {
       }
     }
   }, []);
+
+  // Auto-show guide for new users
+  useEffect(() => {
+    if (isLoggedIn && hasCompletedGuide === false) {
+      const timer = setTimeout(() => {
+        setShowUserGuide(true);
+      }, 2000); // Show after 2 seconds for new users
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoggedIn, hasCompletedGuide]);
 
   const handleLogout = () => {
     localStorage.removeItem('demoUser');
@@ -388,6 +404,13 @@ export function PowerMakerHeader() {
                 <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
                   <UserPlus className="w-4 h-4 mr-2" />
                   Invite
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  resetGuide();
+                  setShowUserGuide(true);
+                }}>
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  User Guide
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setShowLogoutDialog(true)}
@@ -836,6 +859,12 @@ export function PowerMakerHeader() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* User Guide Wizard */}
+      <UserGuideWizard 
+        isOpen={showUserGuide} 
+        onClose={() => setShowUserGuide(false)} 
+      />
     </>
   );
 }
