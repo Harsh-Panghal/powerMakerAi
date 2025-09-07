@@ -144,7 +144,7 @@ export function GreetingContainer() {
   return (
     <>
       {/* Greeting Container */}
-      <div className="flex-1 flex items-center justify-center p-8 lg:mt-12">
+      <div className="flex-1 flex items-center justify-center p-8 lg:mt-12" data-tour="chat-area">
         <div className="max-w-4xl w-full text-center space-y-8">
           {/* Greeting */}
           <div className="space-y-2">
@@ -158,7 +158,7 @@ export function GreetingContainer() {
           </div>
 
           {/* Prompt Cards */}
-          <div className="flex gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible transition-all duration-300 prompt-cards-scroll">
+          <div className="flex gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible transition-all duration-300 prompt-cards-scroll" data-tour="prompt-cards">
             {currentPromptSuggestions.map((suggestion, index) => (
               <PromptCard
                 key={`${selectedModel}-${index}`}
@@ -172,7 +172,7 @@ export function GreetingContainer() {
       </div>
 
       {/* Input Area */}
-      <div className="p-6 bg-layout-main">
+      <div className="p-6 bg-layout-main" data-tour="input-area">
         <div className="max-w-4xl mx-auto">
           <div className="relative">
             {/* Textarea */}

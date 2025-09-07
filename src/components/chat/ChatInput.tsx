@@ -54,7 +54,7 @@ export function ChatInput() {
   };
 
   return (
-    <div className="p-2 sm:p-4 bg-layout-main border-t border-border">
+    <div className="p-2 sm:p-4 bg-layout-main border-t border-border" data-tour="input-area">
       <div className="max-w-4xl mx-auto px-2 sm:px-4">
         <div className="relative">
           {/* Textarea */}

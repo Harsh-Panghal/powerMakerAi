@@ -62,7 +62,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useChatStore } from "@/store/chatStore";
 import { useToast } from "@/components/ui/use-toast";
-import { UserGuideWizard, useUserGuide } from "./UserGuideWizard";
+import { PowerMakerTour, usePowerMakerTour } from "./PowerMakerTour";
 
 const modelOptions = [
   {
@@ -100,10 +100,10 @@ export function PowerMakerHeader() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showUserGuide, setShowUserGuide] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'failed' | 'connected'>('connected');
   
-  const { hasCompletedGuide, resetGuide } = useUserGuide();
+  const { hasCompletedTour, resetTour } = usePowerMakerTour();
 
   // Connection status configuration
   const connectionConfig = {
@@ -138,16 +138,16 @@ export function PowerMakerHeader() {
     }
   }, []);
 
-  // Auto-show guide for new users
+  // Auto-show tour for new users
   useEffect(() => {
-    if (isLoggedIn && hasCompletedGuide === false) {
+    if (isLoggedIn && hasCompletedTour === false) {
       const timer = setTimeout(() => {
-        setShowUserGuide(true);
+        setShowTour(true);
       }, 2000); // Show after 2 seconds for new users
       
       return () => clearTimeout(timer);
     }
-  }, [isLoggedIn, hasCompletedGuide]);
+  }, [isLoggedIn, hasCompletedTour]);
 
   const handleLogout = () => {
     localStorage.removeItem('demoUser');
@@ -205,7 +205,7 @@ export function PowerMakerHeader() {
 
   return (
     <>
-      <header className="h-14 flex items-center justify-between px-2 sm:px-4 border-b border-border bg-background">
+      <header className="h-14 flex items-center justify-between px-2 sm:px-4 border-b border-border bg-background" data-tour="header">
         {/* left section */}
         <div className="flex items-center">
           <Button
@@ -213,6 +213,7 @@ export function PowerMakerHeader() {
             size="sm"
             onClick={toggleSidebar}
             className="mr-1 sm:mr-2"
+            data-tour="hamburger"
           >
             <Menu className="w-5 h-5" />
           </Button>
@@ -276,8 +277,22 @@ export function PowerMakerHeader() {
 
         {/* right section */}
         <div className="flex items-center space-x-1 sm:space-x-4">
+          {/* Take a Tour Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              resetTour();
+              setShowTour(true);
+            }}
+            className="hidden sm:flex items-center text-muted-foreground hover:text-foreground"
+          >
+            <HelpCircle className="w-4 h-4 mr-1" />
+            Take a Tour
+          </Button>
+          
           {/* Connection Status */}
-          <div className="hidden md:flex items-center space-x-2 text-sm">
+          <div className="hidden md:flex items-center space-x-2 text-sm" data-tour="connection-status">
             {currentConnection.icon}
             <span className={`${currentConnection.textColor} hidden lg:inline`}>
               {currentConnection.text}
@@ -435,11 +450,11 @@ export function PowerMakerHeader() {
                   Invite
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
-                  resetGuide();
-                  setShowUserGuide(true);
+                  resetTour();
+                  setShowTour(true);
                 }}>
                   <HelpCircle className="w-4 h-4 mr-2" />
-                  User Guide
+                  Take a Tour
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setShowLogoutDialog(true)}
@@ -889,10 +904,10 @@ export function PowerMakerHeader() {
         </Dialog>
       )}
 
-      {/* User Guide Wizard */}
-      <UserGuideWizard 
-        isOpen={showUserGuide} 
-        onClose={() => setShowUserGuide(false)} 
+      {/* PowerMaker Tour */}
+      <PowerMakerTour 
+        isOpen={showTour} 
+        onClose={() => setShowTour(false)} 
       />
     </>
   );

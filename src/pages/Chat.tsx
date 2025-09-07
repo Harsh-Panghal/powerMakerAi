@@ -8,7 +8,7 @@ const Chat = () => {
   const { currentThread } = useChatStore();
 
   return (
-    <div className="flex-1 flex flex-col bg-layout-main h-[82%] ">
+    <div className="flex-1 flex flex-col bg-layout-main h-[82%]" data-tour="chat-area">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -198,6 +198,7 @@ export function PowerMakerSidebar() {
           setIsSettingsOpen(false);
           setIsFeedbackOpen(true);
         }}
+        data-tour="feedback-option"
       >
         <span className="mr-2">💬</span>
         Feedback
@@ -209,6 +210,7 @@ export function PowerMakerSidebar() {
           setIsSettingsOpen(false);
           setIsCleanChatOpen(true);
         }}
+        data-tour="clean-chat-option"
       >
         <span className="mr-2">🧹</span>
         Clean Chat
@@ -220,6 +222,7 @@ export function PowerMakerSidebar() {
           setIsSettingsOpen(false);
           setIsCrmConnectionOpen(true);
         }}
+        data-tour="crm-connections"
       >
         <span className="mr-2">🔗</span>
         CRM Connection Details
@@ -228,6 +231,7 @@ export function PowerMakerSidebar() {
         variant="ghost"
         className="w-full justify-start"
         onClick={() => window.open("/privacy-policy", "_blank")}
+        data-tour="privacy-terms"
       >
         <span className="mr-2">🔒</span>
         Privacy Policy
@@ -244,11 +248,12 @@ export function PowerMakerSidebar() {
   );
 
   return (
-    <Sidebar collapsible="icon" className="h-screen border-r border-border/30 shadow-[inset_-8px_0_16px_rgba(0,0,0,0.08)] data-[state=collapsed]:w-16 flex flex-col">
+    <Sidebar collapsible="icon" className="h-screen border-r border-border/30 shadow-[inset_-8px_0_16px_rgba(0,0,0,0.08)] data-[state=collapsed]:w-16 flex flex-col" data-sidebar="true">
       <SidebarHeader className={`p-4 flex-shrink-0 ${isCollapsed ? 'flex justify-center' : ''}`}>
         <div 
           className={`flex items-center cursor-pointer ${isCollapsed ? 'justify-center' : 'space-x-2'}`}
           onClick={handleLogoClick}
+          data-tour="logo"
         >
           <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
           {!isCollapsed && (
@@ -278,7 +283,7 @@ export function PowerMakerSidebar() {
         {/* Recent Chats */}
         {!isCollapsed && (
           <SidebarGroup className="flex-1 flex flex-col">
-            <SidebarGroupLabel className="px-4 text-sm font-medium text-muted-foreground flex-shrink-0">
+            <SidebarGroupLabel className="px-4 text-sm font-medium text-muted-foreground flex-shrink-0" data-tour="recent-chats">
               Recent
             </SidebarGroupLabel>
             <SidebarGroupContent className="overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 340px)' }}>
@@ -391,6 +396,7 @@ export function PowerMakerSidebar() {
                   size="sm"
                   className="text-brand hover:text-brand-accent flex items-center"
                   onClick={() => setShowAllChats(!showAllChats)}
+                  data-tour="more-menu"
                 >
                   <ChevronDown className={`w-4 h-4 mr-0 transition-transform ${showAllChats ? 'rotate-180' : ''}`} />
                   {showAllChats ? 'Less' : 'More'}
@@ -406,6 +412,7 @@ export function PowerMakerSidebar() {
           <SidebarMenuButton 
             className={`w-full ${isCollapsed ? 'justify-center' : 'justify-start'} text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out cursor-pointer`}
             onClick={handleHelpClick}
+            data-tour="help-icon"
           >
             <HelpCircle className="w-4 h-4" />
             {!isCollapsed && <span className="ml-2">Help</span>}
