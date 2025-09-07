@@ -224,14 +224,14 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
     <div className="max-w-md mx-auto">
       <div className="flex justify-between items-center mb-4">
         <div />
-        <Button
+        {/* <Button
           variant="ghost"
           size="sm"
           onClick={onClose}
           className="h-8 w-8 p-0"
         >
           <X className="h-4 w-4" />
-        </Button>
+        </Button> */}
       </div>
       {renderStepContent()}
     </div>
