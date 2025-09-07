@@ -118,7 +118,7 @@ export function PowerMakerHeader() {
       textColor: 'text-destructive'
     },
     connected: {
-      icon: <CheckCircle className="w-4 h-4 text-success" />,
+      icon: <img src="/Dataverse_scalable.svg" alt="Dataverse Harsh" className="w-4 h-4 text-success" />,
       text: 'Dataverse Harsh',
       textColor: 'text-success-dark'
     }
