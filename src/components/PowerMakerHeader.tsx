@@ -224,6 +224,7 @@ export function PowerMakerHeader() {
                 setModel(value);
                 navigate("/");
               }}
+              data-guide="model-selector"
             >
               <SelectTrigger className="w-full min-w-[100px] sm:min-w-[140px] max-w-[120px] sm:max-w-[200px] h-8 border border-border/40 bg-background/80 backdrop-blur-sm hover:bg-muted/30 transition-colors duration-200 rounded-md shadow-sm">
                 <SelectValue>
@@ -295,7 +296,7 @@ export function PowerMakerHeader() {
           {/* Notification Bell */}
           <Sheet open={isNotificationOpen} onOpenChange={(open) => open ? openNotifications() : closeNotifications()}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" data-guide="notifications-bell">
                 <Bell className="w-5 h-5" />
               </Button>
             </SheetTrigger>
@@ -412,6 +413,7 @@ export function PowerMakerHeader() {
                 <Button
                   variant="ghost"
                   className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 h-auto"
+                  data-guide="user-menu"
                 >
                   <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
                     <AvatarFallback className="bg-brand text-white font-medium text-xs sm:text-sm">

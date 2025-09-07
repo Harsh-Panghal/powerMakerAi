@@ -267,6 +267,7 @@ export function PowerMakerSidebar() {
           variant="outline"
           onClick={handleNewChat}
           size={isCollapsed ? "sm" : "default"}
+          data-guide="new-chat-button"
         >
           <Plus className="w-4 h-4" />
           {!isCollapsed && <span className="ml-1">New Chat</span>}
@@ -412,6 +413,7 @@ export function PowerMakerSidebar() {
           <SidebarMenuButton 
             className={`w-full ${isCollapsed ? 'justify-center' : 'justify-start'} text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out cursor-pointer`}
             onClick={handleSettingsClick}
+            data-guide="settings-button"
           >
             <Settings className="w-4 h-4" />
             {!isCollapsed && <span className="ml-2">Settings</span>}

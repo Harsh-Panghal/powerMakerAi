@@ -11,6 +11,8 @@ import {
   Database,
   CheckCircle,
   Plug,
+  Target,
+  Play,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +29,8 @@ import {
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
+import { Spotlight } from "@/components/ui/spotlight";
+import { useStepValidation, ValidationRules } from "@/hooks/use-step-validation";
 
 interface UserGuideStep {
   id: number;
@@ -34,6 +38,9 @@ interface UserGuideStep {
   description: string;
   icon: React.ReactNode;
   content: string;
+  target?: string; // CSS selector for highlighting
+  interactive?: boolean; // Whether this step requires interaction
+  validationText?: string; // Text to show during validation
 }
 
 const guideSteps: UserGuideStep[] = [
@@ -46,40 +53,84 @@ const guideSteps: UserGuideStep[] = [
   },
   {
     id: 2,
-    title: "Start Conversations",
-    description: "Chat with your AI assistant",
+    title: "Start New Conversations",
+    description: "Try the chat interface",
     icon: <MessageSquare className="h-6 w-6" />,
-    content: "Use the chat interface to ask questions, analyze data, or get insights. Your AI assistant can help with complex queries and provide intelligent recommendations."
+    content: "Click the 'New Chat' button in the sidebar to start a conversation. The AI assistant can help with complex queries and provide intelligent recommendations.",
+    target: '[data-guide="new-chat-button"]',
+    interactive: true,
+    validationText: "Click the 'New Chat' button to continue"
   },
   {
     id: 3,
-    title: "Manage Your Data",
-    description: "Connect and organize your information",
+    title: "Select AI Models",
+    description: "Choose the right model for your task",
     icon: <Database className="h-6 w-6" />,
-    content: "Connect your CRM systems, databases, and other data sources. The AI will help you analyze patterns and generate actionable insights from your data."
+    content: "Use the model selector in the header to choose between different AI models. Each model is specialized for different tasks like CRM customization, plugin tracing, or general expertise.",
+    target: '[data-guide="model-selector"]',
+    interactive: true,
+    validationText: "Click on the model selector to see available options"
   },
   {
     id: 4,
-    title: "CRM Connections",
-    description: "Set up and manage your CRM integrations",
+    title: "Check Notifications",
+    description: "Stay updated with system activities",
     icon: <Plug className="h-6 w-6" />,
-    content: "Create new CRM connections by navigating to the connections section. You can add multiple CRM systems, configure authentication, and manage data sync settings. Each connection allows you to access customer data, leads, and analytics directly through the AI assistant."
+    content: "Click the notification bell to view recent activities, plugin logs, and system updates. This helps you track what's happening in your CRM integrations.",
+    target: '[data-guide="notifications-bell"]',
+    interactive: true,
+    validationText: "Click the notification bell to view activities"
   },
   {
     id: 5,
-    title: "Collaborate & Share",
-    description: "Invite team members and share insights",
+    title: "Access User Menu",
+    description: "Manage your profile and settings",
     icon: <Users className="h-6 w-6" />,
-    content: "Invite team members to collaborate on projects. Share conversations, insights, and findings with your colleagues to work together more effectively."
+    content: "Click on your profile avatar to access user settings, invite team members, and manage your account preferences.",
+    target: '[data-guide="user-menu"]',
+    interactive: true,
+    validationText: "Click on your profile avatar to open the menu"
   },
   {
     id: 6,
-    title: "Customize Settings",
-    description: "Personalize your experience",
+    title: "Explore Settings",
+    description: "Access advanced options",
     icon: <Settings className="h-6 w-6" />,
-    content: "Adjust your preferences, manage integrations, and customize the interface to match your workflow. Access settings from the user menu in the top right."
+    content: "Use the settings option in the sidebar to access feedback, CRM connections, privacy policy, and other advanced features.",
+    target: '[data-guide="settings-button"]',
+    interactive: true,
+    validationText: "Click the settings button in the sidebar"
   },
 ];
+
+// Validation rules for interactive steps
+const validationRules: ValidationRules = {
+  2: {
+    type: 'click',
+    target: '[data-guide="new-chat-button"]',
+    description: 'Click the New Chat button'
+  },
+  3: {
+    type: 'click',
+    target: '[data-guide="model-selector"]',
+    description: 'Open the model selector'
+  },
+  4: {
+    type: 'click',
+    target: '[data-guide="notifications-bell"]',
+    description: 'Open notifications'
+  },
+  5: {
+    type: 'click',
+    target: '[data-guide="user-menu"]',
+    description: 'Open user menu'
+  },
+  6: {
+    type: 'click',
+    target: '[data-guide="settings-button"]',
+    description: 'Open settings'
+  },
+};
 
 interface UserGuideWizardProps {
   isOpen: boolean;
@@ -89,38 +140,77 @@ interface UserGuideWizardProps {
 export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [waitingForInteraction, setWaitingForInteraction] = useState(false);
   const isMobile = useIsMobile();
+  
+  const {
+    startValidation,
+    stopValidation,
+    isStepCompleted,
+    isValidationActive,
+    resetAll,
+    completeStep
+  } = useStepValidation(validationRules);
 
   const handleNext = () => {
+    const currentStepData = guideSteps.find(step => step.id === currentStep);
+    
+    // If current step is interactive and not completed, start validation
+    if (currentStepData?.interactive && !isStepCompleted(currentStep)) {
+      setWaitingForInteraction(true);
+      startValidation(currentStep);
+      return;
+    }
+    
+    // Move to next step
+    stopValidation(currentStep);
+    setWaitingForInteraction(false);
+    
     if (currentStep < guideSteps.length) {
       setCurrentStep(currentStep + 1);
     } else {
       setIsCompleted(true);
-      // Mark guide as completed in localStorage
+      resetAll();
       localStorage.setItem('userGuideCompleted', 'true');
     }
   };
 
   const handlePrevious = () => {
+    stopValidation(currentStep);
+    setWaitingForInteraction(false);
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
 
   const handleSkip = () => {
+    resetAll();
+    stopValidation(currentStep);
+    setWaitingForInteraction(false);
     setIsCompleted(true);
     localStorage.setItem('userGuideCompleted', 'true');
     onClose();
   };
 
   const handleFinish = () => {
+    resetAll();
     localStorage.setItem('userGuideCompleted', 'true');
     onClose();
     setIsCompleted(false);
     setCurrentStep(1);
+    setWaitingForInteraction(false);
   };
 
   const currentStepData = guideSteps.find(step => step.id === currentStep);
+  
+  // Auto-advance when interactive step is completed
+  useEffect(() => {
+    if (currentStepData?.interactive && isStepCompleted(currentStep) && waitingForInteraction) {
+      setTimeout(() => {
+        handleNext();
+      }, 1000); // Small delay to show completion
+    }
+  }, [currentStep, isStepCompleted, waitingForInteraction, currentStepData?.interactive]);
 
   const renderStepContent = () => {
     if (isCompleted) {
@@ -189,9 +279,44 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
               </div>
             </div>
 
-            <p className="text-foreground leading-relaxed mb-6">
+            <p className="text-foreground leading-relaxed mb-4">
               {currentStepData.content}
             </p>
+            
+            {/* Interactive Step Status */}
+            {currentStepData.interactive && (
+              <div className="mb-6 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <div className="flex items-center gap-2">
+                  {isStepCompleted(currentStep) ? (
+                    <>
+                      <CheckCircle className="h-4 w-4 text-success" />
+                      <span className="text-sm text-success font-medium">
+                        Great! You completed this step.
+                      </span>
+                    </>
+                  ) : waitingForInteraction ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Target className="h-4 w-4 text-primary" />
+                      </motion.div>
+                      <span className="text-sm text-primary font-medium">
+                        {currentStepData.validationText}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Click "Try It" to practice this step
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
 
@@ -219,8 +344,12 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
           <Button
             onClick={handleNext}
             size={isMobile ? "sm" : "default"}
+            disabled={currentStepData?.interactive && !isStepCompleted(currentStep) && !waitingForInteraction}
           >
-            {currentStep === guideSteps.length ? "Finish" : "Next"}
+            {currentStepData?.interactive && !isStepCompleted(currentStep) ? 
+              (waitingForInteraction ? "Waiting..." : "Try It") :
+              (currentStep === guideSteps.length ? "Finish" : "Next")
+            }
             <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
@@ -247,28 +376,54 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
 
   if (isMobile) {
     return (
-      <Drawer open={isOpen} onOpenChange={onClose}>
-        <DrawerContent className="max-h-[90vh]">
-          <DrawerHeader className="text-center">
-            <DrawerTitle>User Guide</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-6">
-            {renderStepContent()}
-          </div>
-        </DrawerContent>
-      </Drawer>
+      <>
+        <Drawer open={isOpen} onOpenChange={onClose}>
+          <DrawerContent className="max-h-[90vh]">
+            <DrawerHeader className="text-center">
+              <DrawerTitle>User Guide</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-6">
+              {renderStepContent()}
+            </div>
+          </DrawerContent>
+        </Drawer>
+        
+        {/* Spotlight for highlighting elements */}
+        <Spotlight
+          target={currentStepData?.target || ''}
+          isActive={isOpen && !!currentStepData?.target && waitingForInteraction}
+          onTargetClick={() => {
+            if (currentStepData?.interactive) {
+              completeStep(currentStep);
+            }
+          }}
+        />
+      </>
     );
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>User Guide</DialogTitle>
-        </DialogHeader>
-        {dialogContent}
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>User Guide</DialogTitle>
+          </DialogHeader>
+          {dialogContent}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Spotlight for highlighting elements */}
+      <Spotlight
+        target={currentStepData?.target || ''}
+        isActive={isOpen && !!currentStepData?.target && waitingForInteraction}
+        onTargetClick={() => {
+          if (currentStepData?.interactive) {
+            completeStep(currentStep);
+          }
+        }}
+      />
+    </>
   );
 }
 
