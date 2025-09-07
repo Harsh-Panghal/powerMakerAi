@@ -27,6 +27,12 @@ export interface Notification {
   stage: string;
 }
 
+export interface Connection {
+  id: string;
+  name: string;
+  isSelected: boolean;
+}
+
 interface ChatStore {
   // UI State
   isPreviewOpen: boolean;
@@ -35,6 +41,9 @@ interface ChatStore {
   // Notification State
   isNotificationOpen: boolean;
   notifications: Notification[];
+  
+  // Connection State
+  activeConnection: Connection | null;
   
   // Chat State
   currentThread: ChatThread | null;
@@ -60,6 +69,9 @@ interface ChatStore {
   openNotifications: () => void;
   closeNotifications: () => void;
   addNotification: (notification: Omit<Notification, 'id'>) => void;
+  
+  // Connection Actions
+  setActiveConnection: (connection: Connection) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -98,6 +110,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       stage: "PreValidation",
     },
   ],
+  
+  // Initial Connection State
+  activeConnection: { id: "1", name: "CRM Dev", isSelected: true },
   
   // Initial Chat State
   currentThread: null,
@@ -344,5 +359,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       notifications: [newNotification, ...notifications],
       isNotificationOpen: true 
     });
+  },
+  
+  // Connection Actions
+  setActiveConnection: (connection: Connection) => {
+    set({ activeConnection: connection });
   },
 }));

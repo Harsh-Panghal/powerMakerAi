@@ -88,7 +88,7 @@ const modelOptions = [
 export function PowerMakerHeader() {
   const { toggleSidebar } = useSidebar();
   const navigate = useNavigate();
-  const { selectedModel, setModel, isNotificationOpen, notifications, openNotifications, closeNotifications } = useChatStore();
+  const { selectedModel, setModel, isNotificationOpen, notifications, openNotifications, closeNotifications, activeConnection } = useChatStore();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -114,12 +114,12 @@ export function PowerMakerHeader() {
     },
     failed: {
       icon: <AlertCircle className="w-4 h-4 text-destructive" />,
-      text: 'Dataverse Harsh',
+      text: activeConnection?.name || 'No Connection',
       textColor: 'text-destructive'
     },
     connected: {
-      icon: <img src="/Dataverse_scalable.svg" alt="Dataverse Harsh" className="w-4 h-4 text-success" />,
-      text: 'Dataverse Harsh',
+      icon: <img src="/Dataverse_scalable.svg" alt={activeConnection?.name || 'Connection'} className="w-4 h-4 text-success" />,
+      text: activeConnection?.name || 'No Connection',
       textColor: 'text-success-dark'
     }
   };
