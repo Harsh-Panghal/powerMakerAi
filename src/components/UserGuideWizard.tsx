@@ -157,16 +157,19 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
   } = useStepValidation(validationRules);
 
   const handleNext = () => {
+    console.log('UserGuide: handleNext called, currentStep:', currentStep);
     const currentStepData = guideSteps.find(step => step.id === currentStep);
     
     // If current step is interactive and not completed, start validation
     if (currentStepData?.interactive && !isStepCompleted(currentStep)) {
+      console.log('UserGuide: Starting validation for step', currentStep);
       setWaitingForInteraction(true);
       startValidation(currentStep);
       return;
     }
     
     // Move to next step
+    console.log('UserGuide: Moving to next step');
     stopValidation(currentStep);
     setWaitingForInteraction(false);
     
@@ -481,7 +484,9 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
           target={currentStepData?.target || ''}
           isActive={isOpen && !!currentStepData?.target && waitingForInteraction && !showResumePrompt}
           onTargetClick={() => {
+            console.log('Spotlight: Target clicked for step', currentStep);
             if (currentStepData?.interactive) {
+              console.log('Spotlight: Completing step', currentStep);
               completeStep(currentStep);
             }
           }}
@@ -508,7 +513,9 @@ export function UserGuideWizard({ isOpen, onClose }: UserGuideWizardProps) {
         target={currentStepData?.target || ''}
         isActive={isOpen && !!currentStepData?.target && waitingForInteraction && !showResumePrompt}
         onTargetClick={() => {
+          console.log('Spotlight: Target clicked for step', currentStep);
           if (currentStepData?.interactive) {
+            console.log('Spotlight: Completing step', currentStep);
             completeStep(currentStep);
           }
         }}

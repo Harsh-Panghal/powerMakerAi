@@ -20,18 +20,25 @@ export function useStepValidation(rules: ValidationRules) {
   const [activeValidations, setActiveValidations] = useState<Set<number>>(new Set());
 
   const startValidation = useCallback((stepId: number) => {
+    console.log('Validation: Starting validation for step', stepId);
     const rule = rules[stepId];
-    if (!rule) return;
+    if (!rule) {
+      console.log('Validation: No rule found for step', stepId);
+      return;
+    }
 
     setActiveValidations(prev => new Set(prev).add(stepId));
+    console.log('Validation: Added step to active validations', stepId);
 
     // Set up validation based on type
     switch (rule.type) {
       case 'click':
         if (rule.target) {
           const element = document.querySelector(rule.target);
+          console.log('Validation: Found element for', rule.target, element);
           if (element) {
             const handleClick = () => {
+              console.log('Validation: Click detected for step', stepId);
               setCompletedSteps(prev => new Set(prev).add(stepId));
               setActiveValidations(prev => {
                 const next = new Set(prev);
@@ -41,6 +48,7 @@ export function useStepValidation(rules: ValidationRules) {
               element.removeEventListener('click', handleClick);
             };
             element.addEventListener('click', handleClick);
+            console.log('Validation: Added click listener to element');
           }
         }
         break;
