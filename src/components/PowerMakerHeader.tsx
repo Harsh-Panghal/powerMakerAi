@@ -451,7 +451,7 @@ export function PowerMakerHeader() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                   resetTour();
-                                    
+                  setShowTour(true);                                    
                 }}>
                   <HelpCircle className="w-4 h-4 mr-2" />
                   Take a Tour

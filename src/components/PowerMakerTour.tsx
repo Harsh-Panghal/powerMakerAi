@@ -196,7 +196,7 @@ const tourSteps: TourStep[] = [
       "Send Feedback here. We'll open it to show text, type, image, and star fields.",
     target: '[data-tour="feedback-option"]',
     position: "bottom",
-    arrow: "up",
+    arrow: "down-left",
     autoAdvance: 4
   },
   {
@@ -206,7 +206,7 @@ const tourSteps: TourStep[] = [
       "Clean Chat deletes all chats. We'll open it to show the confirmation.",
     target: '[data-tour="clean-chat-option"]',
     position: "right",
-    arrow: "left",
+    arrow: "down-left",
     autoAdvance: 4   
   },
   {
@@ -216,7 +216,7 @@ const tourSteps: TourStep[] = [
       "Manage CRM Connections here. We'll open it to show the list.",
     target: '[data-tour="crm-connections"]',
     position: "bottom",
-    arrow: "up",
+    arrow: "down-left",
     autoAdvance: 4
   },
   {
@@ -226,7 +226,7 @@ const tourSteps: TourStep[] = [
       "Privacy Policy and Terms open in new tabs. Read them for app rules.",
     target: '[data-tour="privacy-terms"]',
     position: "bottom",
-    arrow: "up",
+    arrow: "down-left",
     autoAdvance: 4,
   },
   {
