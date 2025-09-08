@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { LoadingProgressBar } from '@/components/ui/loading-progress-bar';
 import { X, Search, Download, ArrowLeft } from 'lucide-react';
 import { TraceDetailsDrawer } from './TraceDetailsDrawer';
 
@@ -23,6 +24,7 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   // Enhanced mock data for demonstration - moved outside component to prevent re-creation
   const mockData = useMemo(() => {
@@ -101,6 +103,23 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
     }
     return data;
   }, []);
+
+  // Simulate initial data loading
+  useEffect(() => {
+    if (isOpen && isLoadingData) {
+      const timer = setTimeout(() => {
+        setIsLoadingData(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, isLoadingData]);
+
+  // Reset loading state when component opens
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoadingData(true);
+    }
+  }, [isOpen]);
 
   // Filter and search data
   const filteredData = useMemo(() => {
@@ -232,167 +251,180 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
               <X className="h-4 w-4" />
             </Button>
           </CardHeader>
+          
           <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
-            {/* Controls */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-x-8 gap-y-2 flex-wrap">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
-                <Button 
-                  variant={groupBy === 'correlation' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setGroupBy('correlation')}
-                  className={`text-xs sm:text-sm w-full xs:w-auto ${groupBy === 'correlation' ? 'bg-primary text-primary-foreground' : ''}`}
-                >
-                  <span className="inline">Group by Correlation ID</span>
-                  {/* <span className="sm:hidden">Correlation ID</span> */}
-                </Button>
-                <Button 
-                  variant={groupBy === 'type' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setGroupBy('type')}
-                  className={`text-xs sm:text-sm w-full xs:w-auto ${groupBy === 'type' ? 'bg-primary text-primary-foreground' : ''}`}
-                >
-                  <span className="inline">Group by Type Name</span>
-                  {/* <span className="sm:hidden">Type Name</span> */}
-                </Button>
+            {/* Loading State */}
+            {isLoadingData ? (
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                <LoadingProgressBar 
+                  isLoading={true}
+                  message="Loading plugin trace logs..."
+                  position="inline"
+                  colorScheme="primary"
+                />
               </div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
-                <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="text-xs sm:text-sm w-full xs:w-auto">
-                      <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                      Search
+            ) : (
+              <>
+                {/* Controls */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-x-8 gap-y-2 flex-wrap">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+                    <Button 
+                      variant={groupBy === 'correlation' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setGroupBy('correlation')}
+                      className={`text-xs sm:text-sm w-full xs:w-auto ${groupBy === 'correlation' ? 'bg-primary text-primary-foreground' : ''}`}
+                    >
+                      <span className="inline">Group by Correlation ID</span>
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Search Trace Logs</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <Input
-                        placeholder="Search by plugin name, step name, correlation ID, type..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full"
-                      />
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => {
-                          setSearchTerm('');
-                          setIsSearchOpen(false);
-                        }}>
-                          Clear
-                        </Button>
-                        <Button onClick={() => setIsSearchOpen(false)}>
+                    <Button 
+                      variant={groupBy === 'type' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setGroupBy('type')}
+                      className={`text-xs sm:text-sm w-full xs:w-auto ${groupBy === 'type' ? 'bg-primary text-primary-foreground' : ''}`}
+                    >
+                      <span className="inline">Group by Type Name</span>
+                    </Button>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+                    <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-xs sm:text-sm w-full xs:w-auto">
+                          <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                           Search
                         </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleExportCSV}
-                  className="text-xs sm:text-sm w-full xs:w-auto"
-                >
-                  <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="inline">Export CSV</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="border rounded-lg overflow-x-auto">
-              <Table className="min-w-full">
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">Created On</TableHead>
-                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">Execution Start</TableHead>
-                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">Duration</TableHead>
-                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">Plugin Name</TableHead>
-                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">Step Name</TableHead>
-                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">Correlation ID</TableHead>
-                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">Type Name</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentPageData.map((record) => (
-                    <TableRow key={record.id}>
-                      <TableCell className="text-xs sm:text-sm">{record.createdOn}</TableCell>
-                      <TableCell className="text-xs sm:text-sm">{record.executionStart}</TableCell>
-                      <TableCell className="text-xs sm:text-sm">{record.duration}</TableCell>
-                      <TableCell className="text-xs sm:text-sm max-w-[200px] truncate" title={record.pluginName}>
-                        {record.pluginName}
-                      </TableCell>
-                      <TableCell className="text-xs sm:text-sm">
-                        <div className="flex items-center gap-2">
-                          <span className="truncate">{record.stepName}</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewDetails(record)}
-                            className="text-xs h-7 px-2 whitespace-nowrap"
-                          >
-                            View Details
-                          </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Search Trace Logs</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <Input
+                            placeholder="Search by plugin name, step name, correlation ID, type..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => {
+                              setSearchTerm('');
+                              setIsSearchOpen(false);
+                            }}>
+                              Clear
+                            </Button>
+                            <Button onClick={() => setIsSearchOpen(false)}>
+                              Search
+                            </Button>
+                          </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-xs sm:text-sm">{record.correlationId}</TableCell>
-                      <TableCell className="text-xs sm:text-sm">{record.typeName}</TableCell>
-                    </TableRow>
-                  ))}
-                  {currentPageData.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-6 sm:py-8 text-muted-foreground text-xs sm:text-sm">
-                        {searchTerm ? 'No matching records found.' : 'No trace logs found. Apply filters and click "Show Trace Logs" to view data.'}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleExportCSV}
+                      className="text-xs sm:text-sm w-full xs:w-auto"
+                    >
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="inline">Export CSV</span>
+                    </Button>
+                  </div>
+                </div>
 
-            {/* Pagination */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="text-xs sm:text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages} (Showing {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of {filteredData.length} records)
-              </div>
-              <div className="flex flex-col xs:flex-row items-start xs:items-center gap-4 w-full sm:w-auto">
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handlePrevPage}
-                    disabled={currentPage <= 1}
-                    className="text-xs sm:text-sm"
-                  >
-                    Prev
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleNextPage}
-                    disabled={currentPage >= totalPages}
-                    className="text-xs sm:text-sm"
-                  >
-                    Next
-                  </Button>
+                {/* Table */}
+                <div className="border rounded-lg overflow-x-auto">
+                  <Table className="min-w-full">
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="text-xs sm:text-sm whitespace-nowrap">Created On</TableHead>
+                        <TableHead className="text-xs sm:text-sm whitespace-nowrap">Execution Start</TableHead>
+                        <TableHead className="text-xs sm:text-sm whitespace-nowrap">Duration</TableHead>
+                        <TableHead className="text-xs sm:text-sm whitespace-nowrap">Plugin Name</TableHead>
+                        <TableHead className="text-xs sm:text-sm whitespace-nowrap">Step Name</TableHead>
+                        <TableHead className="text-xs sm:text-sm whitespace-nowrap">Correlation ID</TableHead>
+                        <TableHead className="text-xs sm:text-sm whitespace-nowrap">Type Name</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {currentPageData.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell className="text-xs sm:text-sm">{record.createdOn}</TableCell>
+                          <TableCell className="text-xs sm:text-sm">{record.executionStart}</TableCell>
+                          <TableCell className="text-xs sm:text-sm">{record.duration}</TableCell>
+                          <TableCell className="text-xs sm:text-sm max-w-[200px] truncate" title={record.pluginName}>
+                            {record.pluginName}
+                          </TableCell>
+                          <TableCell className="text-xs sm:text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="truncate">{record.stepName}</span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewDetails(record)}
+                                className="text-xs h-7 px-2 whitespace-nowrap"
+                              >
+                                View Details
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs sm:text-sm">{record.correlationId}</TableCell>
+                          <TableCell className="text-xs sm:text-sm">{record.typeName}</TableCell>
+                        </TableRow>
+                      ))}
+                      {currentPageData.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-6 sm:py-8 text-muted-foreground text-xs sm:text-sm">
+                            {searchTerm ? 'No matching records found.' : 'No trace logs found. Apply filters and click "Show Trace Logs" to view data.'}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Select value={recordsPerPage} onValueChange={setRecordsPerPage}>
-                    <SelectTrigger className="w-16 sm:w-20 text-xs sm:text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <span className="text-xs sm:text-sm text-muted-foreground">/ page</span>
+
+                {/* Pagination */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages} (Showing {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of {filteredData.length} records)
+                  </div>
+                  <div className="flex flex-col xs:flex-row items-start xs:items-center gap-4 w-full sm:w-auto">
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handlePrevPage}
+                        disabled={currentPage <= 1}
+                        className="text-xs sm:text-sm"
+                      >
+                        Prev
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleNextPage}
+                        disabled={currentPage >= totalPages}
+                        className="text-xs sm:text-sm"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Select value={recordsPerPage} onValueChange={setRecordsPerPage}>
+                        <SelectTrigger className="w-16 sm:w-20 text-xs sm:text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="25">25</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span className="text-xs sm:text-sm text-muted-foreground">/ page</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </motion.div>

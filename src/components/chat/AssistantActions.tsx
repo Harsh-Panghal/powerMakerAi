@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Sparkles, Plus, FileCode, Code, HelpCircle, Table2, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LoadingProgressBar } from '@/components/ui/loading-progress-bar';
 import { FollowUpPromptCard } from './FollowUpPromptCard';
 import { Message, useChatStore } from '@/store/chatStore';
 import { TablesView } from './TablesView';
@@ -40,6 +41,8 @@ export function AssistantActions({ message }: AssistantActionsProps) {
   const [showTables, setShowTables] = useState(false);
   const [showTraceLogFilters, setShowTraceLogFilters] = useState(false);
   const [showPluginTraceLogs, setShowPluginTraceLogs] = useState(false);
+  const [isLoadingTraceFilters, setIsLoadingTraceFilters] = useState(false);
+  const [isLoadingTraceLogs, setIsLoadingTraceLogs] = useState(false);
 
   const handlePreview = () => {
     openPreview(message.content);
@@ -49,9 +52,25 @@ export function AssistantActions({ message }: AssistantActionsProps) {
     sendMessage(promptText);
   };
 
-  const handleShowTraceLogs = () => {
+  const handleShowTraceLogs = async () => {
+    setIsLoadingTraceLogs(true);
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
     setShowTraceLogFilters(false);
     setShowPluginTraceLogs(true);
+    setIsLoadingTraceLogs(false);
+  };
+
+  const handleShowTraceFilters = async () => {
+    setIsLoadingTraceFilters(true);
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    
+    setShowTraceLogFilters(true);
+    setIsLoadingTraceFilters(false);
   };
 
   const handleBackToFilters = () => {
@@ -105,13 +124,14 @@ export function AssistantActions({ message }: AssistantActionsProps) {
               transition={{ delay: 0.3 }}
             >
               <Button
-                onClick={() => setShowTraceLogFilters(true)}
+                onClick={handleShowTraceFilters}
                 variant="outline"
                 size="sm"
+                disabled={isLoadingTraceFilters}
                 className="bg-background hover:bg-muted border-border text-foreground"
               >
                 <Filter className="w-4 h-4 mr-2" />
-                Show Trace Logs
+                {isLoadingTraceFilters ? 'Loading...' : 'Show Trace Logs'}
               </Button>
             </motion.div>
           )}
@@ -161,11 +181,27 @@ export function AssistantActions({ message }: AssistantActionsProps) {
             isOpen={showTraceLogFilters}
             onClose={() => setShowTraceLogFilters(false)}
             onShowTraceLogs={handleShowTraceLogs}
+            isLoadingTraceLogs={isLoadingTraceLogs}
           />
           <PluginTraceLogs
             isOpen={showPluginTraceLogs}
             onClose={() => setShowPluginTraceLogs(false)}
             onBack={handleBackToFilters}
+          />
+          
+          {/* Loading Progress Bars */}
+          <LoadingProgressBar 
+            isLoading={isLoadingTraceFilters}
+            message="Loading trace log filters..."
+            position="overlay"
+            colorScheme="primary"
+          />
+          
+          <LoadingProgressBar 
+            isLoading={isLoadingTraceLogs}
+            message="Fetching plugin trace logs..."
+            position="overlay"
+            colorScheme="primary"
           />
         </>
       )}
