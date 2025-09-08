@@ -61,8 +61,9 @@ export function PowerMakerSidebar() {
   const [feedbackType, setFeedbackType] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [connectionList, setConnectionList] = useState(connections);
+  const [isAnimating, setIsAnimating] = useState(false); // Add animation state
   const editInputRef = useRef<HTMLInputElement>(null);
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const isCollapsed = state === "collapsed";
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -73,6 +74,13 @@ export function PowerMakerSidebar() {
   // Get displayed chats based on showAllChats state
   const displayedChats = showAllChats ? recentThreads : recentThreads.slice(0, INITIAL_CHAT_LIMIT);
   const hasMoreChats = recentThreads.length > INITIAL_CHAT_LIMIT;
+
+  // Track sidebar state changes for animation
+  useEffect(() => {
+    setIsAnimating(true);
+    const timer = setTimeout(() => setIsAnimating(false), 300);
+    return () => clearTimeout(timer);
+  }, [isCollapsed]);
 
   const handleLogoClick = () => {
     // Navigate to greeting page
@@ -255,179 +263,229 @@ export function PowerMakerSidebar() {
           onClick={handleLogoClick}
           data-tour="logo"
         >
-          <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
-          {!isCollapsed && (
-            <>
-              <span className="font-bold text-brand">PowerMaker AI</span>
-              <span className="text-xs bg-brand/10 text-brand px-2 py-1 rounded">Beta</span>
-            </>
-          )}
+          <img src="/logo.svg" alt="Logo" className="w-8 h-8 flex-shrink-0" />
+          {/* Animated text elements */}
+          <div className={`
+            flex items-center space-x-2 overflow-hidden
+            transition-all duration-300 ease-in-out
+            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}
+            ${isAnimating && !isCollapsed ? 'delay-100' : ''}
+          `}>
+            <span className="font-bold text-brand whitespace-nowrap">PowerMaker AI</span>
+            <span className="text-xs bg-brand/10 text-brand px-2 py-1 rounded whitespace-nowrap">Beta</span>
+          </div>
         </div>
       </SidebarHeader>
 
       {/* New Chat Button - Fixed position */}
       <div className={`p-4 border-b border-border/30 flex-shrink-0 ${isCollapsed ? 'px-2' : ''}`}>
         <Button 
-          className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-center'} bg-transparent border border-border hover:bg-sidebar-accent text-brand shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out`}
+          className={`w-full ${isCollapsed ? 'justify-start pl-1.5' : 'justify-center'} bg-transparent border border-border hover:bg-sidebar-accent text-brand shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out`}
           variant="outline"
           onClick={handleNewChat}
           size={isCollapsed ? "sm" : "default"}
           data-guide="new-chat-button"
         >
-          <Plus className="w-4 h-4" />
-          {!isCollapsed && <span className="ml-1">New Chat</span>}
+          <Plus className="w-4 h-4 flex-shrink-0" />
+          <span className={`
+            whitespace-nowrap overflow-hidden
+            transition-all duration-300 ease-in-out
+            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-1'}
+            ${isAnimating && !isCollapsed ? 'delay-100' : ''}
+          `}>
+            New Chat
+          </span>
         </Button>
       </div>
 
       <SidebarContent className="flex-1 flex flex-col">
         {/* Recent Chats */}
-        {!isCollapsed && (
-          <SidebarGroup className="flex-1 flex flex-col">
-            <SidebarGroupLabel className="px-4 text-sm font-medium text-muted-foreground flex-shrink-0" data-tour="recent-chats">
-              Recent
-            </SidebarGroupLabel>
-            <SidebarGroupContent className="overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 340px)' }}>
-              <SidebarMenu>
-                {displayedChats.length > 0 ? (
-                  displayedChats.map((thread, index) => (
-                    <SidebarMenuItem 
-                      key={thread.id} 
-                      className={`transition-all duration-300 ${
-                        deletingChatId === thread.id ? 'opacity-0 translate-x-4 scale-95' : 'opacity-100 translate-x-0 scale-100'
-                      }`}
+        <SidebarGroup className="flex-1 flex flex-col">
+          <SidebarGroupLabel className={`
+            px-4 text-sm font-medium text-muted-foreground flex-shrink-0
+            transition-all duration-300 ease-in-out
+            ${isCollapsed ? 'opacity-0 h-0 py-0' : 'opacity-100 h-auto'}
+            ${isAnimating && !isCollapsed ? 'delay-150' : ''}
+          `} data-tour="recent-chats">
+            Recent
+          </SidebarGroupLabel>
+          <SidebarGroupContent className="overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 340px)' }}>
+            <SidebarMenu>
+              {displayedChats.length > 0 ? (
+                displayedChats.map((thread, index) => (
+                  <SidebarMenuItem 
+                    key={thread.id} 
+                    className={`transition-all duration-300 ${
+                      deletingChatId === thread.id ? 'opacity-0 translate-x-4 scale-95' : 'opacity-100 translate-x-0 scale-100'
+                    }`}
+                    style={{
+                      // Staggered animation for chat items
+                      transitionDelay: isAnimating && !isCollapsed ? `${index * 50 + 200}ms` : '0ms'
+                    }}
+                  >
+                    <div
+                      className="flex items-center px-4 py-1 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out overflow-hidden"
+                      onMouseEnter={() => setHoveredChat(index)}
+                      onMouseLeave={() => setHoveredChat(null)}
                     >
-                      <div
-                        className="flex items-center px-4 py-1 mx-2 hover:bg-sidebar-accent rounded-md group transition-all duration-200 ease-in-out overflow-hidden"
-                        onMouseEnter={() => setHoveredChat(index)}
-                        onMouseLeave={() => setHoveredChat(null)}
+                      <SidebarMenuButton 
+                        className="flex-1 justify-start p-0 h-auto cursor-pointer min-w-0"
+                        onClick={() => editingChatId !== thread.id ? handleChatClick(thread.id) : undefined}
                       >
-                        <SidebarMenuButton 
-                          className="flex-1 justify-start p-0 h-auto cursor-pointer min-w-0"
-                          onClick={() => editingChatId !== thread.id ? handleChatClick(thread.id) : undefined}
-                        >
-                          <MessageSquare className="w-3 h-3 mr-2 text-muted-foreground flex-shrink-0" />
-                          <div className="flex flex-col items-start min-w-0 flex-1 overflow-hidden">
-                            {editingChatId === thread.id ? (
-                              <div className="flex items-center gap-1 w-full">
-                                <Input
-                                  ref={editInputRef}
-                                  value={editingTitle}
-                                  onChange={(e) => setEditingTitle(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleRenameConfirm();
-                                    if (e.key === 'Escape') handleRenameCancel();
-                                  }}
-                                  onBlur={handleRenameConfirm}
-                                  className="text-sm h-6 py-0 px-1 border-0 bg-transparent focus:ring-1 focus:ring-brand"
-                                  maxLength={50}
-                                />
-                              </div>
-                            ) : (
-                              <>
-                                <span className="text-sm text-sidebar-foreground truncate w-full">
-                                  {thread.title}
-                                </span>
-                                <span className="text-xs text-muted-foreground truncate w-full">
-                                  {thread.messages.length} messages • {thread.createdAt.toLocaleDateString()}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </SidebarMenuButton>
-                        {editingChatId !== thread.id && (
-                          <div className="flex-shrink-0 ml-2">
-                            <Popover open={chatMenuOpen === index} onOpenChange={(open) => setChatMenuOpen(open ? index : null)}>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
-                                    hoveredChat === index || isMobile ? 'opacity-100' : 'opacity-0'
-                                  }`}
-                                >
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent 
-                                className="w-32 p-1 z-50" 
-                                side="right" 
-                                align="start"
-                                sideOffset={3}
-                                avoidCollisions={true}
-                                alignOffset={10}
+                        <MessageSquare className="w-3 h-3 mr-2 text-muted-foreground flex-shrink-0" />
+                        <div className={`
+                          flex flex-col items-start min-w-0 flex-1 overflow-hidden
+                          transition-all duration-300 ease-in-out
+                          ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}
+                          ${isAnimating && !isCollapsed ? 'delay-200' : ''}
+                        `}>
+                          {editingChatId === thread.id ? (
+                            <div className="flex items-center gap-1 w-full">
+                              <Input
+                                ref={editInputRef}
+                                value={editingTitle}
+                                onChange={(e) => setEditingTitle(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleRenameConfirm();
+                                  if (e.key === 'Escape') handleRenameCancel();
+                                }}
+                                onBlur={handleRenameConfirm}
+                                className="text-sm h-6 py-0 px-1 border-0 bg-transparent focus:ring-1 focus:ring-brand"
+                                maxLength={50}
+                              />
+                            </div>
+                          ) : (
+                            <>
+                              <span className="text-sm text-sidebar-foreground truncate w-full whitespace-nowrap">
+                                {thread.title}
+                              </span>
+                              <span className="text-xs text-muted-foreground truncate w-full whitespace-nowrap">
+                                {thread.messages.length} messages • {thread.createdAt.toLocaleDateString()}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </SidebarMenuButton>
+                      {editingChatId !== thread.id && !isCollapsed && (
+                        <div className="flex-shrink-0 ml-2">
+                          <Popover open={chatMenuOpen === index} onOpenChange={(open) => setChatMenuOpen(open ? index : null)}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
+                                  hoveredChat === index || isMobile ? 'opacity-100' : 'opacity-0'
+                                }`}
                               >
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full justify-start text-xs"
-                                  onClick={() => handleRenameChat(thread.id, thread.title)}
-                                >
-                                  <Pencil className="w-3 h-3 mr-2" />
-                                  Rename
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
-                                  onClick={() => handleDeleteChat(thread.id)}
-                                >
-                                  <Trash2 className="w-3 h-3 mr-2" />
-                                  Delete
-                                </Button>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                        )}
-                      </div>
-                    </SidebarMenuItem>
-                  ))
-                ) : (
-                  <div className="px-4 py-2 text-sm text-muted-foreground">
-                    No recent conversations
-                  </div>
-                )}
-              </SidebarMenu>
-            </SidebarGroupContent>
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent 
+                              className="w-32 p-1 z-50" 
+                              side="right" 
+                              align="start"
+                              sideOffset={3}
+                              avoidCollisions={true}
+                              alignOffset={10}
+                            >
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full justify-start text-xs"
+                                onClick={() => handleRenameChat(thread.id, thread.title)}
+                              >
+                                <Pencil className="w-3 h-3 mr-2" />
+                                Rename
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
+                                onClick={() => handleDeleteChat(thread.id)}
+                              >
+                                <Trash2 className="w-3 h-3 mr-2" />
+                                Delete
+                              </Button>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      )}
+                    </div>
+                  </SidebarMenuItem>
+                ))
+              ) : (
+                <div className={`
+                  px-4 py-2 text-sm text-muted-foreground
+                  transition-all duration-300 ease-in-out
+                  ${isCollapsed ? 'opacity-0 h-0 py-0' : 'opacity-100 h-auto'}
+                  ${isAnimating && !isCollapsed ? 'delay-200' : ''}
+                `}>
+                  No recent conversations
+                </div>
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
 
-            {hasMoreChats && (
-              <div className="px-4 py-2 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-brand hover:text-brand-accent flex items-center"
-                  onClick={() => setShowAllChats(!showAllChats)}
-                  data-tour="more-menu"
-                >
-                  <ChevronDown className={`w-4 h-4 mr-0 transition-transform ${showAllChats ? 'rotate-180' : ''}`} />
+          {hasMoreChats && (
+            <div className={`
+              px-4 py-2 flex-shrink-0
+              transition-all duration-300 ease-in-out
+              ${isCollapsed ? 'opacity-0 h-0 py-0' : 'opacity-100 h-auto'}
+              ${isAnimating && !isCollapsed ? 'delay-300' : ''}
+            `}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-brand hover:text-brand-accent flex items-center"
+                onClick={() => setShowAllChats(!showAllChats)}
+                data-tour="more-menu"
+              >
+                <ChevronDown className={`w-4 h-4 mr-0 transition-transform ${showAllChats ? 'rotate-180' : ''}`} />
+                <span className="ml-1 whitespace-nowrap">
                   {showAllChats ? 'Less' : 'More'}
-                </Button>
-              </div>
-            )}
-          </SidebarGroup>
-        )}
+                </span>
+              </Button>
+            </div>
+          )}
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-border">
-        <div className={isCollapsed ? 'flex flex-col items-center space-y-2' : ''}>
+        <div className={isCollapsed ? 'flex flex-col items-center' : ''}>
           <SidebarMenuButton 
-            className={`w-full ${isCollapsed ? 'justify-center' : 'justify-start'} text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out cursor-pointer`}
+            className={`w-full ${isCollapsed ? 'justify-start' : 'justify-start'} text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out cursor-pointer`}
             onClick={handleHelpClick}
             data-tour="help-icon"
           >
-            <HelpCircle className="w-4 h-4" />
-            {!isCollapsed && <span className="ml-2">Help</span>}
+            <HelpCircle className="w-4 h-4 flex-shrink-0" />
+            <span className={`
+              whitespace-nowrap overflow-hidden
+              transition-all duration-300 ease-in-out
+              ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-2'}
+              ${isAnimating && !isCollapsed ? 'delay-100' : ''}
+            `}>
+              Help
+            </span>
           </SidebarMenuButton>
           <SidebarMenuButton 
-            className={`w-full ${isCollapsed ? 'justify-center' : 'justify-start'} text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out cursor-pointer`}
+            className={`w-full ${isCollapsed ? 'justify-start ' : 'justify-start'} text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out cursor-pointer`}
             onClick={handleSettingsClick}
             data-guide="settings-button"
           >
-            <Settings className="w-4 h-4" />
-            {!isCollapsed && <span className="ml-2">Settings</span>}
+            <Settings className="w-4 h-4 flex-shrink-0" />
+            <span className={`
+              whitespace-nowrap overflow-hidden
+              transition-all duration-300 ease-in-out
+              ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-2'}
+              ${isAnimating && !isCollapsed ? 'delay-100' : ''}
+            `}>
+              Settings
+            </span>
           </SidebarMenuButton>
         </div>
       </SidebarFooter>
 
+      {/* All your existing dialogs and modals remain the same */}
       {/* Responsive Settings - Drawer for mobile, Dialog for desktop */}
       {isMobile ? (
         <Drawer open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
