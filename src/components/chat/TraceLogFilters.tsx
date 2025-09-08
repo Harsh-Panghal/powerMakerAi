@@ -13,9 +13,10 @@ interface TraceLogFiltersProps {
   isOpen: boolean;
   onClose: () => void;
   onShowTraceLogs: () => void;
+  isLoadingTraceLogs?: boolean;
 }
 
-export function TraceLogFilters({ isOpen, onClose, onShowTraceLogs }: TraceLogFiltersProps) {
+export function TraceLogFilters({ isOpen, onClose, onShowTraceLogs, isLoadingTraceLogs = false }: TraceLogFiltersProps) {
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
@@ -261,9 +262,10 @@ export function TraceLogFilters({ isOpen, onClose, onShowTraceLogs }: TraceLogFi
               </Button> */}
               <Button 
                 onClick={onShowTraceLogs}
+                disabled={isLoadingTraceLogs}
                 className="bg-primary hover:bg-primary/90"
               >
-                Show Trace Logs
+                {isLoadingTraceLogs ? 'Loading...' : 'Show Trace Logs'}
               </Button>
             </div>
           </CardContent>
