@@ -11,13 +11,15 @@ import { useChatStore } from "@/store/chatStore";
 interface TablesViewProps {
   isOpen: boolean;
   onClose: () => void;
+  isLoadingTables?: boolean;
+  
 }
 
 export function TablesView({ isOpen, onClose }: TablesViewProps) {
   const [activeTab, setActiveTab] = useState("entity");
   const { addNotification } = useChatStore();
 
-  const handleStartCustomization = () => {
+   const handleStartCustomization = () => {
     // Add notification about entity customization starting
     const now = new Date();
     const endTime = new Date(now.getTime() + 2 * 60 * 1000); // 2 minutes later

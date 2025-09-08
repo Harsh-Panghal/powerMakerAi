@@ -43,6 +43,7 @@ export function AssistantActions({ message }: AssistantActionsProps) {
   const [showPluginTraceLogs, setShowPluginTraceLogs] = useState(false);
   const [isLoadingTraceFilters, setIsLoadingTraceFilters] = useState(false);
   const [isLoadingTraceLogs, setIsLoadingTraceLogs] = useState(false);
+  const [isLoadingTables, setIsLoadingTables] = useState(false);
 
   const handlePreview = () => {
     openPreview(message.content);
@@ -77,6 +78,15 @@ export function AssistantActions({ message }: AssistantActionsProps) {
     setShowPluginTraceLogs(false);
     setShowTraceLogFilters(true);
   };
+  const handleShowTables = async () => {
+    setIsLoadingTables(true);
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setShowTables(true);
+    setIsLoadingTables(false);
+  };
 
   return (
     <>
@@ -106,13 +116,14 @@ export function AssistantActions({ message }: AssistantActionsProps) {
               transition={{ delay: 0.3 }}
             >
               <Button
-                onClick={() => setShowTables(true)}
+                onClick={handleShowTables}
                 variant="outline"
                 size="sm"
+                disabled={isLoadingTables}
                 className="bg-background hover:bg-muted border-border text-foreground"
               >
                 <Table2 className="w-4 h-4 mr-2" />
-                Show Tables
+                {isLoadingTables ? 'Loading...' : 'Show Tables'}
               </Button>
             </motion.div>
           )}
@@ -169,10 +180,22 @@ export function AssistantActions({ message }: AssistantActionsProps) {
       
       {/* Conditional Modals */}
       {selectedModel === 'model-0-1' && (
-        <TablesView 
-          isOpen={showTables} 
-          onClose={() => setShowTables(false)} 
-        />
+        <>
+          <TablesView
+            isOpen={showTables}
+            onClose={() => setShowTables(false)}
+            isLoadingTables={isLoadingTables}
+          />
+          
+          {/* Loading Progress Bar */}
+          <LoadingProgressBar 
+            isLoading={isLoadingTables}
+            message="Loading CRM Entity Configuration..."
+            position="overlay"
+            colorScheme="primary"
+          />
+        </>
+        
       )}
       
       {selectedModel === 'model-0-2' && (
