@@ -88,47 +88,67 @@ const modelOptions = [
 export function PowerMakerHeader() {
   const { toggleSidebar } = useSidebar();
   const navigate = useNavigate();
-  const { selectedModel, setModel, isNotificationOpen, notifications, openNotifications, closeNotifications, activeConnection } = useChatStore();
+  const {
+    selectedModel,
+    setModel,
+    isNotificationOpen,
+    notifications,
+    openNotifications,
+    closeNotifications,
+    activeConnection,
+    highlightedNotificationId,
+  } = useChatStore();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [demoUser, setDemoUser] = useState<{email: string; name: string} | null>(null);
+  const [demoUser, setDemoUser] = useState<{
+    email: string;
+    name: string;
+  } | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteMode, setInviteMode] = useState<'email' | 'link'>('email');
-  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteMode, setInviteMode] = useState<"email" | "link">("email");
+  const [inviteEmail, setInviteEmail] = useState("");
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showTour, setShowTour] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'failed' | 'connected'>('connected');
-  
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connecting" | "failed" | "connected"
+  >("connected");
+
   const { hasCompletedTour, resetTour } = usePowerMakerTour();
 
   // Connection status configuration
   const connectionConfig = {
     connecting: {
       icon: <Loader2 className="w-4 h-4 text-warning animate-spin" />,
-      text: 'Connecting...',
-      textColor: 'text-warning'
+      text: "Connecting...",
+      textColor: "text-warning",
     },
     failed: {
       icon: <AlertCircle className="w-4 h-4 text-destructive" />,
-      text: activeConnection?.name || 'No Connection',
-      textColor: 'text-destructive'
+      text: activeConnection?.name || "No Connection",
+      textColor: "text-destructive",
     },
     connected: {
-      icon: <img src="/Dataverse_scalable.svg" alt={activeConnection?.name || 'Connection'} className="w-4 h-4 text-success" />,
-      text: activeConnection?.name || 'No Connection',
-      textColor: 'text-success-dark'
-    }
+      icon: (
+        <img
+          src="/Dataverse_scalable.svg"
+          alt={activeConnection?.name || "Connection"}
+          className="w-4 h-4 text-success"
+        />
+      ),
+      text: activeConnection?.name || "No Connection",
+      textColor: "text-success-dark",
+    },
   };
 
   const currentConnection = connectionConfig[connectionStatus];
 
   // Check for demo user on component mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('demoUser');
+    const storedUser = localStorage.getItem("demoUser");
     if (storedUser) {
       const userData = JSON.parse(storedUser);
       if (userData.isLoggedIn) {
@@ -144,13 +164,13 @@ export function PowerMakerHeader() {
       const timer = setTimeout(() => {
         setShowTour(true);
       }, 2000); // Show after 2 seconds for new users
-      
+
       return () => clearTimeout(timer);
     }
   }, [isLoggedIn, hasCompletedTour]);
 
   const handleLogout = () => {
-    localStorage.removeItem('demoUser');
+    localStorage.removeItem("demoUser");
     setIsLoggedIn(false);
     setDemoUser(null);
     toast({
@@ -161,13 +181,13 @@ export function PowerMakerHeader() {
   };
 
   const handleInviteWithLink = () => {
-    setInviteMode('link');
-    setInviteEmail('https://powermaker.com/invite/abc123def456');
+    setInviteMode("link");
+    setInviteEmail("https://powermaker.com/invite/abc123def456");
   };
 
   const handleInviteWithEmail = () => {
-    setInviteMode('email');
-    setInviteEmail('');
+    setInviteMode("email");
+    setInviteEmail("");
   };
 
   const handleCopyLink = async () => {
@@ -187,14 +207,14 @@ export function PowerMakerHeader() {
   };
 
   const handleSendInvite = () => {
-    if (inviteMode === 'link') {
+    if (inviteMode === "link") {
       handleCopyLink();
     } else {
       toast({
         title: "Invite sent!",
         description: `Invitation sent to ${inviteEmail}`,
       });
-      setInviteEmail('');
+      setInviteEmail("");
     }
   };
 
@@ -205,7 +225,10 @@ export function PowerMakerHeader() {
 
   return (
     <>
-      <header className="h-14 flex items-center justify-between px-2 sm:px-4 border-b border-border bg-background" data-tour="header">
+      <header
+        className="h-14 flex items-center justify-between px-2 sm:px-4 border-b border-border bg-background"
+        data-tour="header"
+      >
         {/* left section */}
         <div className="flex items-center">
           <Button
@@ -218,7 +241,10 @@ export function PowerMakerHeader() {
             <Menu className="w-5 h-5" />
           </Button>
           {/* model selector */}
-          <div className="flex items-center flex-1 justify-start px-2 max-w-[120px] sm:max-w-xs md:max-w-sm" data-tour="model-selector">
+          <div
+            className="flex items-center flex-1 justify-start px-2 max-w-[120px] sm:max-w-xs md:max-w-sm"
+            data-tour="model-selector"
+          >
             <Select
               value={selectedModel}
               onValueChange={(value) => {
@@ -290,26 +316,35 @@ export function PowerMakerHeader() {
             <HelpCircle className="w-4 h-4 mr-1" />
             Take a Tour
           </Button> */}
-          
+
           {/* Connection Status */}
-          <div className="hidden md:flex items-center space-x-2 text-sm" data-tour="connection-status">
+          <div
+            className="hidden md:flex items-center space-x-2 text-sm"
+            data-tour="connection-status"
+          >
             {currentConnection.icon}
             <span className={`${currentConnection.textColor} hidden lg:inline`}>
               {currentConnection.text}
             </span>
             <span className={`${currentConnection.textColor} lg:hidden`}>
-              {connectionStatus === 'connecting' ? 'Connecting...' : 
-               connectionStatus === 'failed' ? 'Failed' : 'Connected'}
+              {connectionStatus === "connecting"
+                ? "Connecting..."
+                : connectionStatus === "failed"
+                ? "Failed"
+                : "Connected"}
             </span>
           </div>
 
           {/* Mobile Connection Status - Just icon */}
-          <div className="md:hidden">
-            {currentConnection.icon}
-          </div>
+          <div className="md:hidden">{currentConnection.icon}</div>
 
           {/* Notification Bell */}
-          <Sheet open={isNotificationOpen} onOpenChange={(open) => open ? openNotifications() : closeNotifications()}>
+          <Sheet
+            open={isNotificationOpen}
+            onOpenChange={(open) =>
+              open ? openNotifications() : closeNotifications()
+            }
+          >
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm" data-guide="notifications-bell">
                 <Bell className="w-5 h-5" />
@@ -336,13 +371,24 @@ export function PowerMakerHeader() {
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className="border rounded-lg p-4 space-y-2"
+                      className={`border rounded-lg p-4 space-y-2 transition-all duration-300 ${
+                        highlightedNotificationId === notification.id
+                          ? "bg-brand/10 border-brand shadow-lg ring-2 ring-brand/20 animate-pulse"
+                          : "hover:bg-muted/50"
+                      }`}
                     >
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium text-sm">
                           {notification.title}
                         </h4>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${
+                            highlightedNotificationId === notification.id
+                              ? "bg-brand text-white border-brand"
+                              : ""
+                          }`}
+                        >
                           {notification.type}
                         </Badge>
                       </div>
@@ -365,7 +411,11 @@ export function PowerMakerHeader() {
                     .map((notification) => (
                       <div
                         key={notification.id}
-                        className="border rounded-lg p-4 space-y-2"
+                        className={`border rounded-lg p-4 space-y-2 transition-all duration-300 ${
+                          highlightedNotificationId === notification.id
+                            ? "bg-brand/10 border-brand shadow-lg ring-2 ring-brand/20 animate-pulse"
+                            : "hover:bg-muted/50"
+                        }`}
                       >
                         <div className="flex items-center justify-between">
                           <h4 className="font-medium text-sm">
@@ -394,7 +444,11 @@ export function PowerMakerHeader() {
                     .map((notification) => (
                       <div
                         key={notification.id}
-                        className="border rounded-lg p-4 space-y-2"
+                        className={`border rounded-lg p-4 space-y-2 transition-all duration-300 ${
+                          highlightedNotificationId === notification.id
+                            ? "bg-brand/10 border-brand shadow-lg ring-2 ring-brand/20 animate-pulse"
+                            : "hover:bg-muted/50"
+                        }`}
                       >
                         <div className="flex items-center justify-between">
                           <h4 className="font-medium text-sm">
@@ -432,15 +486,19 @@ export function PowerMakerHeader() {
                 >
                   <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
                     <AvatarFallback className="bg-brand text-white font-medium text-xs sm:text-sm">
-                      {demoUser?.name?.charAt(0).toUpperCase() || 'U'}
+                      {demoUser?.name?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden md:inline text-sm font-medium text-foreground">
-                    {demoUser?.name || 'User'}
+                    {demoUser?.name || "User"}
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48" data-guide="user-menu">
+              <DropdownMenuContent
+                align="end"
+                className="w-48"
+                data-guide="user-menu"
+              >
                 <DropdownMenuItem onClick={() => setShowProfileDialog(true)}>
                   <User className="w-4 h-4 mr-2" />
                   Profile
@@ -449,10 +507,12 @@ export function PowerMakerHeader() {
                   <UserPlus className="w-4 h-4 mr-2" />
                   Invite
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  resetTour();
-                  setShowTour(true);                                    
-                }}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    resetTour();
+                    setShowTour(true);
+                  }}
+                >
                   <HelpCircle className="w-4 h-4 mr-2" />
                   Take a Tour
                 </DropdownMenuItem>
@@ -673,13 +733,16 @@ export function PowerMakerHeader() {
 
       {/* Invite Dialog/Drawer */}
       {isMobile ? (
-        <Drawer open={showInviteDialog} onOpenChange={(open) => {
-          setShowInviteDialog(open);
-          if (!open) {
-            setInviteMode('email');
-            setInviteEmail('');
-          }
-        }}>
+        <Drawer
+          open={showInviteDialog}
+          onOpenChange={(open) => {
+            setShowInviteDialog(open);
+            if (!open) {
+              setInviteMode("email");
+              setInviteEmail("");
+            }
+          }}
+        >
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle>Invite people</DrawerTitle>
@@ -690,17 +753,25 @@ export function PowerMakerHeader() {
 
             <div className="p-4 space-y-6">
               <div className="flex flex-col space-y-3">
-                <Button 
+                <Button
                   onClick={handleInviteWithEmail}
-                  variant={inviteMode === 'email' ? 'default' : 'outline'} 
-                  className={`w-full h-12 text-base ${inviteMode === 'email' ? 'bg-brand hover:bg-brand/90 text-white' : ''}`}
+                  variant={inviteMode === "email" ? "default" : "outline"}
+                  className={`w-full h-12 text-base ${
+                    inviteMode === "email"
+                      ? "bg-brand hover:bg-brand/90 text-white"
+                      : ""
+                  }`}
                 >
                   Invite with email
                 </Button>
-                <Button 
+                <Button
                   onClick={handleInviteWithLink}
-                  variant={inviteMode === 'link' ? 'default' : 'outline'} 
-                  className={`w-full h-12 text-base ${inviteMode === 'link' ? 'bg-brand hover:bg-brand/90 text-white' : ''}`}
+                  variant={inviteMode === "link" ? "default" : "outline"}
+                  className={`w-full h-12 text-base ${
+                    inviteMode === "link"
+                      ? "bg-brand hover:bg-brand/90 text-white"
+                      : ""
+                  }`}
                 >
                   Invite with link
                 </Button>
@@ -709,18 +780,20 @@ export function PowerMakerHeader() {
               <div className="space-y-3">
                 <Label className="text-base">Add Team</Label>
                 <div className="flex flex-col space-y-3">
-                  <Input 
-                    placeholder={inviteMode === 'email' ? "Enter email" : "Invite link"} 
+                  <Input
+                    placeholder={
+                      inviteMode === "email" ? "Enter email" : "Invite link"
+                    }
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
-                    className="h-12 text-base" 
-                    readOnly={inviteMode === 'link'}
+                    className="h-12 text-base"
+                    readOnly={inviteMode === "link"}
                   />
-                  <Button 
+                  <Button
                     onClick={handleSendInvite}
                     className="w-full h-12 bg-brand hover:bg-brand/90 text-white text-base"
                   >
-                    {inviteMode === 'link' ? 'Copy Link' : 'Send'}
+                    {inviteMode === "link" ? "Copy Link" : "Send"}
                   </Button>
                 </div>
               </div>
@@ -732,13 +805,16 @@ export function PowerMakerHeader() {
           </DrawerContent>
         </Drawer>
       ) : (
-        <Dialog open={showInviteDialog} onOpenChange={(open) => {
-          setShowInviteDialog(open);
-          if (!open) {
-            setInviteMode('email');
-            setInviteEmail('');
-          }
-        }}>
+        <Dialog
+          open={showInviteDialog}
+          onOpenChange={(open) => {
+            setShowInviteDialog(open);
+            if (!open) {
+              setInviteMode("email");
+              setInviteEmail("");
+            }
+          }}
+        >
           <DialogContent className="sm:max-w-[400px]">
             <DialogHeader>
               <DialogTitle>Invite people</DialogTitle>
@@ -749,17 +825,25 @@ export function PowerMakerHeader() {
 
             <div className="space-y-4">
               <div className="flex space-x-2">
-                <Button 
+                <Button
                   onClick={handleInviteWithEmail}
-                  variant={inviteMode === 'email' ? 'default' : 'outline'}
-                  className={inviteMode === 'email' ? 'bg-brand hover:bg-brand/90 text-white' : ''}
+                  variant={inviteMode === "email" ? "default" : "outline"}
+                  className={
+                    inviteMode === "email"
+                      ? "bg-brand hover:bg-brand/90 text-white"
+                      : ""
+                  }
                 >
                   Invite with email
                 </Button>
-                <Button 
+                <Button
                   onClick={handleInviteWithLink}
-                  variant={inviteMode === 'link' ? 'default' : 'outline'}
-                  className={inviteMode === 'link' ? 'bg-brand hover:bg-brand/90 text-white' : ''}
+                  variant={inviteMode === "link" ? "default" : "outline"}
+                  className={
+                    inviteMode === "link"
+                      ? "bg-brand hover:bg-brand/90 text-white"
+                      : ""
+                  }
                 >
                   Invite with link
                 </Button>
@@ -768,18 +852,20 @@ export function PowerMakerHeader() {
               <div className="space-y-2">
                 <Label>Add Team</Label>
                 <div className="flex space-x-2">
-                  <Input 
-                    placeholder={inviteMode === 'email' ? "Enter email" : "Invite link"} 
+                  <Input
+                    placeholder={
+                      inviteMode === "email" ? "Enter email" : "Invite link"
+                    }
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
-                    className="flex-1" 
-                    readOnly={inviteMode === 'link'}
+                    className="flex-1"
+                    readOnly={inviteMode === "link"}
                   />
-                  <Button 
+                  <Button
                     onClick={handleSendInvite}
                     className="bg-brand hover:bg-brand/90 text-white"
                   >
-                    {inviteMode === 'link' ? 'Copy Link' : 'Send'}
+                    {inviteMode === "link" ? "Copy Link" : "Send"}
                   </Button>
                 </div>
               </div>
@@ -905,10 +991,7 @@ export function PowerMakerHeader() {
       )}
 
       {/* PowerMaker Tour */}
-      <PowerMakerTour 
-        isOpen={showTour} 
-        onClose={() => setShowTour(false)} 
-      />
+      <PowerMakerTour isOpen={showTour} onClose={() => setShowTour(false)} />
     </>
   );
 }

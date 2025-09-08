@@ -1,9 +1,9 @@
-import { create } from 'zustand';
-import { startStreamingResponse } from '@/utils/mockApi';
+import { create } from "zustand";
+import { startStreamingResponse } from "@/utils/mockApi";
 
 export interface Message {
   id: string;
-  type: 'user' | 'assistant';
+  type: "user" | "assistant";
   content: string;
   timestamp: Date;
   isStreaming?: boolean;
@@ -18,7 +18,7 @@ export interface ChatThread {
 }
 
 export interface Notification {
-  id: number;
+  id: string;
   type: string;
   title: string;
   startDate: string;
@@ -37,19 +37,21 @@ interface ChatStore {
   // UI State
   isPreviewOpen: boolean;
   previewContent: string;
-  
+
   // Notification State
-  isNotificationOpen: boolean;
   notifications: Notification[];
+  isNotificationOpen: boolean;
+  highlightedNotificationId: string | null;
+  activeConnections: { name: string } | null;
   
   // Connection State
   activeConnection: Connection | null;
-  
+
   // Chat State
   currentThread: ChatThread | null;
   recentThreads: ChatThread[];
   selectedModel: string;
-  
+
   // Actions
   startChat: (prompt: string) => void;
   sendMessage: (message: string) => void;
@@ -64,12 +66,14 @@ interface ChatStore {
   loadThread: (threadId: string) => void;
   renameThread: (threadId: string, newTitle: string) => void;
   deleteThread: (threadId: string) => void;
-  
+
   // Notification Actions
+  addNotification: (notification: Omit<Notification, "id">) => string;
   openNotifications: () => void;
   closeNotifications: () => void;
-  addNotification: (notification: Omit<Notification, 'id'>) => void;
-  
+  setHighlightedNotification: (id: string | null) => void;
+  highlightNotification: (id: string) => void;
+
   // Connection Actions
   setActiveConnection: (connection: Connection) => void;
 }
@@ -77,13 +81,12 @@ interface ChatStore {
 export const useChatStore = create<ChatStore>((set, get) => ({
   // Initial UI State
   isPreviewOpen: false,
-  previewContent: '',
-  
+  previewContent: "",
+
   // Initial Notification State
-  isNotificationOpen: false,
   notifications: [
     {
-      id: 1,
+      id: '1',
       type: "trace",
       title: "Plugin Execution Trace",
       startDate: "2024-01-15 10:30",
@@ -92,7 +95,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       stage: "PreOperation",
     },
     {
-      id: 2,
+      id: '2',
       type: "activity",
       title: "Entity Created Successfully",
       startDate: "2024-01-15 09:45",
@@ -101,7 +104,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       stage: "PostOperation",
     },
     {
-      id: 3,
+      id: '3',
       type: "update",
       title: "Configuration Updated",
       startDate: "2024-01-15 08:20",
@@ -110,179 +113,229 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       stage: "PreValidation",
     },
   ],
+  isNotificationOpen: false,
+  highlightedNotificationId: null,
+  activeConnections: null,
   
+  addNotification: (notification) => {
+    const newNotification = {
+      ...notification,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9), // Generate unique ID
+    };
+    
+    set((state) => ({
+      notifications: [newNotification, ...state.notifications]
+    }));
+    
+    return newNotification.id; // Return the ID so we can highlight it
+  },
+  
+  openNotifications: () => {
+    set({ isNotificationOpen: true });
+  },
+  
+  closeNotifications: () => {
+    set({ isNotificationOpen: false });
+  },
+  
+  setHighlightedNotification: (id: string | null) => {
+    set({ highlightedNotificationId: id });
+  },
+  
+  highlightNotification: (id: string) => {
+    set({ highlightedNotificationId: id });
+    // Clear highlight after 2 seconds
+    setTimeout(() => {
+      const currentState = get();
+      if (currentState.highlightedNotificationId === id) {
+        set({ highlightedNotificationId: null });
+      }
+    }, 2000);
+  },
   // Initial Connection State
   activeConnection: { id: "1", name: "CRM Dev", isSelected: true },
-  
+
   // Initial Chat State
   currentThread: null,
   recentThreads: [],
-  selectedModel: 'model-0-1',
-  
+  selectedModel: "model-0-1",
+
   // Actions
   startChat: (prompt: string) => {
     const threadId = `thread-${Date.now()}`;
     const messageId = `msg-${Date.now()}`;
-    
+
     const newThread: ChatThread = {
       id: threadId,
-      title: prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt,
-      messages: [{
-        id: messageId,
-        type: 'user',
-        content: prompt,
-        timestamp: new Date(),
-      }],
+      title: prompt.length > 50 ? prompt.substring(0, 50) + "..." : prompt,
+      messages: [
+        {
+          id: messageId,
+          type: "user",
+          content: prompt,
+          timestamp: new Date(),
+        },
+      ],
       createdAt: new Date(),
       model: get().selectedModel,
     };
-    
-    set({ 
-      currentThread: newThread 
+
+    set({
+      currentThread: newThread,
     });
-    
+
     // Trigger streaming assistant response
     setTimeout(() => {
-      get().addAssistantMessage('', true);
+      get().addAssistantMessage("", true);
       startStreamingResponse(prompt);
     }, 500);
   },
-  
+
   sendMessage: (message: string) => {
     const currentThread = get().currentThread;
     if (!currentThread) return;
-    
+
     const messageId = `msg-${Date.now()}`;
     const userMessage: Message = {
       id: messageId,
-      type: 'user',
+      type: "user",
       content: message,
       timestamp: new Date(),
     };
-    
+
     const updatedThread = {
       ...currentThread,
       messages: [...currentThread.messages, userMessage],
     };
-    
+
     set({ currentThread: updatedThread });
-    
+
     // Trigger streaming assistant response
     setTimeout(() => {
-      get().addAssistantMessage('', true);
+      get().addAssistantMessage("", true);
       startStreamingResponse(message);
     }, 500);
   },
-  
+
   newChat: () => {
     // Save current thread to recent threads if it exists
     get().saveToRecentThreads();
-    
-    set({ 
+
+    set({
       currentThread: null,
       isPreviewOpen: false,
-      previewContent: '',
+      previewContent: "",
     });
   },
-  
+
   openPreview: (content: string) => {
-    set({ 
-      isPreviewOpen: true, 
-      previewContent: content 
+    set({
+      isPreviewOpen: true,
+      previewContent: content,
     });
   },
-  
+
   closePreview: () => {
-    set({ 
-      isPreviewOpen: false, 
-      previewContent: '' 
+    set({
+      isPreviewOpen: false,
+      previewContent: "",
     });
   },
-  
+
   setModel: (model: string) => {
     // Save current thread to recent threads if it exists
     get().saveToRecentThreads();
-    
-    set({ 
+
+    set({
       selectedModel: model,
       currentThread: null,
       isPreviewOpen: false,
-      previewContent: '',
+      previewContent: "",
     });
   },
-  
+
   addAssistantMessage: (content: string, isStreaming = false) => {
     const currentThread = get().currentThread;
     if (!currentThread) return;
-    
+
     const messageId = `msg-${Date.now()}`;
     const assistantMessage: Message = {
       id: messageId,
-      type: 'assistant',
+      type: "assistant",
       content,
       timestamp: new Date(),
       isStreaming,
     };
-    
+
     const updatedThread = {
       ...currentThread,
       messages: [...currentThread.messages, assistantMessage],
     };
-    
+
     set({ currentThread: updatedThread });
   },
-  
+
   updateStreamingMessage: (content: string) => {
     const currentThread = get().currentThread;
     if (!currentThread) return;
-    
+
     const messages = [...currentThread.messages];
     const lastMessage = messages[messages.length - 1];
-    
-    if (lastMessage && lastMessage.type === 'assistant' && lastMessage.isStreaming) {
+
+    if (
+      lastMessage &&
+      lastMessage.type === "assistant" &&
+      lastMessage.isStreaming
+    ) {
       lastMessage.content = content;
-      
+
       const updatedThread = {
         ...currentThread,
         messages,
       };
-      
+
       set({ currentThread: updatedThread });
     }
   },
-  
+
   finishStreaming: () => {
     const currentThread = get().currentThread;
     if (!currentThread) return;
-    
+
     const messages = [...currentThread.messages];
     const lastMessage = messages[messages.length - 1];
-    
-    if (lastMessage && lastMessage.type === 'assistant' && lastMessage.isStreaming) {
+
+    if (
+      lastMessage &&
+      lastMessage.type === "assistant" &&
+      lastMessage.isStreaming
+    ) {
       lastMessage.isStreaming = false;
-      
+
       const updatedThread = {
         ...currentThread,
         messages,
       };
-      
+
       set({ currentThread: updatedThread });
-      
+
       // Auto-save to recent threads when response is complete
       get().saveToRecentThreads();
     }
   },
-  
+
   saveToRecentThreads: () => {
     const currentThread = get().currentThread;
-    
+
     // Only save if thread exists and has messages
     if (currentThread && currentThread.messages.length > 0) {
       const recentThreads = get().recentThreads;
-      
+
       // Check if this thread is already in recent threads
-      const existingIndex = recentThreads.findIndex(thread => thread.id === currentThread.id);
-      
+      const existingIndex = recentThreads.findIndex(
+        (thread) => thread.id === currentThread.id
+      );
+
       let updatedRecentThreads;
       if (existingIndex >= 0) {
         // Update existing thread
@@ -292,75 +345,56 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         // Add new thread to the beginning
         updatedRecentThreads = [currentThread, ...recentThreads.slice(0, 16)]; // Keep last 17 threads
       }
-      
+
       set({ recentThreads: updatedRecentThreads });
     }
   },
-  
+
   loadThread: (threadId: string) => {
     const recentThreads = get().recentThreads;
-    const threadToLoad = recentThreads.find(thread => thread.id === threadId);
-    
+    const threadToLoad = recentThreads.find((thread) => thread.id === threadId);
+
     if (threadToLoad) {
-      set({ 
-        currentThread: threadToLoad 
+      set({
+        currentThread: threadToLoad,
       });
     }
   },
-  
+
   renameThread: (threadId: string, newTitle: string) => {
     const currentThread = get().currentThread;
     const recentThreads = get().recentThreads;
-    
+
     // Update current thread if it matches
     if (currentThread && currentThread.id === threadId) {
-      set({ 
-        currentThread: { ...currentThread, title: newTitle }
+      set({
+        currentThread: { ...currentThread, title: newTitle },
       });
     }
-    
+
     // Update in recent threads
-    const updatedRecentThreads = recentThreads.map(thread => 
+    const updatedRecentThreads = recentThreads.map((thread) =>
       thread.id === threadId ? { ...thread, title: newTitle } : thread
     );
-    
+
     set({ recentThreads: updatedRecentThreads });
   },
-  
+
   deleteThread: (threadId: string) => {
     const currentThread = get().currentThread;
     const recentThreads = get().recentThreads;
-    
+
     // If current thread is being deleted, clear it
     if (currentThread && currentThread.id === threadId) {
       set({ currentThread: null });
     }
-    
+
     // Remove from recent threads
-    const updatedRecentThreads = recentThreads.filter(thread => thread.id !== threadId);
+    const updatedRecentThreads = recentThreads.filter(
+      (thread) => thread.id !== threadId
+    );
     set({ recentThreads: updatedRecentThreads });
   },
-  
-  // Notification Actions
-  openNotifications: () => {
-    set({ isNotificationOpen: true });
-  },
-  
-  closeNotifications: () => {
-    set({ isNotificationOpen: false });
-  },
-  
-  addNotification: (notification: Omit<Notification, 'id'>) => {
-    const notifications = get().notifications;
-    const newId = Math.max(...notifications.map(n => n.id), 0) + 1;
-    const newNotification = { ...notification, id: newId };
-    
-    set({ 
-      notifications: [newNotification, ...notifications],
-      isNotificationOpen: true 
-    });
-  },
-  
   // Connection Actions
   setActiveConnection: (connection: Connection) => {
     set({ activeConnection: connection });

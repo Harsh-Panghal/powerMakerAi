@@ -12,19 +12,18 @@ interface TablesViewProps {
   isOpen: boolean;
   onClose: () => void;
   isLoadingTables?: boolean;
-  
 }
 
 export function TablesView({ isOpen, onClose }: TablesViewProps) {
   const [activeTab, setActiveTab] = useState("entity");
-  const { addNotification } = useChatStore();
+  const { addNotification, highlightNotification, openNotifications } = useChatStore();
 
-   const handleStartCustomization = () => {
+  const handleStartCustomization = () => {
     // Add notification about entity customization starting
     const now = new Date();
-    const endTime = new Date(now.getTime() + 2 * 60 * 1000); // 2 minutes later
+    const endTime = new Date(now.getTime() + 2 * 10 * 500); // 2 minutes later
 
-    addNotification({
+    const notificationId = addNotification({
       type: "customization",
       title: "Entity Customization Started",
       startDate: now.toLocaleString(),
@@ -33,8 +32,19 @@ export function TablesView({ isOpen, onClose }: TablesViewProps) {
       stage: "Initialize",
     });
 
-    // Close the tables modal
+    // Close the tables modal first
     onClose();
+    
+    // Small delay to ensure modal closes before opening notifications
+    setTimeout(() => {
+      // Open notifications panel
+      openNotifications();
+      
+      // Highlight the notification for 2 seconds
+      if (notificationId) {
+        highlightNotification(notificationId);
+      }
+    }, 1000);
   };
 
   return (
