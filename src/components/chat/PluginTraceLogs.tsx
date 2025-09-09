@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { LoadingProgressBar } from '@/components/ui/loading-progress-bar';
-import { X, Search, Download, ArrowLeft } from 'lucide-react';
+import { X, Search, Download, ArrowLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { TraceDetailsDrawer } from './TraceDetailsDrawer';
 
 interface PluginTraceLogsProps {
@@ -16,8 +16,26 @@ interface PluginTraceLogsProps {
   onBack: () => void;
 }
 
+interface TraceRecord {
+  id: number;
+  createdOn: string;
+  executionStart: string;
+  duration: string;
+  pluginName: string;
+  stepName: string;
+  correlationId: string;
+  typeName: string;
+}
+
+interface GroupedDataItem {
+  type: 'header' | 'record';
+  data: any;
+  groupKey?: string;
+  count?: number;
+}
+
 export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProps) {
-  const [groupBy, setGroupBy] = useState('correlation');
+  const [groupBy, setGroupBy] = useState('none');
   const [recordsPerPage, setRecordsPerPage] = useState('5');
   const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -25,6 +43,7 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
   const [currentPage, setCurrentPage] = useState(1);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Enhanced mock data for demonstration - moved outside component to prevent re-creation
   const mockData = useMemo(() => {
@@ -121,8 +140,8 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
     }
   }, [isOpen]);
 
-  // Filter and search data
-  const filteredData = useMemo(() => {
+  // Filter and group data
+  const { groupedData, totalRecords } = useMemo(() => {
     let filtered = [...mockData];
     
     // Apply search filter
@@ -138,22 +157,65 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
       );
     }
     
-    // Apply grouping sort
-    if (groupBy === 'correlation') {
-      filtered.sort((a, b) => a.correlationId.localeCompare(b.correlationId));
-    } else if (groupBy === 'type') {
-      filtered.sort((a, b) => a.typeName.localeCompare(b.typeName));
+    if (groupBy === 'none') {
+      // No grouping - return flat structure
+      return {
+        groupedData: filtered.map(record => ({ type: 'record', data: record })),
+        totalRecords: filtered.length
+      };
     }
     
-    return filtered;
-  }, [mockData, searchTerm, groupBy]);
+    // Group data by correlation ID or type name
+    const groupKey = groupBy === 'correlation' ? 'correlationId' : 'typeName';
+    const groupMap = new Map<string, any[]>();
+    
+    filtered.forEach(record => {
+      const key = record[groupKey] || 'N/A';
+      if (!groupMap.has(key)) {
+        groupMap.set(key, []);
+      }
+      groupMap.get(key)!.push(record);
+    });
+    
+    // Convert to array with headers and records
+    const result: Array<{type: 'header' | 'record', data: any, groupKey?: string, count?: number}> = [];
+    
+    // Sort groups by key
+    const sortedGroups = Array.from(groupMap.entries()).sort(([a], [b]) => a.localeCompare(b));
+    
+    sortedGroups.forEach(([key, records]) => {
+      // Add group header
+      result.push({
+        type: 'header',
+        data: key,
+        groupKey: key,
+        count: records.length
+      });
+      
+      // Add records if group is expanded
+      if (expandedGroups.has(key)) {
+        records.forEach(record => {
+          result.push({
+            type: 'record',
+            data: record,
+            groupKey: key
+          });
+        });
+      }
+    });
+    
+    return {
+      groupedData: result,
+      totalRecords: filtered.length
+    };
+  }, [mockData, searchTerm, groupBy, expandedGroups]);
 
   // Pagination calculations
   const recordsPerPageNum = parseInt(recordsPerPage);
-  const totalPages = Math.ceil(filteredData.length / recordsPerPageNum);
+  const totalPages = Math.ceil(groupedData.length / recordsPerPageNum);
   const startIndex = (currentPage - 1) * recordsPerPageNum;
   const endIndex = startIndex + recordsPerPageNum;
-  const currentPageData = filteredData.slice(startIndex, endIndex);
+  const currentPageData = groupedData.slice(startIndex, endIndex);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -182,11 +244,33 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
     }
   };
 
+  const toggleGroup = (groupKey: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupKey)) {
+      newExpanded.delete(groupKey);
+    } else {
+      newExpanded.add(groupKey);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
   const handleExportCSV = () => {
+    // Get all records for export (not just the current page)
+    const allRecords = mockData.filter(record => {
+      if (!searchTerm.trim()) return true;
+      const search = searchTerm.toLowerCase();
+      return record.pluginName.toLowerCase().includes(search) ||
+        record.stepName.toLowerCase().includes(search) ||
+        record.correlationId.toLowerCase().includes(search) ||
+        record.typeName.toLowerCase().includes(search) ||
+        record.createdOn.toLowerCase().includes(search) ||
+        record.executionStart.toLowerCase().includes(search);
+    });
+    
     const headers = ['Created On', 'Execution Start', 'Duration', 'Plugin Name', 'Step Name', 'Correlation ID', 'Type Name'];
     const csvContent = [
       headers.join(','),
-      ...filteredData.map(record => [
+      ...allRecords.map(record => [
         `"${record.createdOn}"`,
         `"${record.executionStart}"`,
         `"${record.duration}"`,
@@ -269,6 +353,14 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-x-8 gap-y-2 flex-wrap">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
                     <Button 
+                      variant={groupBy === 'none' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setGroupBy('none')}
+                      className={`text-xs sm:text-sm w-full xs:w-auto ${groupBy === 'none' ? 'bg-primary text-primary-foreground' : ''}`}
+                    >
+                      <span className="inline">No Grouping</span>
+                    </Button>
+                    <Button 
                       variant={groupBy === 'correlation' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setGroupBy('correlation')}
@@ -345,31 +437,68 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {currentPageData.map((record) => (
-                        <TableRow key={record.id}>
-                          <TableCell className="text-xs sm:text-sm">{record.createdOn}</TableCell>
-                          <TableCell className="text-xs sm:text-sm">{record.executionStart}</TableCell>
-                          <TableCell className="text-xs sm:text-sm">{record.duration}</TableCell>
-                          <TableCell className="text-xs sm:text-sm max-w-[200px] truncate" title={record.pluginName}>
-                            {record.pluginName}
-                          </TableCell>
-                          <TableCell className="text-xs sm:text-sm">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate">{record.stepName}</span>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewDetails(record)}
-                                className="text-xs h-7 px-2 whitespace-nowrap"
-                              >
-                                View Details
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-xs sm:text-sm">{record.correlationId}</TableCell>
-                          <TableCell className="text-xs sm:text-sm">{record.typeName}</TableCell>
-                        </TableRow>
-                      ))}
+                      {currentPageData.map((item: GroupedDataItem, index) => {
+                        if (item.type === 'header') {
+                          // Group header row
+                          const isExpanded = expandedGroups.has(item.groupKey!);
+                          const groupLabel = groupBy === 'correlation' ? 'Correlation ID' : 'Type Name';
+                          
+                          return (
+                            <TableRow 
+                              key={`header-${item.groupKey}`}
+                              className="bg-muted/30 cursor-pointer hover:bg-muted/50"
+                              onClick={() => toggleGroup(item.groupKey!)}
+                            >
+                              <TableCell colSpan={7} className="text-xs sm:text-sm font-medium">
+                                <div className="flex items-center gap-2">
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                  )}
+                                  <span>
+                                    {groupLabel}: {item.data} ({item.count} item{item.count !== 1 ? 's' : ''})
+                                  </span>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        } else {
+                          // Regular record row
+                          const record = item.data as TraceRecord;
+                          return (
+                            <TableRow key={`record-${record.id}-${index}`} className="bg-background/50">
+                              <TableCell className={`text-xs sm:text-sm ${groupBy !== 'none' ? 'pl-8' : ''}`}>
+                                {record.createdOn}
+                              </TableCell>
+                              <TableCell className="text-xs sm:text-sm">{record.executionStart}</TableCell>
+                              <TableCell className="text-xs sm:text-sm">{record.duration}</TableCell>
+                              <TableCell className="text-xs sm:text-sm max-w-[200px] truncate" title={record.pluginName}>
+                                {record.pluginName}
+                              </TableCell>
+                              <TableCell className="text-xs sm:text-sm">
+                                <div className="flex items-center gap-2">
+                                  <span className="truncate">{record.stepName}</span>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleViewDetails(record)}
+                                    className="text-xs h-7 px-2 whitespace-nowrap"
+                                  >
+                                    View Details
+                                  </Button>
+                                </div>
+                              </TableCell>
+                              <TableCell className={`text-xs sm:text-sm ${groupBy === 'correlation' ? 'text-muted-foreground' : ''}`}>
+                                {groupBy === 'correlation' ? '—' : record.correlationId}
+                              </TableCell>
+                              <TableCell className={`text-xs sm:text-sm ${groupBy === 'type' ? 'text-muted-foreground' : ''}`}>
+                                {groupBy === 'type' ? '—' : record.typeName}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+                      })}
                       {currentPageData.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={7} className="text-center py-6 sm:py-8 text-muted-foreground text-xs sm:text-sm">
@@ -384,7 +513,7 @@ export function PluginTraceLogs({ isOpen, onClose, onBack }: PluginTraceLogsProp
                 {/* Pagination */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="text-xs sm:text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages} (Showing {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of {filteredData.length} records)
+                    Page {currentPage} of {totalPages} (Showing {startIndex + 1}-{Math.min(endIndex, groupedData.length)} of {groupedData.length} {groupBy !== 'none' ? 'items' : 'records'})
                   </div>
                   <div className="flex flex-col xs:flex-row items-start xs:items-center gap-4 w-full sm:w-auto">
                     <div className="flex items-center gap-2">
