@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,15 @@ interface AttributeDetailsDrawerProps {
 }
 
 export function AttributeDetailsDrawer({ isOpen, onClose, attribute }: AttributeDetailsDrawerProps) {
+  const [selectedDataType, setSelectedDataType] = useState(attribute?.dataType || '');
+  
+  // Update selectedDataType when attribute changes
+  useEffect(() => {
+    if (attribute?.dataType) {
+      setSelectedDataType(attribute.dataType);
+    }
+  }, [attribute?.dataType]);
+  
   if (!attribute) return null;
 
   return (
@@ -90,9 +99,9 @@ export function AttributeDetailsDrawer({ isOpen, onClose, attribute }: Attribute
               <Label htmlFor="dataType" className="text-sm font-medium">
                 Data Type
               </Label>
-              <Select value={attribute.dataType} disabled>
-                <SelectTrigger>
-                  <SelectValue />
+              <Select value={selectedDataType} onValueChange={setSelectedDataType}>
+                <SelectTrigger className="cursor-pointer">
+                  <SelectValue placeholder="Select data type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Single Line of Text">Single Line of Text</SelectItem>
@@ -109,9 +118,9 @@ export function AttributeDetailsDrawer({ isOpen, onClose, attribute }: Attribute
             </div>
 
             {/* Conditional fields based on data type */}
-            {(attribute.dataType === 'Single Line of Text' || 
-              attribute.dataType === 'Multiple Lines of Text' || 
-              attribute.dataType === 'Whole Number') && attribute.maxLength && (
+            {(selectedDataType === 'Single Line of Text' || 
+              selectedDataType === 'Multiple Lines of Text' || 
+              selectedDataType === 'Whole Number') && attribute.maxLength && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="maxLength" className="text-sm font-medium">
@@ -139,9 +148,9 @@ export function AttributeDetailsDrawer({ isOpen, onClose, attribute }: Attribute
             )}
 
             {/* Format only for other types */}
-            {!(attribute.dataType === 'Single Line of Text' || 
-               attribute.dataType === 'Multiple Lines of Text' || 
-               attribute.dataType === 'Whole Number') && (
+            {!(selectedDataType === 'Single Line of Text' || 
+               selectedDataType === 'Multiple Lines of Text' || 
+               selectedDataType === 'Whole Number') && (
               <div className="space-y-2">
                 <Label htmlFor="format" className="text-sm font-medium">
                   Format
