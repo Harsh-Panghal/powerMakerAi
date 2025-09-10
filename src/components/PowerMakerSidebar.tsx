@@ -1,20 +1,55 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Plus, ChevronDown, MoreHorizontal, HelpCircle, Settings, Star, Upload, Trash2, Check, ArrowLeft, X, MessageSquare, Pencil } from "lucide-react";
+import {
+  Plus,
+  ChevronDown,
+  MoreHorizontal,
+  HelpCircle,
+  Settings,
+  Star,
+  Upload,
+  Trash2,
+  Check,
+  ArrowLeft,
+  X,
+  MessageSquare,
+  Pencil,
+} from "lucide-react";
 import { CrmConnectionDetail } from "@/components/CrmConnectionDetail";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { 
-  Sidebar, 
-  SidebarContent, 
-  SidebarHeader, 
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
@@ -22,16 +57,16 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { useChatStore } from "@/store/chatStore";
 import { useToast } from "@/hooks/use-toast";
 
 const recentChats = [
   "API Config Entity Design",
-  "API Config Entity Design", 
   "API Config Entity Design",
-  "Account Plugin Trace Logs"
+  "API Config Entity Design",
+  "Account Plugin Trace Logs",
 ];
 
 const connections = [
@@ -67,34 +102,44 @@ export function PowerMakerSidebar() {
   const isCollapsed = state === "collapsed";
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   // Chat store integration
-  const { newChat, recentThreads, loadThread, renameThread, deleteThread, setModel, currentThread } = useChatStore();
+  const {
+    newChat,
+    recentThreads,
+    loadThread,
+    renameThread,
+    deleteThread,
+    setModel,
+    currentThread,
+  } = useChatStore();
 
   // Get displayed chats based on showAllChats state
-  const displayedChats = showAllChats ? recentThreads : recentThreads.slice(0, INITIAL_CHAT_LIMIT);
+  const displayedChats = showAllChats
+    ? recentThreads
+    : recentThreads.slice(0, INITIAL_CHAT_LIMIT);
   const hasMoreChats = recentThreads.length > INITIAL_CHAT_LIMIT;
 
   // Track sidebar state changes for animation
   useEffect(() => {
     setIsAnimating(true);
-    const timer = setTimeout(() => setIsAnimating(false), 300);
+    const timer = setTimeout(() => setIsAnimating(false), 400);
     return () => clearTimeout(timer);
   }, [isCollapsed]);
 
   const handleLogoClick = () => {
     // Navigate to greeting page
-    navigate('/');
+    navigate("/");
   };
 
   const handleNewChat = () => {
     newChat();
-    navigate('/');
+    navigate("/");
   };
 
   const handleChatClick = (threadId: string) => {
     loadThread(threadId);
-    navigate('/chat');
+    navigate("/chat");
   };
 
   const handleHelpClick = () => {
@@ -119,15 +164,17 @@ export function PowerMakerSidebar() {
   };
 
   const handleConnectionToggle = (id: number) => {
-    setConnectionList(connections.map(conn => 
-      conn.id === id 
-        ? { ...conn, isActive: true }
-        : { ...conn, isActive: false }
-    ));
+    setConnectionList(
+      connections.map((conn) =>
+        conn.id === id
+          ? { ...conn, isActive: true }
+          : { ...conn, isActive: false }
+      )
+    );
   };
 
   const handleConnectionDelete = (id: number) => {
-    setConnectionList(connections.filter(conn => conn.id !== id));
+    setConnectionList(connections.filter((conn) => conn.id !== id));
   };
 
   const handleRenameChat = (threadId: string, currentTitle: string) => {
@@ -158,10 +205,10 @@ export function PowerMakerSidebar() {
   const handleDeleteChat = (threadId: string) => {
     setDeletingChatId(threadId);
     setChatMenuOpen(null);
-    
+
     // Check if the deleted chat is the currently active one
     const isActiveChat = currentThread?.id === threadId;
-    
+
     setTimeout(() => {
       deleteThread(threadId);
       toast({
@@ -170,10 +217,10 @@ export function PowerMakerSidebar() {
         variant: "destructive",
       });
       setDeletingChatId(null);
-      
+
       // Only navigate to home if the deleted chat was the active one
       if (isActiveChat) {
-        navigate('/');
+        navigate("/");
       }
     }, 300);
   };
@@ -194,7 +241,9 @@ export function PowerMakerSidebar() {
             key={star}
             type="button"
             onClick={() => setRating(star)}
-            className={`w-6 h-6 ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
+            className={`w-6 h-6 ${
+              star <= rating ? "text-yellow-400" : "text-gray-300"
+            }`}
           >
             <Star className="w-full h-full fill-current" />
           </button>
@@ -263,43 +312,76 @@ export function PowerMakerSidebar() {
   );
 
   return (
-    <Sidebar collapsible="icon" className="h-screen border-r border-border/30 shadow-[inset_-8px_0_16px_rgba(0,0,0,0.08)] data-[state=collapsed]:w-16 flex flex-col" data-sidebar="true">
-      <SidebarHeader className={`p-4 flex-shrink-0 ${isCollapsed ? 'flex justify-center' : ''}`}>
-        <div 
-          className={`flex items-center cursor-pointer ${isCollapsed ? 'justify-center' : 'space-x-2'}`}
+    <Sidebar
+      collapsible="icon"
+      className="h-screen border-r border-border/30 shadow-[inset_-8px_0_16px_rgba(0,0,0,0.08)] data-[state=collapsed]:w-16 flex flex-col"
+      data-sidebar="true"
+    >
+      <SidebarHeader
+        className={`p-4 flex-shrink-0 ${
+          isCollapsed ? "flex justify-center" : ""
+        }`}
+      >
+        <div
+          className={`flex items-center cursor-pointer ${
+            isCollapsed ? "justify-center" : "space-x-2"
+          }`}
           onClick={handleLogoClick}
           data-tour="logo"
         >
           <img src="/logo.svg" alt="Logo" className="w-8 h-8 flex-shrink-0" />
-          {/* Animated text elements */}
-          <div className={`
-            flex items-center space-x-2 overflow-hidden
-            transition-all duration-300 ease-in-out
-            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}
-            ${isAnimating && !isCollapsed ? 'delay-100' : ''}
-          `}>
-            <span className="font-bold text-brand whitespace-nowrap">PowerMaker AI</span>
-            <span className="text-xs bg-brand/10 text-brand px-2 py-1 rounded whitespace-nowrap">Beta</span>
+          {/* Improved animated text elements */}
+          <div
+            className={`
+      flex items-center space-x-2 overflow-hidden
+      transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+      ${
+        isCollapsed
+          ? "w-0 opacity-0 -translate-x-2"
+          : "w-auto opacity-100 translate-x-0"
+      }
+    `}
+          >
+            <span className="font-bold text-brand whitespace-nowrap">
+              PowerMaker AI
+            </span>
+            <span className="text-xs bg-brand/10 text-brand px-2 py-1 rounded whitespace-nowrap">
+              Beta
+            </span>
           </div>
         </div>
       </SidebarHeader>
 
       {/* New Chat Button - Fixed position */}
-      <div className={`p-4 border-b border-border/30 flex-shrink-0 ${isCollapsed ? 'px-2' : ''}`}>
-        <Button 
-          className={`w-full ${isCollapsed ? 'justify-start pl-1.5' : 'justify-center'} bg-transparent border border-border hover:bg-sidebar-accent text-brand shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out`}
+      <div
+        className={`p-4 border-b border-border/30 flex-shrink-0 ${
+          isCollapsed ? "px-2" : ""
+        } transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]`}
+      >
+        <Button
+          className={`
+      w-full bg-transparent border border-border hover:bg-sidebar-accent text-brand 
+      shadow-[2px_2px_4px_rgba(0,0,0,0.1)] 
+      transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+      ${isCollapsed ? "justify-start pl-1.5" : "justify-center px-4"}
+    `}
           variant="outline"
           onClick={handleNewChat}
           size={isCollapsed ? "sm" : "default"}
           data-guide="new-chat-button"
         >
           <Plus className="w-4 h-4 flex-shrink-0" />
-          <span className={`
-            whitespace-nowrap overflow-hidden
-            transition-all duration-300 ease-in-out
-            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-1'}
-            ${isAnimating && !isCollapsed ? 'delay-100' : ''}
-          `}>
+          <span
+            className={`
+      whitespace-nowrap overflow-hidden
+      transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+      ${
+        isCollapsed
+          ? "w-0 opacity-0 -translate-x-2 ml-0"
+          : "w-auto opacity-100 translate-x-0 ml-2"
+      }
+    `}
+          >
             New Chat
           </span>
         </Button>
@@ -308,76 +390,143 @@ export function PowerMakerSidebar() {
       <SidebarContent className="flex-1 flex flex-col">
         {/* Recent Chats */}
         <SidebarGroup className="flex-1 flex flex-col">
-          <SidebarGroupLabel className={`
-            px-4 text-sm font-medium text-muted-foreground flex-shrink-0
-            transition-all duration-300 ease-in-out
-            ${isCollapsed ? 'opacity-0 h-0 py-0' : 'opacity-100 h-auto'}
-            ${isAnimating && !isCollapsed ? 'delay-150' : ''}
-          `} data-tour="recent-chats">
+          <SidebarGroupLabel
+            className={`
+  px-4 text-sm font-medium text-muted-foreground flex-shrink-0
+  transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+  ${
+    isCollapsed
+      ? "opacity-0 h-0 py-0 -translate-x-2"
+      : "opacity-100 h-auto py-2 translate-x-0"
+  }
+`}
+            data-tour="recent-chats"
+          >
             Recent
           </SidebarGroupLabel>
-          <SidebarGroupContent className="overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 340px)' }}>
+          <SidebarGroupContent
+            className="overflow-y-auto overflow-x-hidden"
+            style={{ height: "calc(100vh - 340px)" }}
+          >
             <SidebarMenu>
               {displayedChats.length > 0 ? (
                 displayedChats.map((thread, index) => {
                   const isActiveThread = currentThread?.id === thread.id;
                   return (
-                    <SidebarMenuItem 
-                      key={thread.id} 
+                    <SidebarMenuItem
+                      key={thread.id}
                       className={`transition-all duration-300 ${
-                        deletingChatId === thread.id ? 'opacity-0 translate-x-4 scale-95' : 'opacity-100 translate-x-0 scale-100'
+                        deletingChatId === thread.id
+                          ? "opacity-0 translate-x-4 scale-95"
+                          : "opacity-100 translate-x-0 scale-100"
                       }`}
                       style={{
                         // Staggered animation for chat items
-                        transitionDelay: isAnimating && !isCollapsed ? `${index * 50 + 200}ms` : '0ms'
+                        transitionDelay:
+                          isAnimating && !isCollapsed
+                            ? `${index * 50 + 200}ms`
+                            : "0ms",
                       }}
                     >
                       <div
                         className={`flex items-center px-4 py-1 mx-2 rounded-md group transition-all duration-200 ease-in-out overflow-hidden ${
-                          isActiveThread 
-                            ? 'bg-sidebar-accent border-l-2 border-l-brand text-brand' 
-                            : 'hover:bg-sidebar-accent'
+                          isActiveThread && !isCollapsed
+                            ? "bg-sidebar-accent border-l-2 border-l-brand text-brand"
+                            : "hover:bg-sidebar-accent"
                         }`}
                         onMouseEnter={() => setHoveredChat(index)}
                         onMouseLeave={() => setHoveredChat(null)}
                       >
-                        <SidebarMenuButton 
+                        <SidebarMenuButton
                           className="flex-1 justify-start p-0 h-auto cursor-pointer min-w-0"
-                          onClick={() => editingChatId !== thread.id ? handleChatClick(thread.id) : undefined}
+                          onClick={() =>
+                            editingChatId !== thread.id
+                              ? handleChatClick(thread.id)
+                              : undefined
+                          }
                         >
-                          <MessageSquare className={`w-3 h-3 mr-2 flex-shrink-0 ${
-                            isActiveThread ? 'text-brand' : 'text-muted-foreground'
-                          }`} />
-                          <div className={`
+                          <MessageSquare
+                            className={`w-3 h-3 mr-2 flex-shrink-0 ${
+                              isActiveThread
+                                ? "text-brand"
+                                : "text-muted-foreground"
+                            }`}
+                          />
+                          <div
+                            className={`
                             flex flex-col items-start min-w-0 flex-1 overflow-hidden
                             transition-all duration-300 ease-in-out
-                            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}
-                            ${isAnimating && !isCollapsed ? 'delay-200' : ''}
-                          `}>
+                            ${
+                              isCollapsed
+                                ? "w-0 opacity-0"
+                                : "w-auto opacity-100"
+                            }
+                            ${isAnimating && !isCollapsed ? "delay-200" : ""}
+                          `}
+                          >
                             {editingChatId === thread.id ? (
-                              <div className="flex items-center gap-1 w-full">
-                                <Input
-                                  ref={editInputRef}
-                                  value={editingTitle}
-                                  onChange={(e) => setEditingTitle(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleRenameConfirm();
-                                    if (e.key === 'Escape') handleRenameCancel();
-                                  }}
-                                  onBlur={handleRenameConfirm}
-                                  className="text-sm h-6 py-0 px-1 border-0 bg-transparent focus:ring-1 focus:ring-brand"
-                                  maxLength={50}
-                                />
+                              <div
+                                className={`
+  flex flex-col items-start min-w-0 flex-1 overflow-hidden
+  transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+  ${
+    isCollapsed
+      ? "w-0 opacity-0 -translate-x-2"
+      : "w-auto opacity-100 translate-x-0"
+  }
+`}
+                              >
+                                {editingChatId === thread.id ? (
+                                  <div className="flex items-center gap-1 w-full">
+                                    <Input
+                                      ref={editInputRef}
+                                      value={editingTitle}
+                                      onChange={(e) =>
+                                        setEditingTitle(e.target.value)
+                                      }
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter")
+                                          handleRenameConfirm();
+                                        if (e.key === "Escape")
+                                          handleRenameCancel();
+                                      }}
+                                      onBlur={handleRenameConfirm}
+                                      className="text-sm h-6 py-0 px-1 border-0 bg-transparent focus:ring-1 focus:ring-brand"
+                                      maxLength={50}
+                                    />
+                                  </div>
+                                ) : (
+                                  <>
+                                    <span
+                                      className={`text-sm truncate w-full whitespace-nowrap font-medium ${
+                                        isActiveThread
+                                          ? "text-brand"
+                                          : "text-sidebar-foreground"
+                                      }`}
+                                    >
+                                      {thread.title}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground truncate w-full whitespace-nowrap">
+                                      {thread.messages.length} messages •{" "}
+                                      {thread.createdAt.toLocaleDateString()}
+                                    </span>
+                                  </>
+                                )}
                               </div>
                             ) : (
                               <>
-                                <span className={`text-sm truncate w-full whitespace-nowrap font-medium ${
-                                  isActiveThread ? 'text-brand' : 'text-sidebar-foreground'
-                                }`}>
+                                <span
+                                  className={`text-sm truncate w-full whitespace-nowrap font-medium ${
+                                    isActiveThread
+                                      ? "text-brand"
+                                      : "text-sidebar-foreground"
+                                  }`}
+                                >
                                   {thread.title}
                                 </span>
                                 <span className="text-xs text-muted-foreground truncate w-full whitespace-nowrap">
-                                  {thread.messages.length} messages • {thread.createdAt.toLocaleDateString()}
+                                  {thread.messages.length} messages •{" "}
+                                  {thread.createdAt.toLocaleDateString()}
                                 </span>
                               </>
                             )}
@@ -385,21 +534,28 @@ export function PowerMakerSidebar() {
                         </SidebarMenuButton>
                         {editingChatId !== thread.id && !isCollapsed && (
                           <div className="flex-shrink-0 ml-2">
-                            <Popover open={chatMenuOpen === index} onOpenChange={(open) => setChatMenuOpen(open ? index : null)}>
+                            <Popover
+                              open={chatMenuOpen === index}
+                              onOpenChange={(open) =>
+                                setChatMenuOpen(open ? index : null)
+                              }
+                            >
                               <PopoverTrigger asChild>
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
-                                    hoveredChat === index || isMobile ? 'opacity-100' : 'opacity-0'
+                                    hoveredChat === index || isMobile
+                                      ? "opacity-100"
+                                      : "opacity-0"
                                   }`}
                                 >
                                   <MoreHorizontal className="w-4 h-4" />
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent 
-                                className="w-32 p-1 z-50" 
-                                side="right" 
+                              <PopoverContent
+                                className="w-32 p-1 z-50"
+                                side="right"
                                 align="start"
                                 sideOffset={3}
                                 avoidCollisions={true}
@@ -409,7 +565,9 @@ export function PowerMakerSidebar() {
                                   variant="ghost"
                                   size="sm"
                                   className="w-full justify-start text-xs"
-                                  onClick={() => handleRenameChat(thread.id, thread.title)}
+                                  onClick={() =>
+                                    handleRenameChat(thread.id, thread.title)
+                                  }
                                 >
                                   <Pencil className="w-3 h-3 mr-2" />
                                   Rename
@@ -432,12 +590,17 @@ export function PowerMakerSidebar() {
                   );
                 })
               ) : (
-                <div className={`
-                  px-4 py-2 text-sm text-muted-foreground
-                  transition-all duration-300 ease-in-out
-                  ${isCollapsed ? 'opacity-0 h-0 py-0' : 'opacity-100 h-auto'}
-                  ${isAnimating && !isCollapsed ? 'delay-200' : ''}
-                `}>
+                <div
+                  className={`
+  px-4 py-2 text-sm text-muted-foreground
+  transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+  ${
+    isCollapsed
+      ? "opacity-0 h-0 py-0 -translate-x-2"
+      : "opacity-100 h-auto py-2 translate-x-0"
+  }
+`}
+                >
                   No recent conversations
                 </div>
               )}
@@ -445,22 +608,31 @@ export function PowerMakerSidebar() {
           </SidebarGroupContent>
 
           {hasMoreChats && (
-            <div className={`
-              px-4 py-2 flex-shrink-0
-              transition-all duration-300 ease-in-out
-              ${isCollapsed ? 'opacity-0 h-0 py-0' : 'opacity-100 h-auto'}
-              ${isAnimating && !isCollapsed ? 'delay-300' : ''}
-            `}>
+            <div
+              className={`
+  px-4 py-2 flex-shrink-0
+  transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+  ${
+    isCollapsed
+      ? "opacity-0 h-0 py-0 -translate-x-2"
+      : "opacity-100 h-auto py-2 translate-x-0"
+  }
+`}
+            >
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-brand hover:text-brand-accent flex items-center"
+                className="text-brand hover:text-brand-accent flex items-center transition-all duration-200"
                 onClick={() => setShowAllChats(!showAllChats)}
                 data-tour="more-menu"
               >
-                <ChevronDown className={`w-4 h-4 mr-0 transition-transform ${showAllChats ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`w-4 h-4 mr-0 transition-transform duration-300 ${
+                    showAllChats ? "rotate-180" : ""
+                  }`}
+                />
                 <span className="ml-1 whitespace-nowrap">
-                  {showAllChats ? 'Less' : 'More'}
+                  {showAllChats ? "Less" : "More"}
                 </span>
               </Button>
             </div>
@@ -468,35 +640,49 @@ export function PowerMakerSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-border">
-        <div className={isCollapsed ? 'flex flex-col items-center' : ''}>
-          <SidebarMenuButton 
-            className={`w-full ${isCollapsed ? 'justify-start' : 'justify-start'} text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out cursor-pointer`}
+      <SidebarFooter className="p-4 border-t border-border transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]">
+        <div className={isCollapsed ? "flex flex-col items-center" : ""}>
+          <SidebarMenuButton
+            className={`w-full ${
+              isCollapsed ? "justify-start pl-1.5" : "justify-start"
+            } text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer`}
             onClick={handleHelpClick}
             data-tour="help-icon"
           >
             <HelpCircle className="w-4 h-4 flex-shrink-0" />
-            <span className={`
-              whitespace-nowrap overflow-hidden
-              transition-all duration-300 ease-in-out
-              ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-2'}
-              ${isAnimating && !isCollapsed ? 'delay-100' : ''}
-            `}>
+            <span
+              className={`
+        whitespace-nowrap overflow-hidden
+        transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+        ${
+          isCollapsed
+            ? "w-0 opacity-0 -translate-x-2 ml-0"
+            : "w-auto opacity-100 translate-x-0 ml-2"
+        }
+      `}
+            >
               Help
             </span>
           </SidebarMenuButton>
-          <SidebarMenuButton 
-            className={`w-full ${isCollapsed ? 'justify-start ' : 'justify-start'} text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out cursor-pointer`}
+          <SidebarMenuButton
+            className={`w-full ${
+              isCollapsed ? "justify-start pl-1.5" : "justify-start"
+            } text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer`}
             onClick={handleSettingsClick}
             data-guide="settings-button"
           >
             <Settings className="w-4 h-4 flex-shrink-0" />
-            <span className={`
-              whitespace-nowrap overflow-hidden
-              transition-all duration-300 ease-in-out
-              ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-2'}
-              ${isAnimating && !isCollapsed ? 'delay-100' : ''}
-            `}>
+            <span
+              className={`
+        whitespace-nowrap overflow-hidden
+        transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+        ${
+          isCollapsed
+            ? "w-0 opacity-0 -translate-x-2 ml-0"
+            : "w-auto opacity-100 translate-x-0 ml-2"
+        }
+      `}
+            >
               Settings
             </span>
           </SidebarMenuButton>
@@ -511,9 +697,7 @@ export function PowerMakerSidebar() {
             <DrawerHeader className="px-4 pt-4 pb-2">
               <DrawerTitle>Settings</DrawerTitle>
             </DrawerHeader>
-            <div className="px-4 pb-4">
-              {renderSettingsContent()}
-            </div>
+            <div className="px-4 pb-4">{renderSettingsContent()}</div>
           </DrawerContent>
         </Drawer>
       ) : (
@@ -635,13 +819,22 @@ export function PowerMakerSidebar() {
             </DrawerHeader>
             <div className="px-4 pb-4">
               <p className="text-sm text-muted-foreground mb-6">
-                Do you really want to delete all chats? This action cannot be undone.
+                Do you really want to delete all chats? This action cannot be
+                undone.
               </p>
               <div className="flex flex-col gap-3">
-                <Button variant="destructive" onClick={handleCleanChatConfirm} className="w-full">
+                <Button
+                  variant="destructive"
+                  onClick={handleCleanChatConfirm}
+                  className="w-full"
+                >
                   Yes, Delete All
                 </Button>
-                <Button variant="outline" onClick={() => setIsCleanChatOpen(false)} className="w-full">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCleanChatOpen(false)}
+                  className="w-full"
+                >
                   Cancel
                 </Button>
               </div>
@@ -654,11 +847,15 @@ export function PowerMakerSidebar() {
             <DialogHeader>
               <DialogTitle>Are you sure?</DialogTitle>
               <DialogDescription>
-                Do you really want to delete all chats? This action cannot be undone.
+                Do you really want to delete all chats? This action cannot be
+                undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setIsCleanChatOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsCleanChatOpen(false)}
+              >
                 Cancel
               </Button>
               <Button variant="destructive" onClick={handleCleanChatConfirm}>
@@ -670,9 +867,9 @@ export function PowerMakerSidebar() {
       )}
 
       {/* CRM Connection Details Dialog */}
-      <CrmConnectionDetail 
-        isOpen={isCrmConnectionOpen} 
-        onClose={() => setIsCrmConnectionOpen(false)} 
+      <CrmConnectionDetail
+        isOpen={isCrmConnectionOpen}
+        onClose={() => setIsCrmConnectionOpen(false)}
       />
     </Sidebar>
   );
