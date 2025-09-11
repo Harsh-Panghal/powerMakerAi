@@ -59,6 +59,8 @@ interface ChatStore {
   currentThread: ChatThread | null;
   recentThreads: ChatThread[];
   selectedModel: string;
+  isStreamingActive: boolean;
+  streamingPlaceholder: { id: string; title: string; timestamp: Date } | null;
 
   // Actions
   startChat: (prompt: string) => void;
@@ -171,6 +173,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   currentThread: null,
   recentThreads: [],
   selectedModel: "model-0-1",
+  isStreamingActive: false,
+  streamingPlaceholder: null,
 
   // Actions
   startChat: (prompt: string) => {
@@ -192,8 +196,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       model: get().selectedModel,
     };
 
+    // Set streaming placeholder for recent threads
     set({
       currentThread: newThread,
+      isStreamingActive: true,
+      streamingPlaceholder: {
+        id: threadId,
+        title: prompt.length > 30 ? prompt.substring(0, 30) + "..." : prompt,
+        timestamp: new Date(),
+      },
     });
 
     // Trigger streaming assistant response
@@ -220,7 +231,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       messages: [...currentThread.messages, userMessage],
     };
 
-    set({ currentThread: updatedThread });
+    set({ 
+      currentThread: updatedThread,
+      isStreamingActive: true,
+    });
 
     // Trigger streaming assistant response
     setTimeout(() => {
@@ -237,6 +251,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       currentThread: null,
       isPreviewOpen: false,
       previewContent: "",
+      isStreamingActive: false,
+      streamingPlaceholder: null,
     });
   },
 
@@ -263,6 +279,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       currentThread: null,
       isPreviewOpen: false,
       previewContent: "",
+      isStreamingActive: false,
+      streamingPlaceholder: null,
     });
   },
 
@@ -329,7 +347,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         messages,
       };
 
-      set({ currentThread: updatedThread });
+      set({ 
+        currentThread: updatedThread,
+        isStreamingActive: false,
+        streamingPlaceholder: null,
+      });
 
       // Auto-save to recent threads when response is complete
       get().saveToRecentThreads();
@@ -413,6 +435,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       recentThreads: [],
       isPreviewOpen: false,
       previewContent: "",
+      isStreamingActive: false,
+      streamingPlaceholder: null,
     });
   },
   // Connection Actions

@@ -115,12 +115,32 @@ export function PowerMakerSidebar() {
     clearAllThreads, // Add this function to your chat store
     setModel,
     currentThread,
+    isStreamingActive,
+    streamingPlaceholder,
   } = useChatStore();
 
-  // Get displayed chats based on showAllChats state
+  // Get displayed chats based on showAllChats state with streaming placeholder
+  const getCombinedChats = () => {
+    const chats = [...recentThreads];
+    
+    // Add streaming placeholder at the beginning if active
+    if (isStreamingActive && streamingPlaceholder) {
+      chats.unshift({
+        id: streamingPlaceholder.id,
+        title: streamingPlaceholder.title,
+        messages: [],
+        createdAt: streamingPlaceholder.timestamp,
+        model: "streaming",
+      });
+    }
+    
+    return chats;
+  };
+
+  const combinedChats = getCombinedChats();
   const displayedChats = showAllChats
-    ? recentThreads
-    : recentThreads.slice(0, INITIAL_CHAT_LIMIT);
+    ? combinedChats
+    : combinedChats.slice(0, INITIAL_CHAT_LIMIT);
   const hasMoreChats = recentThreads.length > INITIAL_CHAT_LIMIT;
 
   // Track sidebar state changes for animation
@@ -453,6 +473,7 @@ export function PowerMakerSidebar() {
               {displayedChats.length > 0 ? (
                 displayedChats.map((thread, index) => {
                   const isActiveThread = currentThread?.id === thread.id;
+                  const isStreamingItem = thread.model === "streaming";
                   const isBeingDeleted = deletingChatId === thread.id || 
                                         (isDeletingAll && deletingAllIds.includes(thread.id));
                   
@@ -484,13 +505,15 @@ export function PowerMakerSidebar() {
                         onMouseLeave={() => setHoveredChat(null)}
                       >
                         <SidebarMenuButton
-                          className="flex-1 justify-start p-0 h-auto cursor-pointer min-w-0"
+                          className={`flex-1 justify-start p-0 h-auto min-w-0 ${
+                            isStreamingItem ? "cursor-default" : "cursor-pointer"
+                          }`}
                           onClick={() =>
-                            editingChatId !== thread.id && !isBeingDeleted
+                            editingChatId !== thread.id && !isBeingDeleted && !isStreamingItem
                               ? handleChatClick(thread.id)
                               : undefined
                           }
-                          disabled={isBeingDeleted}
+                          disabled={isBeingDeleted || isStreamingItem}
                         >
                           <MessageSquare
                             className={`w-3 h-3 mr-2 flex-shrink-0 ${
@@ -551,17 +574,31 @@ export function PowerMakerSidebar() {
                                       : "text-sidebar-foreground"
                                   }`}
                                 >
-                                  {thread.title}
+                                  {isStreamingItem ? (
+                                    <div className="flex items-center gap-2">
+                                      <span>{thread.title}</span>
+                                      <div className="flex space-x-1">
+                                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse"></div>
+                                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    thread.title
+                                  )}
                                 </span>
                                 <span className="text-xs text-muted-foreground truncate w-full whitespace-nowrap">
-                                  {thread.messages.length} messages •{" "}
-                                  {thread.createdAt.toLocaleDateString()}
+                                  {isStreamingItem ? (
+                                    "Assistant is thinking..."
+                                  ) : (
+                                    `${thread.messages.length} messages • ${thread.createdAt.toLocaleDateString()}`
+                                  )}
                                 </span>
                               </>
                             )}
                           </div>
                         </SidebarMenuButton>
-                        {editingChatId !== thread.id && !isCollapsed && !isBeingDeleted && (
+                        {editingChatId !== thread.id && !isCollapsed && !isBeingDeleted && !isStreamingItem && (
                           <div className="flex-shrink-0 ml-2">
                             <Popover
                               open={chatMenuOpen === index}
