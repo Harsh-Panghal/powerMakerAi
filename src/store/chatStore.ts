@@ -33,6 +33,13 @@ export interface Connection {
   isSelected: boolean;
 }
 
+export type ConnectionStatus = "connecting" | "connected" | "failed";
+
+export interface ConnectionState {
+  status: ConnectionStatus;
+  activeConnection: Connection | null;
+}
+
 interface ChatStore {
   // UI State
   isPreviewOpen: boolean;
@@ -45,6 +52,7 @@ interface ChatStore {
   activeConnections: { name: string } | null;
   
   // Connection State
+  connectionStatus: ConnectionStatus;
   activeConnection: Connection | null;
 
   // Chat State
@@ -76,6 +84,8 @@ interface ChatStore {
 
   // Connection Actions
   setActiveConnection: (connection: Connection) => void;
+  setConnectionStatus: (status: ConnectionStatus) => void;
+  simulateConnectionFlow: () => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -153,6 +163,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }, 2000);
   },
   // Initial Connection State
+  connectionStatus: "connecting",
   activeConnection: { id: "1", name: "CRM Dev", isSelected: true },
 
   // Initial Chat State
@@ -398,5 +409,33 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   // Connection Actions
   setActiveConnection: (connection: Connection) => {
     set({ activeConnection: connection });
+  },
+  
+  setConnectionStatus: (status: ConnectionStatus) => {
+    set({ connectionStatus: status });
+  },
+  
+  simulateConnectionFlow: () => {
+    const { setConnectionStatus } = get();
+    
+    // Start with connecting status
+    setConnectionStatus("connecting");
+    
+    // Simulate connection attempt (2-3 seconds)
+    setTimeout(() => {
+      // 80% chance of success, 20% chance of failure for demo
+      const isSuccess = Math.random() > 0.2;
+      
+      if (isSuccess) {
+        setConnectionStatus("connected");
+      } else {
+        setConnectionStatus("failed");
+        
+        // Auto-retry after 3 seconds on failure
+        setTimeout(() => {
+          get().simulateConnectionFlow();
+        }, 3000);
+      }
+    }, 2000 + Math.random() * 1000); // 2-3 seconds delay
   },
 }));

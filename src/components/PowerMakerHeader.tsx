@@ -97,6 +97,8 @@ export function PowerMakerHeader() {
     closeNotifications,
     activeConnection,
     highlightedNotificationId,
+    connectionStatus: storeConnectionStatus,
+    simulateConnectionFlow,
   } = useChatStore();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -113,9 +115,9 @@ export function PowerMakerHeader() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showTour, setShowTour] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<
-    "connecting" | "failed" | "connected"
-  >("connected");
+  
+  // Use connection status from store
+  const connectionStatus = storeConnectionStatus;
 
   const { hasCompletedTour, resetTour } = usePowerMakerTour();
 
@@ -128,7 +130,7 @@ export function PowerMakerHeader() {
     },
     failed: {
       icon: <AlertCircle className="w-4 h-4 text-destructive" />,
-      text: activeConnection?.name || "No Connection",
+      text: `Failed to connect to ${activeConnection?.name || "CRM"}`,
       textColor: "text-destructive",
     },
     connected: {
@@ -139,15 +141,19 @@ export function PowerMakerHeader() {
           className="w-4 h-4 text-success"
         />
       ),
-      text: activeConnection?.name || "No Connection",
+      text: `Connected to ${activeConnection?.name || "CRM"}`,
       textColor: "text-success-dark",
     },
   };
 
   const currentConnection = connectionConfig[connectionStatus];
 
-  // Check for demo user on component mount
+  // Initialize connection flow and check for demo user
   useEffect(() => {
+    // Start connection simulation on component mount
+    simulateConnectionFlow();
+    
+    // Check for demo user
     const storedUser = localStorage.getItem("demoUser");
     if (storedUser) {
       const userData = JSON.parse(storedUser);
@@ -156,7 +162,24 @@ export function PowerMakerHeader() {
         setDemoUser(userData);
       }
     }
-  }, []);
+  }, [simulateConnectionFlow]);
+  
+  // Show toast notifications based on connection status changes
+  useEffect(() => {
+    if (connectionStatus === "connected") {
+      toast({
+        title: "Connection Established",
+        description: `Successfully connected to ${activeConnection?.name || 'CRM'}`,
+        className: "border-success bg-success/10 text-success-dark",
+      });
+    } else if (connectionStatus === "failed") {
+      toast({
+        title: "Connection Failed",
+        description: "Unable to connect to CRM. Retrying...",
+        variant: "destructive",
+      });
+    }
+  }, [connectionStatus, activeConnection?.name, toast]);
 
   // Auto-show tour for new users
   useEffect(() => {
