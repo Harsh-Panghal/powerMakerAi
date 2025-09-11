@@ -141,7 +141,7 @@ export function PowerMakerHeader() {
           className="w-4 h-4 text-success"
         />
       ),
-      text: `Connected to ${activeConnection?.name || "CRM"}`,
+      text: activeConnection?.name || "CRM",
       textColor: "text-success-dark",
     },
   };
