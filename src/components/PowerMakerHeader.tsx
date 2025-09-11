@@ -373,8 +373,11 @@ export function PowerMakerHeader() {
                 <Bell className="w-5 h-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[90vw] sm:w-96 max-w-md">
-              <SheetHeader>
+            <SheetContent
+              side="right"
+              className="w-[90vw] sm:w-96 max-w-md flex flex-col"
+            >
+              <SheetHeader className="flex-shrink-0">
                 <SheetTitle className="flex items-center justify-between">
                   Notifications
                   <Button variant="ghost" size="sm">
@@ -383,115 +386,132 @@ export function PowerMakerHeader() {
                 </SheetTitle>
               </SheetHeader>
 
-              <Tabs defaultValue="all" className="mt-4">
-                <TabsList className="grid w-full grid-cols-3">
+              <Tabs
+                defaultValue="all"
+                className="mt-4 flex flex-col flex-1 min-h-0"
+              >
+                <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
                   <TabsTrigger value="all">All</TabsTrigger>
                   <TabsTrigger value="activities">Activities</TabsTrigger>
                   <TabsTrigger value="updates">Updates</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="all" className="mt-4 space-y-4">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`border rounded-lg p-4 space-y-2 transition-all duration-300 ${
-                        highlightedNotificationId === notification.id
-                          ? "bg-brand/10 border-brand shadow-lg ring-2 ring-brand/20 animate-pulse"
-                          : "hover:bg-muted/50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-sm">
-                          {notification.title}
-                        </h4>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs ${
+                <TabsContent value="all" className="mt-4 flex-1 min-h-0">
+                  <div className="h-full overflow-y-auto pr-2 space-y-4">
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`border rounded-lg p-4 space-y-2 transition-all duration-300 ${
+                          highlightedNotificationId === notification.id
+                            ? "bg-brand/10 border-brand shadow-lg ring-2 ring-brand/20 animate-pulse"
+                            : "hover:bg-muted/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-sm">
+                            {notification.title}
+                          </h4>
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${
+                              highlightedNotificationId === notification.id
+                                ? "bg-brand text-white border-brand"
+                                : ""
+                            }`}
+                          >
+                            {notification.type}
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground space-y-1">
+                          <p>Start: {notification.startDate}</p>
+                          <p>End: {notification.endDate}</p>
+                          <p>Plugin: {notification.plugin}</p>
+                          <p>Stage: {notification.stage}</p>
+                        </div>
+                        <Button size="sm" variant="outline" className="w-full">
+                          View
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="activities" className="mt-4 flex-1 min-h-0">
+                  <div className="h-full overflow-y-auto pr-2 space-y-4">
+                    {notifications
+                      .filter((n) => n.type === "activity")
+                      .map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`border rounded-lg p-4 space-y-2 transition-all duration-300 ${
                             highlightedNotificationId === notification.id
-                              ? "bg-brand text-white border-brand"
-                              : ""
+                              ? "bg-brand/10 border-brand shadow-lg ring-2 ring-brand/20 animate-pulse"
+                              : "hover:bg-muted/50"
                           }`}
                         >
-                          {notification.type}
-                        </Badge>
-                      </div>
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <p>Start: {notification.startDate}</p>
-                        <p>End: {notification.endDate}</p>
-                        <p>Plugin: {notification.plugin}</p>
-                        <p>Stage: {notification.stage}</p>
-                      </div>
-                      <Button size="sm" variant="outline" className="w-full">
-                        View
-                      </Button>
-                    </div>
-                  ))}
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-sm">
+                              {notification.title}
+                            </h4>
+                            <Badge variant="outline" className="text-xs">
+                              {notification.type}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <p>Start: {notification.startDate}</p>
+                            <p>End: {notification.endDate}</p>
+                            <p>Plugin: {notification.plugin}</p>
+                            <p>Stage: {notification.stage}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full"
+                          >
+                            View
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
                 </TabsContent>
 
-                <TabsContent value="activities" className="mt-4 space-y-4">
-                  {notifications
-                    .filter((n) => n.type === "activity")
-                    .map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`border rounded-lg p-4 space-y-2 transition-all duration-300 ${
-                          highlightedNotificationId === notification.id
-                            ? "bg-brand/10 border-brand shadow-lg ring-2 ring-brand/20 animate-pulse"
-                            : "hover:bg-muted/50"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-sm">
-                            {notification.title}
-                          </h4>
-                          <Badge variant="outline" className="text-xs">
-                            {notification.type}
-                          </Badge>
+                <TabsContent value="updates" className="mt-4 flex-1 min-h-0">
+                  <div className="h-full overflow-y-auto pr-2 space-y-4">
+                    {notifications
+                      .filter((n) => n.type === "update")
+                      .map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`border rounded-lg p-4 space-y-2 transition-all duration-300 ${
+                            highlightedNotificationId === notification.id
+                              ? "bg-brand/10 border-brand shadow-lg ring-2 ring-brand/20 animate-pulse"
+                              : "hover:bg-muted/50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-sm">
+                              {notification.title}
+                            </h4>
+                            <Badge variant="outline" className="text-xs">
+                              {notification.type}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <p>Start: {notification.startDate}</p>
+                            <p>End: {notification.endDate}</p>
+                            <p>Plugin: {notification.plugin}</p>
+                            <p>Stage: {notification.stage}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full"
+                          >
+                            View
+                          </Button>
                         </div>
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <p>Start: {notification.startDate}</p>
-                          <p>End: {notification.endDate}</p>
-                          <p>Plugin: {notification.plugin}</p>
-                          <p>Stage: {notification.stage}</p>
-                        </div>
-                        <Button size="sm" variant="outline" className="w-full">
-                          View
-                        </Button>
-                      </div>
-                    ))}
-                </TabsContent>
-
-                <TabsContent value="updates" className="mt-4 space-y-4">
-                  {notifications
-                    .filter((n) => n.type === "update")
-                    .map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`border rounded-lg p-4 space-y-2 transition-all duration-300 ${
-                          highlightedNotificationId === notification.id
-                            ? "bg-brand/10 border-brand shadow-lg ring-2 ring-brand/20 animate-pulse"
-                            : "hover:bg-muted/50"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-sm">
-                            {notification.title}
-                          </h4>
-                          <Badge variant="outline" className="text-xs">
-                            {notification.type}
-                          </Badge>
-                        </div>
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <p>Start: {notification.startDate}</p>
-                          <p>End: {notification.endDate}</p>
-                          <p>Plugin: {notification.plugin}</p>
-                          <p>Stage: {notification.stage}</p>
-                        </div>
-                        <Button size="sm" variant="outline" className="w-full">
-                          View
-                        </Button>
-                      </div>
-                    ))}
+                      ))}
+                  </div>
                 </TabsContent>
               </Tabs>
             </SheetContent>
