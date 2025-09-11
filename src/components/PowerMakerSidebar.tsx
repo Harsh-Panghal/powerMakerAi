@@ -97,6 +97,8 @@ export function PowerMakerSidebar() {
   const [feedbackText, setFeedbackText] = useState("");
   const [connectionList, setConnectionList] = useState(connections);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [deletingAllIds, setDeletingAllIds] = useState<string[]>([]);
   const editInputRef = useRef<HTMLInputElement>(null);
   const { state, setOpen } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -110,6 +112,7 @@ export function PowerMakerSidebar() {
     loadThread,
     renameThread,
     deleteThread,
+    clearAllThreads, // Add this function to your chat store
     setModel,
     currentThread,
   } = useChatStore();
@@ -159,8 +162,42 @@ export function PowerMakerSidebar() {
   };
 
   const handleCleanChatConfirm = () => {
-    console.log("All chats deleted");
+    setIsDeletingAll(true);
+    
+    // Get all thread IDs for animation
+    const allThreadIds = recentThreads.map(thread => thread.id);
+    setDeletingAllIds(allThreadIds);
+
+    // Close the dialog first
     setIsCleanChatOpen(false);
+
+    // Start staggered animation
+    allThreadIds.forEach((threadId, index) => {
+      setTimeout(() => {
+        // This will trigger the opacity and transform animation for each item
+        setDeletingChatId(threadId);
+      }, index * 100); // 100ms delay between each item
+    });
+
+    // After all animations are done, actually delete the threads
+    setTimeout(() => {
+      clearAllThreads(); // This should be implemented in your chat store
+      
+      // Navigate to home page since all chats are deleted
+      navigate("/");
+      
+      // Show success toast
+      toast({
+        title: "All chats deleted",
+        description: "All conversations have been removed successfully.",
+        variant: "destructive",
+      });
+
+      // Reset states
+      setIsDeletingAll(false);
+      setDeletingAllIds([]);
+      setDeletingChatId(null);
+    }, allThreadIds.length * 100 + 500); // Wait for all animations plus extra buffer
   };
 
   const handleConnectionToggle = (id: number) => {
@@ -275,9 +312,13 @@ export function PowerMakerSidebar() {
           setIsCleanChatOpen(true);
         }}
         data-tour="clean-chat-option"
+        disabled={recentThreads.length === 0}
       >
         <span className="mr-2">🧹</span>
         Clean Chat
+        {recentThreads.length === 0 && (
+          <span className="ml-auto text-xs text-muted-foreground">(No chats)</span>
+        )}
       </Button>
       <Button
         variant="ghost"
@@ -412,12 +453,15 @@ export function PowerMakerSidebar() {
               {displayedChats.length > 0 ? (
                 displayedChats.map((thread, index) => {
                   const isActiveThread = currentThread?.id === thread.id;
+                  const isBeingDeleted = deletingChatId === thread.id || 
+                                        (isDeletingAll && deletingAllIds.includes(thread.id));
+                  
                   return (
                     <SidebarMenuItem
                       key={thread.id}
-                      className={`transition-all duration-300 ${
-                        deletingChatId === thread.id
-                          ? "opacity-0 translate-x-4 scale-95"
+                      className={`transition-all duration-500 ease-in-out ${
+                        isBeingDeleted
+                          ? "opacity-0 translate-x-8 scale-95 pointer-events-none"
                           : "opacity-100 translate-x-0 scale-100"
                       }`}
                       style={{
@@ -425,6 +469,8 @@ export function PowerMakerSidebar() {
                         transitionDelay:
                           isAnimating && !isCollapsed
                             ? `${index * 50 + 200}ms`
+                            : isDeletingAll && deletingAllIds.includes(thread.id)
+                            ? `${deletingAllIds.indexOf(thread.id) * 100}ms`
                             : "0ms",
                       }}
                     >
@@ -434,16 +480,17 @@ export function PowerMakerSidebar() {
                             ? "bg-sidebar-accent border-l-2 border-l-brand text-brand"
                             : "hover:bg-sidebar-accent"
                         }`}
-                        onMouseEnter={() => setHoveredChat(index)}
+                        onMouseEnter={() => !isBeingDeleted && setHoveredChat(index)}
                         onMouseLeave={() => setHoveredChat(null)}
                       >
                         <SidebarMenuButton
                           className="flex-1 justify-start p-0 h-auto cursor-pointer min-w-0"
                           onClick={() =>
-                            editingChatId !== thread.id
+                            editingChatId !== thread.id && !isBeingDeleted
                               ? handleChatClick(thread.id)
                               : undefined
                           }
+                          disabled={isBeingDeleted}
                         >
                           <MessageSquare
                             className={`w-3 h-3 mr-2 flex-shrink-0 ${
@@ -476,42 +523,24 @@ export function PowerMakerSidebar() {
   }
 `}
                               >
-                                {editingChatId === thread.id ? (
-                                  <div className="flex items-center gap-1 w-full">
-                                    <Input
-                                      ref={editInputRef}
-                                      value={editingTitle}
-                                      onChange={(e) =>
-                                        setEditingTitle(e.target.value)
-                                      }
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Enter")
-                                          handleRenameConfirm();
-                                        if (e.key === "Escape")
-                                          handleRenameCancel();
-                                      }}
-                                      onBlur={handleRenameConfirm}
-                                      className="text-sm h-6 py-0 px-1 border-0 bg-transparent focus:ring-1 focus:ring-brand"
-                                      maxLength={50}
-                                    />
-                                  </div>
-                                ) : (
-                                  <>
-                                    <span
-                                      className={`text-sm truncate w-full whitespace-nowrap font-medium ${
-                                        isActiveThread
-                                          ? "text-brand"
-                                          : "text-sidebar-foreground"
-                                      }`}
-                                    >
-                                      {thread.title}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground truncate w-full whitespace-nowrap">
-                                      {thread.messages.length} messages •{" "}
-                                      {thread.createdAt.toLocaleDateString()}
-                                    </span>
-                                  </>
-                                )}
+                                <div className="flex items-center gap-1 w-full">
+                                  <Input
+                                    ref={editInputRef}
+                                    value={editingTitle}
+                                    onChange={(e) =>
+                                      setEditingTitle(e.target.value)
+                                    }
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter")
+                                        handleRenameConfirm();
+                                      if (e.key === "Escape")
+                                        handleRenameCancel();
+                                    }}
+                                    onBlur={handleRenameConfirm}
+                                    className="text-sm h-6 py-0 px-1 border-0 bg-transparent focus:ring-1 focus:ring-brand"
+                                    maxLength={50}
+                                  />
+                                </div>
                               </div>
                             ) : (
                               <>
@@ -532,7 +561,7 @@ export function PowerMakerSidebar() {
                             )}
                           </div>
                         </SidebarMenuButton>
-                        {editingChatId !== thread.id && !isCollapsed && (
+                        {editingChatId !== thread.id && !isCollapsed && !isBeingDeleted && (
                           <div className="flex-shrink-0 ml-2">
                             <Popover
                               open={chatMenuOpen === index}
@@ -607,7 +636,7 @@ export function PowerMakerSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
 
-          {hasMoreChats && (
+          {hasMoreChats && !isDeletingAll && (
             <div
               className={`
   px-4 py-2 flex-shrink-0
@@ -689,7 +718,6 @@ export function PowerMakerSidebar() {
         </div>
       </SidebarFooter>
 
-
       {/* Responsive Settings - Drawer for mobile, Dialog for desktop */}
       {isMobile ? (
         <Drawer open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
@@ -712,6 +740,7 @@ export function PowerMakerSidebar() {
       )}
 
       {/* Responsive Feedback - Drawer for mobile, Dialog for desktop */}
+      
       {isMobile ? (
         <Drawer open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
           <DrawerContent className="max-h-[90vh]">
@@ -758,7 +787,7 @@ export function PowerMakerSidebar() {
                 Send Feedback
               </Button>
             </div>
-          </DrawerContent>
+            </DrawerContent>
         </Drawer>
       ) : (
         <Dialog open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
@@ -815,25 +844,26 @@ export function PowerMakerSidebar() {
         <Drawer open={isCleanChatOpen} onOpenChange={setIsCleanChatOpen}>
           <DrawerContent className="max-h-[40vh]">
             <DrawerHeader className="px-4 pt-4 pb-2">
-              <DrawerTitle>Are you sure?</DrawerTitle>
+              <DrawerTitle>Delete All Chats?</DrawerTitle>
             </DrawerHeader>
             <div className="px-4 pb-4">
               <p className="text-sm text-muted-foreground mb-6">
-                Do you really want to delete all chats? This action cannot be
-                undone.
+                This will permanently delete all {recentThreads.length} conversation{recentThreads.length !== 1 ? 's' : ''}. This action cannot be undone.
               </p>
               <div className="flex flex-col gap-3">
                 <Button
                   variant="destructive"
                   onClick={handleCleanChatConfirm}
                   className="w-full"
+                  disabled={isDeletingAll}
                 >
-                  Yes, Delete All
+                  {isDeletingAll ? "Deleting..." : `Yes, Delete All (${recentThreads.length})`}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setIsCleanChatOpen(false)}
                   className="w-full"
+                  disabled={isDeletingAll}
                 >
                   Cancel
                 </Button>
@@ -845,21 +875,25 @@ export function PowerMakerSidebar() {
         <Dialog open={isCleanChatOpen} onOpenChange={setIsCleanChatOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Are you sure?</DialogTitle>
+              <DialogTitle>Delete All Chats?</DialogTitle>
               <DialogDescription>
-                Do you really want to delete all chats? This action cannot be
-                undone.
+                This will permanently delete all {recentThreads.length} conversation{recentThreads.length !== 1 ? 's' : ''}. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2">
               <Button
                 variant="outline"
                 onClick={() => setIsCleanChatOpen(false)}
+                disabled={isDeletingAll}
               >
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleCleanChatConfirm}>
-                Yes
+              <Button 
+                variant="destructive" 
+                onClick={handleCleanChatConfirm}
+                disabled={isDeletingAll}
+              >
+                {isDeletingAll ? "Deleting..." : `Yes, Delete All (${recentThreads.length})`}
               </Button>
             </div>
           </DialogContent>

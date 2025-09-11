@@ -43,7 +43,7 @@ interface ChatStore {
   isNotificationOpen: boolean;
   highlightedNotificationId: string | null;
   activeConnections: { name: string } | null;
-  
+
   // Connection State
   activeConnection: Connection | null;
 
@@ -66,6 +66,7 @@ interface ChatStore {
   loadThread: (threadId: string) => void;
   renameThread: (threadId: string, newTitle: string) => void;
   deleteThread: (threadId: string) => void;
+  clearAllThreads: () => void;
 
   // Notification Actions
   addNotification: (notification: Omit<Notification, "id">) => string;
@@ -86,7 +87,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   // Initial Notification State
   notifications: [
     {
-      id: '1',
+      id: "1",
       type: "trace",
       title: "Plugin Execution Trace",
       startDate: "2024-01-15 10:30",
@@ -95,7 +96,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       stage: "PreOperation",
     },
     {
-      id: '2',
+      id: "2",
       type: "activity",
       title: "Entity Created Successfully",
       startDate: "2024-01-15 09:45",
@@ -104,7 +105,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       stage: "PostOperation",
     },
     {
-      id: '3',
+      id: "3",
       type: "update",
       title: "Configuration Updated",
       startDate: "2024-01-15 08:20",
@@ -116,32 +117,32 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   isNotificationOpen: false,
   highlightedNotificationId: null,
   activeConnections: null,
-  
+
   addNotification: (notification) => {
     const newNotification = {
       ...notification,
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9), // Generate unique ID
     };
-    
+
     set((state) => ({
-      notifications: [newNotification, ...state.notifications]
+      notifications: [newNotification, ...state.notifications],
     }));
-    
+
     return newNotification.id; // Return the ID so we can highlight it
   },
-  
+
   openNotifications: () => {
     set({ isNotificationOpen: true });
   },
-  
+
   closeNotifications: () => {
     set({ isNotificationOpen: false });
   },
-  
+
   setHighlightedNotification: (id: string | null) => {
     set({ highlightedNotificationId: id });
   },
-  
+
   highlightNotification: (id: string) => {
     set({ highlightedNotificationId: id });
     // Clear highlight after 2 seconds
@@ -394,6 +395,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       (thread) => thread.id !== threadId
     );
     set({ recentThreads: updatedRecentThreads });
+  },
+  clearAllThreads: () => {
+    set({
+      currentThread: null,
+      recentThreads: [],
+      isPreviewOpen: false,
+      previewContent: "",
+    });
   },
   // Connection Actions
   setActiveConnection: (connection: Connection) => {
