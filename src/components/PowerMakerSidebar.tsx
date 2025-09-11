@@ -689,7 +689,7 @@ export function PowerMakerSidebar() {
         </div>
       </SidebarFooter>
 
-      {/* All your existing dialogs and modals remain the same */}
+
       {/* Responsive Settings - Drawer for mobile, Dialog for desktop */}
       {isMobile ? (
         <Drawer open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
