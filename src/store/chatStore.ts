@@ -7,6 +7,12 @@ export interface Message {
   content: string;
   timestamp: Date;
   isStreaming?: boolean;
+  image?: {
+    data: string; // base64 data
+    name: string;
+    size: number;
+    type: string;
+  };
 }
 
 export interface ChatThread {
@@ -63,8 +69,8 @@ interface ChatStore {
   streamingPlaceholder: { id: string; title: string; timestamp: Date } | null;
 
   // Actions
-  startChat: (prompt: string) => void;
-  sendMessage: (message: string) => void;
+  startChat: (prompt: string, image?: Message['image']) => void;
+  sendMessage: (message: string, image?: Message['image']) => void;
   newChat: () => void;
   openPreview: (content: string) => void;
   closePreview: () => void;
@@ -177,7 +183,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   streamingPlaceholder: null,
 
   // Actions
-  startChat: (prompt: string) => {
+  startChat: (prompt: string, image?: Message['image']) => {
     const threadId = `thread-${Date.now()}`;
     const messageId = `msg-${Date.now()}`;
 
@@ -190,6 +196,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           type: "user",
           content: prompt,
           timestamp: new Date(),
+          ...(image && { image }),
         },
       ],
       createdAt: new Date(),
@@ -214,7 +221,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }, 500);
   },
 
-  sendMessage: (message: string) => {
+  sendMessage: (message: string, image?: Message['image']) => {
     const currentThread = get().currentThread;
     if (!currentThread) return;
 
@@ -224,6 +231,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       type: "user",
       content: message,
       timestamp: new Date(),
+      ...(image && { image }),
     };
 
     const updatedThread = {

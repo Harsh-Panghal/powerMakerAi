@@ -63,7 +63,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                 : 'bg-muted text-foreground mr-2 sm:mr-4'
             }`}
           >
-            {/* Streaming Loading State */}
+            {/* Message Content */}
             {isStreaming ? (
               <div className="space-y-2">
                 <Skeleton className="h-4 w-full" />
@@ -71,45 +71,63 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                 <Skeleton className="h-4 w-1/2" />
               </div>
             ) : (
-              /* Message Content */
-              <div className="prose prose-sm max-w-full dark:prose-invert text-sm sm:text-base overflow-hidden">
-                {message.content.split('\n').map((line, index) => {
-                  // Handle table formatting
-                  if (line.includes('|') && line.includes('---')) {
-                    return null; // Skip separator lines
-                  }
-                  if (line.includes('|')) {
-                    const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
-                    return (
-                      <div key={index} className="w-full overflow-x-auto">
-                        <div className="flex flex-col sm:flex-row border-b border-border/20 py-1 gap-1 sm:gap-0 min-w-0">
-                          {cells.map((cell, cellIndex) => (
-                            <div key={cellIndex} className={`flex-1 px-1 sm:px-2 text-xs sm:text-sm break-words overflow-hidden text-ellipsis ${cellIndex === 0 ? 'font-medium' : ''}`}>
-                              {cell}
+              <div className="space-y-2">
+                {/* Image Display */}
+                {message.image && (
+                  <div className="mb-3">
+                    <img 
+                      src={message.image.data} 
+                      alt={message.image.name}
+                      className="max-w-[250px] max-h-[200px] object-cover rounded-lg border border-border shadow-sm"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1 opacity-75">
+                      {message.image.name}
+                    </p>
+                  </div>
+                )}
+                
+                {/* Text Content */}
+                {message.content && (
+                  <div className="prose prose-sm max-w-full dark:prose-invert text-sm sm:text-base overflow-hidden">
+                    {message.content.split('\n').map((line, index) => {
+                      // Handle table formatting
+                      if (line.includes('|') && line.includes('---')) {
+                        return null; // Skip separator lines
+                      }
+                      if (line.includes('|')) {
+                        const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
+                        return (
+                          <div key={index} className="w-full overflow-x-auto">
+                            <div className="flex flex-col sm:flex-row border-b border-border/20 py-1 gap-1 sm:gap-0 min-w-0">
+                              {cells.map((cell, cellIndex) => (
+                                <div key={cellIndex} className={`flex-1 px-1 sm:px-2 text-xs sm:text-sm break-words overflow-hidden text-ellipsis ${cellIndex === 0 ? 'font-medium' : ''}`}>
+                                  {cell}
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  }
-                  
-                  // Handle bold text
-                  if (line.includes('**')) {
-                    const parts = line.split('**');
-                    return (
-                      <p key={index} className="mb-2 break-words overflow-wrap-anywhere">
-                        {parts.map((part, partIndex) => 
-                          partIndex % 2 === 1 ? 
-                            <strong key={partIndex}>{part}</strong> : 
-                            part
-                        )}
-                      </p>
-                    );
-                  }
-                  
-                  // Regular text
-                  return line ? <p key={index} className="mb-2 break-words overflow-wrap-anywhere">{line}</p> : <br key={index} />;
-                })}
+                          </div>
+                        );
+                      }
+                      
+                      // Handle bold text
+                      if (line.includes('**')) {
+                        const parts = line.split('**');
+                        return (
+                          <p key={index} className="mb-2 break-words overflow-wrap-anywhere">
+                            {parts.map((part, partIndex) => 
+                              partIndex % 2 === 1 ? 
+                                <strong key={partIndex}>{part}</strong> : 
+                                part
+                            )}
+                          </p>
+                        );
+                      }
+                      
+                      // Regular text
+                      return line ? <p key={index} className="mb-2 break-words overflow-wrap-anywhere">{line}</p> : <br key={index} />;
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
