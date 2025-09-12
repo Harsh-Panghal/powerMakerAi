@@ -33,7 +33,7 @@ const modelOptions = [
 
 export function ChatInput() {
   const [message, setMessage] = useState('');
-  const [pastedImage, setPastedImage] = useState<ImageData | null>(null);
+  const [pastedImages, setPastedImages] = useState<ImageData[]>([]);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const { selectedModel, setModel, sendMessage } = useChatStore();
   const navigate = useNavigate();
@@ -46,10 +46,10 @@ export function ChatInput() {
   };
 
   const handleSend = () => {
-    if (message.trim() || pastedImage) {
-      sendMessage(message.trim(), pastedImage || undefined);
+    if (message.trim() || pastedImages.length > 0) {
+      sendMessage(message.trim(), pastedImages.length > 0 ? pastedImages : undefined);
       setMessage('');
-      setPastedImage(null);
+      setPastedImages([]);
     }
   };
 
@@ -67,22 +67,19 @@ export function ChatInput() {
     const images = getImagesFromClipboard(clipboardData);
     
     if (images.length > 0) {
-      // Only handle the first image (limit to one image at a time)
-      const imageFile = images[0];
-      
       setIsProcessingImage(true);
       
       try {
-        const processedImage = await processImage(imageFile);
-        setPastedImage(processedImage);
+        const processedImages = await Promise.all(images.map(image => processImage(image)));
+        setPastedImages(prev => [...prev, ...processedImages]);
         
         toast({
-          title: "Image pasted successfully",
-          description: `${processedImage.name} ready to send`,
+          title: "Images pasted successfully",
+          description: `${processedImages.length} image${processedImages.length > 1 ? 's' : ''} ready to send`,
         });
         
         // Announce to screen readers
-        const announcement = `Image ${processedImage.name} pasted successfully`;
+        const announcement = `${processedImages.length} image${processedImages.length > 1 ? 's' : ''} pasted successfully`;
         const ariaLiveRegion = document.createElement('div');
         ariaLiveRegion.setAttribute('aria-live', 'polite');
         ariaLiveRegion.setAttribute('aria-atomic', 'true');
@@ -121,8 +118,8 @@ export function ChatInput() {
     }
   };
 
-  const handleRemoveImage = () => {
-    setPastedImage(null);
+  const handleRemoveImage = (index: number) => {
+    setPastedImages(prev => prev.filter((_, i) => i !== index));
     
     toast({
       title: "Image removed",
@@ -133,15 +130,20 @@ export function ChatInput() {
   return (
     <div className="p-2 sm:p-4 bg-layout-main border-t border-border" data-tour="input-area">
       <div className="max-w-4xl mx-auto px-2 sm:px-4">
-        {/* Image Preview */}
-        {pastedImage && (
+        {/* Image Previews */}
+        {pastedImages.length > 0 && (
           <div className="mb-2 animate-fade-in">
-            <ImagePreview
-              imageData={pastedImage.data}
-              imageName={pastedImage.name}
-              imageSize={pastedImage.size}
-              onRemove={handleRemoveImage}
-            />
+            <div className="flex flex-wrap gap-2">
+              {pastedImages.map((image, index) => (
+                <ImagePreview
+                  key={`${image.name}-${index}`}
+                  imageData={image.data}
+                  imageName={image.name}
+                  imageSize={image.size}
+                  onRemove={() => handleRemoveImage(index)}
+                />
+              ))}
+            </div>
           </div>
         )}
         
@@ -168,7 +170,7 @@ export function ChatInput() {
             {/* Send Button */}
             <Button
               onClick={handleSend}
-              disabled={(!message.trim() && !pastedImage) || isProcessingImage}
+              disabled={(!message.trim() && pastedImages.length === 0) || isProcessingImage}
               size="sm"
               className="w-7 h-7 sm:w-8 sm:h-8 p-0 rounded-full bg-success-light hover:bg-success text-success-dark flex-shrink-0"
               aria-label="Send message"

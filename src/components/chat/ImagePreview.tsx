@@ -33,8 +33,8 @@ export function ImagePreview({
           <img 
             src={imageData} 
             alt={imageName}
-            className="max-w-[200px] h-auto object-cover rounded-t-lg"
-            style={{ maxHeight: '150px' }}
+            className="max-w-[120px] h-auto object-cover rounded-t-lg"
+            style={{ maxHeight: '80px' }}
           />
           
           {/* Remove Button */}

@@ -134,7 +134,7 @@ export function GreetingContainer() {
 
   const handleSend = () => {
     if (prompt.trim() || pastedImage) {
-      startChat(prompt.trim(), pastedImage || undefined);
+      startChat(prompt.trim(), pastedImage ? [pastedImage] : undefined);
       setPrompt("");
       setPastedImage(null);
       navigate("/chat");

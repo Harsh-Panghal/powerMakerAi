@@ -72,17 +72,23 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
               </div>
             ) : (
               <div className="space-y-2">
-                {/* Image Display */}
-                {message.image && (
+                {/* Images Display */}
+                {message.images && message.images.length > 0 && (
                   <div className="mb-3">
-                    <img 
-                      src={message.image.data} 
-                      alt={message.image.name}
-                      className="max-w-[250px] max-h-[200px] object-cover rounded-lg border border-border shadow-sm"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1 opacity-75">
-                      {message.image.name}
-                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {message.images.map((image, index) => (
+                        <div key={index} className="flex flex-col">
+                          <img 
+                            src={image.data} 
+                            alt={image.name}
+                            className="max-w-[200px] max-h-[150px] object-cover rounded-lg border border-border shadow-sm"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1 opacity-75">
+                            {image.name}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 
