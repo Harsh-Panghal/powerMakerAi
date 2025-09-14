@@ -39,6 +39,7 @@ export function ChatInput() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const maxLength = 1000;
+  const maxImages = 10;
 
   const handleModelChange = (newModel: string) => {
     setModel(newModel);
@@ -67,6 +68,16 @@ export function ChatInput() {
     const images = getImagesFromClipboard(clipboardData);
     
     if (images.length > 0) {
+      // Check if adding new images would exceed the limit
+      if (pastedImages.length + images.length > maxImages) {
+        toast({
+          variant: "destructive",
+          title: "Too many images",
+          description: `Maximum ${maxImages} images allowed. Current: ${pastedImages.length}`,
+        });
+        return;
+      }
+
       setIsProcessingImage(true);
       
       try {
@@ -74,8 +85,8 @@ export function ChatInput() {
         setPastedImages(prev => [...prev, ...processedImages]);
         
         toast({
-          title: "Images pasted successfully",
-          description: `${processedImages.length} image${processedImages.length > 1 ? 's' : ''} ready to send`,
+          title: `${processedImages.length} image${processedImages.length > 1 ? 's' : ''} pasted successfully`,
+          description: `${processedImages.length} image${processedImages.length > 1 ? 's' : ''} ready to send. Total: ${pastedImages.length + processedImages.length}`,
         });
         
         // Announce to screen readers
@@ -96,7 +107,7 @@ export function ChatInput() {
         
         toast({
           variant: "destructive",
-          title: "Error processing image",
+          title: "Error processing images",
           description: errorMessage,
         });
         
@@ -123,40 +134,91 @@ export function ChatInput() {
     
     toast({
       title: "Image removed",
-      description: "Pasted image has been removed",
+      description: `Image has been removed. Remaining: ${pastedImages.length - 1}`,
+    });
+  };
+
+  const handleRemoveAllImages = () => {
+    setPastedImages([]);
+    
+    toast({
+      title: "All images removed",
+      description: "All pasted images have been removed",
     });
   };
 
   return (
     <div className="p-2 sm:p-4 bg-layout-main border-t border-border" data-tour="input-area">
       <div className="max-w-4xl mx-auto px-2 sm:px-4">
-        {/* Image Previews */}
+        {/* Compact Image Previews */}
         {pastedImages.length > 0 && (
           <div className="mb-2 animate-fade-in">
+            {/* Images counter and clear all button */}
+            {pastedImages.length > 1 && (
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs sm:text-sm text-muted-foreground">
+                  {pastedImages.length} image{pastedImages.length > 1 ? 's' : ''} attached
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveAllImages}
+                  className="text-xs h-6 sm:h-7 px-2"
+                >
+                  Remove All
+                </Button>
+              </div>
+            )}
+            
+            {/* Compact Images */}
             <div className="flex flex-wrap gap-2">
               {pastedImages.map((image, index) => (
-                <ImagePreview
-                  key={`${image.name}-${index}`}
-                  imageData={image.data}
-                  imageName={image.name}
-                  imageSize={image.size}
-                  onRemove={() => handleRemoveImage(index)}
-                />
+                <div key={`${image.name}-${index}`} className="relative group">
+                  {/* Compact Image Preview */}
+                  <div className="relative w-12 h-12 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors">
+                    <img
+                      src={image.data}
+                      alt={`Image ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    
+                    {/* Remove button overlay */}
+                    <button
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-0 right-0 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 hover:bg-red-600 text-white rounded-bl-lg flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={`Remove image ${index + 1}`}
+                    >
+                      ×
+                    </button>
+                    
+                    {/* Image index badge */}
+                    <div className="absolute bottom-0 left-0 bg-black/70 text-white text-xs rounded-tr-lg px-1 py-0.5 min-w-[14px] sm:min-w-[16px] text-center">
+                      {index + 1}
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
+            
+            {/* Images limit indicator */}
+            {pastedImages.length >= maxImages - 2 && (
+              <div className="mt-2 text-xs text-muted-foreground text-center">
+                {pastedImages.length}/{maxImages} images
+              </div>
+            )}
           </div>
         )}
         
         <div className="relative">
           {/* Textarea */}
           <Textarea
-            placeholder="Type your message or paste an image..."
+            placeholder={`Type your message or paste ${pastedImages.length === 0 ? 'images' : 'more images'}... (${pastedImages.length}/${maxImages} images)`}
             value={message}
             onChange={(e) => setMessage(e.target.value.slice(0, maxLength))}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             className="w-full min-h-[80px] sm:min-h-[100px] pr-28 sm:pr-32 pb-12 sm:pb-14 resize-none border-brand-light focus:ring-brand-light text-sm sm:text-base align-top"
-            aria-label="Message input with image paste support"
+            aria-label="Message input with multiple image paste support"
             disabled={isProcessingImage}
           />
 
@@ -166,6 +228,13 @@ export function ChatInput() {
             <span className="text-xs text-muted-foreground inline">
               {message.length}/{maxLength}
             </span>
+
+            {/* Images Counter */}
+            {pastedImages.length > 0 && (
+              <span className="text-xs text-muted-foreground">
+                {pastedImages.length} img
+              </span>
+            )}
 
             {/* Send Button */}
             <Button
