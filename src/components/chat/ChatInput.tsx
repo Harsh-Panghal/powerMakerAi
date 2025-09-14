@@ -72,8 +72,8 @@ export function ChatInput() {
       if (pastedImages.length + images.length > maxImages) {
         toast({
           variant: "destructive",
-          title: "Image limit reached",
-          description: `Maximum ${maxImages} images allowed`,
+          title: "Too many images",
+          description: `Maximum ${maxImages} images allowed. Current: ${pastedImages.length}`,
         });
         return;
       }
@@ -85,9 +85,8 @@ export function ChatInput() {
         setPastedImages(prev => [...prev, ...processedImages]);
         
         toast({
-          variant: "success",
-          title: `${processedImages.length} image${processedImages.length > 1 ? 's' : ''} added`,
-          description: `Ready to send`,
+          title: `${processedImages.length} image${processedImages.length > 1 ? 's' : ''} pasted successfully`,
+          description: `${processedImages.length} image${processedImages.length > 1 ? 's' : ''} ready to send. Total: ${pastedImages.length + processedImages.length}`,
         });
         
         // Announce to screen readers
@@ -108,7 +107,7 @@ export function ChatInput() {
         
         toast({
           variant: "destructive",
-          title: "Upload failed",
+          title: "Error processing images",
           description: errorMessage,
         });
         
@@ -134,8 +133,8 @@ export function ChatInput() {
     setPastedImages(prev => prev.filter((_, i) => i !== index));
     
     toast({
-      variant: "success",
       title: "Image removed",
+      description: `Image has been removed. Remaining: ${pastedImages.length - 1}`,
     });
   };
 
@@ -143,8 +142,8 @@ export function ChatInput() {
     setPastedImages([]);
     
     toast({
-      variant: "success",
-      title: "All images cleared",
+      title: "All images removed",
+      description: "All pasted images have been removed",
     });
   };
 
