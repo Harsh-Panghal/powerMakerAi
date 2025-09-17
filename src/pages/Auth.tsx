@@ -4,11 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FloatingInput } from "@/components/ui/floating-input";
-import {
-  TooltipProvider,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+// import all things related to firebase auth
+import {
+  handleGoogleSignIn,
+  handleEmailSignUp,
+  handleEmailSignIn,
+} from "../config/firebase config/firebase.auth";
+import { doc, getDoc } from "firebase/firestore";
+import { firestore, auth } from "../config/firebase config/firebase.config";
+import saveUserWithReferral from "../functions/saveUserWithReferral";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 const Auth = () => {
   // Form component with validation and error handling
@@ -19,6 +27,7 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string>("");
 
   // Field validation states
   const [fieldErrors, setFieldErrors] = useState<{
@@ -28,11 +37,30 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Helper function to show error toast
+  const showErrorToast = (errorMessage: string) => {
+    toast({
+      title: "Error",
+      description: errorMessage,
+      variant: "destructive",
+      duration: 2000, // 2 seconds
+    });
+  };
+
+  // Helper function to show success toast
+  const showSuccessToast = (successMessage: string) => {
+    toast({
+      title: "Success",
+      description: successMessage,
+      duration: 2000, // 2 seconds
+    });
+  };
+
   // Validation functions
   const validateField = (field: string, value: string) => {
     let hasError = false;
     let message = "";
-    
+
     switch (field) {
       case "email":
         if (!value.trim()) {
@@ -62,16 +90,16 @@ const Auth = () => {
         }
         break;
     }
-    
+
     if (hasError) {
-      setFieldErrors(prev => ({
+      setFieldErrors((prev) => ({
         ...prev,
-        [field]: { hasError: true, message, showError: true }
+        [field]: { hasError: true, message, showError: true },
       }));
     } else {
-      setFieldErrors(prev => ({
+      setFieldErrors((prev) => ({
         ...prev,
-        [field]: { hasError: false, message: "", showError: false }
+        [field]: { hasError: false, message: "", showError: false },
       }));
     }
   };
@@ -88,19 +116,25 @@ const Auth = () => {
         setConfirmPassword(value);
         break;
     }
-    
+
     // Validate field in real-time as user types
     if (value.trim()) {
       validateField(field, value);
     } else {
       // Show error immediately if field becomes empty (for required fields)
-      setFieldErrors(prev => ({
+      setFieldErrors((prev) => ({
         ...prev,
-        [field]: { 
-          hasError: true, 
-          message: `${field === "email" ? "Email" : field === "password" ? "Password" : "Confirm Password"} is required`,
-          showError: true 
-        }
+        [field]: {
+          hasError: true,
+          message: `${
+            field === "email"
+              ? "Email"
+              : field === "password"
+              ? "Password"
+              : "Confirm Password"
+          } is required`,
+          showError: true,
+        },
       }));
     }
   };
@@ -109,184 +143,181 @@ const Auth = () => {
     validateField(field, value);
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate all fields before submission
-    let hasErrors = false;
-    
-    if (!email.trim()) {
-      setFieldErrors(prev => ({
-        ...prev,
-        email: { hasError: true, message: "Email is required", showError: true }
-      }));
-      hasErrors = true;
-    } else {
-      validateField("email", email);
-      if (fieldErrors.email?.hasError) hasErrors = true;
-    }
-    
-    if (!password.trim()) {
-      setFieldErrors(prev => ({
-        ...prev,
-        password: { hasError: true, message: "Password is required", showError: true }
-      }));
-      hasErrors = true;
-    } else {
-      validateField("password", password);
-      if (fieldErrors.password?.hasError) hasErrors = true;
-    }
-    
-    if (hasErrors) {
-      return;
-    }
-    
+  // Email-Signin handler
+  const onEmailSignIn = async (email: string, password: string) => {
     setLoading(true);
-
-    // Simulate loading for demo purposes
-    setTimeout(() => {
-      // Set demo user data in localStorage
-      localStorage.setItem(
-        "demoUser",
-        JSON.stringify({
-          email: email,
-          name: email.split("@")[0], // Use part before @ as name
-          isLoggedIn: true,
-        })
-      );
-
-      toast({
-        title: "Success",
-        description: "Successfully signed in! (Demo Mode)",
-      });
-      setLoading(false);
+    try {
+      await handleEmailSignIn(email, password);
+      showSuccessToast("Successfully signed in!");
       navigate("/");
-    }, 1000);
+    } catch (error: any) {
+      // Clean up Firebase error messages
+      const errorMessage ="Invalid email or password";
+      showErrorToast(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate all fields before submission
-    let hasErrors = false;
-    
-    if (!email.trim()) {
-      setFieldErrors(prev => ({
-        ...prev,
-        email: { hasError: true, message: "Email is required", showError: true }
-      }));
-      hasErrors = true;
-    } else {
-      validateField("email", email);
-      if (fieldErrors.email?.hasError) hasErrors = true;
-    }
-    
-    if (!password.trim()) {
-      setFieldErrors(prev => ({
-        ...prev,
-        password: { hasError: true, message: "Password is required", showError: true }
-      }));
-      hasErrors = true;
-    } else {
-      validateField("password", password);
-      if (fieldErrors.password?.hasError) hasErrors = true;
-    }
-    
-    if (!confirmPassword.trim()) {
-      setFieldErrors(prev => ({
-        ...prev,
-        confirmPassword: { hasError: true, message: "Please confirm your password", showError: true }
-      }));
-      hasErrors = true;
-    } else {
-      validateField("confirmPassword", confirmPassword);
-      if (fieldErrors.confirmPassword?.hasError) hasErrors = true;
-    }
-
-    if (!acceptTerms) {
-      toast({
-        title: "Error",
-        description: "Please accept the terms and conditions",
-        variant: "destructive",
-      });
-      hasErrors = true;
-    }
-
-    if (hasErrors) {
+  // Email-Signup handler
+  const onEmailSignUp = async (email: string, password: string, confirmPassword: string) => {
+    if (password !== confirmPassword) {
+      showErrorToast("Passwords do not match");
       return;
     }
 
     setLoading(true);
-
-    // Simulate loading for demo purposes
-    setTimeout(() => {
-      toast({
-        title: "Success",
-        description: "Account created successfully! (Demo Mode)",
-      });
-      setLoading(false);
+    try {
+      const user = await handleEmailSignUp(email, password);
+      
+      // Check if user data already exists to avoid duplicates
+      const userDoc = await getDoc(doc(firestore, "users", user.uid));
+      if (!userDoc.exists()) {
+        await saveUserWithReferral(user.uid, email);
+      }
+      
+      showSuccessToast("Account created successfully! Please check your email for verification.");
       // Switch to sign in form after successful signup
       setIsSignUp(false);
       setPassword("");
       setConfirmPassword("");
       setAcceptTerms(false);
-    }, 1000);
-  };
-
-  const handleGoogleLogin = async () => {
-    toast({
-      title: "Demo Mode",
-      description: "Google login will be implemented later",
-    });
-  };
-
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate email field before submission
-    if (!email.trim()) {
-      setFieldErrors(prev => ({
-        ...prev,
-        email: { hasError: true, message: "Email is required", showError: true }
-      }));
-      return;
-    }
-    
-    validateField("email", email);
-    if (fieldErrors.email?.hasError) {
-      return;
-    }
-    
-    setLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`,
-      });
-      
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Password Reset Email Sent",
-          description: "Check your email for password reset instructions.",
-        });
-        // Switch back to sign in mode
-        setIsForgotPassword(false);
-        setEmail("");
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      // Clean up Firebase error messages
+      const errorMessage = error.message?.replace(/^Firebase:\s*/, "") || "Error during sign-up";
+      showErrorToast(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Google Sign-In handler
+  const onGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      const user = await handleGoogleSignIn();
+      
+      // Check if user data already exists to avoid duplicates
+      const userDoc = await getDoc(doc(firestore, "users", user.uid));
+      if (!userDoc.exists()) {
+        await saveUserWithReferral(user.uid, user.email || "");
+      }
+      
+      showSuccessToast("Successfully signed in with Google!");
+      navigate("/");
+    } catch (error: any) {
+      // Clean up Firebase error messages
+      const errorMessage = error.message?.replace(/^Firebase:\s*/, "") || "Google Sign-In failed";
+      showErrorToast(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Forgot Password handler
+  const handleForgotPassword = async (email: string) => {
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      showSuccessToast("Password reset email sent! Please check your inbox.");
+      // Clear form and go back to sign in
+      setIsForgotPassword(false);
+      setEmail("");
+      setPassword("");
+      setFieldErrors({});
+    } catch (error: any) {
+      let errorMessage = "Failed to send password reset email";
+      
+      // Handle specific Firebase errors
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email address";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many requests. Please try again later";
+      }
+      
+      showErrorToast(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Form submission handler
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate fields before submission
+    let hasErrors = false;
+
+    // Always validate email
+    if (!email.trim()) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        email: {
+          hasError: true,
+          message: "Email is required",
+          showError: true,
+        },
+      }));
+      hasErrors = true;
+    } else {
+      validateField("email", email);
+      if (fieldErrors.email?.hasError) hasErrors = true;
+    }
+
+    // Validate password for sign in and sign up
+    if (!isForgotPassword) {
+      if (!password.trim()) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          password: {
+            hasError: true,
+            message: "Password is required",
+            showError: true,
+          },
+        }));
+        hasErrors = true;
+      } else {
+        validateField("password", password);
+        if (fieldErrors.password?.hasError) hasErrors = true;
+      }
+
+      // Validate confirm password for sign up
+      if (isSignUp) {
+        if (!confirmPassword.trim()) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            confirmPassword: {
+              hasError: true,
+              message: "Please confirm your password",
+              showError: true,
+            },
+          }));
+          hasErrors = true;
+        } else {
+          validateField("confirmPassword", confirmPassword);
+          if (fieldErrors.confirmPassword?.hasError) hasErrors = true;
+        }
+
+        if (!acceptTerms) {
+          showErrorToast("Please accept the terms and conditions");
+          hasErrors = true;
+        }
+      }
+    }
+
+    if (hasErrors) {
+      return;
+    }
+
+    // Execute appropriate action
+    if (isForgotPassword) {
+      await handleForgotPassword(email);
+    } else if (isSignUp) {
+      await onEmailSignUp(email, password, confirmPassword);
+    } else {
+      await onEmailSignIn(email, password);
     }
   };
 
@@ -295,10 +326,12 @@ const Auth = () => {
       {/* Smooth flowing background animation */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-brand-light/8 to-brand-medium/5 animate-flow-smooth" />
-        <div className="absolute inset-0 bg-gradient-to-tl from-brand-accent/3 via-transparent to-brand/4 animate-flow-smooth" 
-             style={{ animationDelay: '-3s' }} />
+        <div
+          className="absolute inset-0 bg-gradient-to-tl from-brand-accent/3 via-transparent to-brand/4 animate-flow-smooth"
+          style={{ animationDelay: "-3s" }}
+        />
       </div>
-      
+
       {/* Static decorative elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-20 w-32 h-32 bg-brand/5 rounded-full blur-2xl" />
@@ -320,21 +353,17 @@ const Auth = () => {
               />
             </div>
             <h2 className="text-2xl font-bold text-brand">
-              {isForgotPassword 
-                ? "Reset your password" 
-                : isSignUp 
-                ? "Sign up to continue" 
+              {isForgotPassword
+                ? "Reset your password"
+                : isSignUp
+                ? "Sign up to continue"
                 : "Sign in to continue"}
             </h2>
           </div>
 
           {/* Form */}
           <TooltipProvider>
-            <form
-              onSubmit={isForgotPassword ? handleForgotPassword : isSignUp ? handleSignUp : handleSignIn}
-              className="space-y-4"
-              noValidate
-            >
+            <form onSubmit={handleFormSubmit} className="space-y-4" noValidate>
               {/* Email Field */}
               <FloatingInput
                 label="Email *"
@@ -353,7 +382,9 @@ const Auth = () => {
                   isPassword={true}
                   value={password}
                   error={fieldErrors.password}
-                  onChange={(e) => handleFieldChange("password", e.target.value)}
+                  onChange={(e) =>
+                    handleFieldChange("password", e.target.value)
+                  }
                   onBlur={(e) => handleFieldBlur("password", e.target.value)}
                   autoComplete="current-password"
                 />
@@ -366,8 +397,12 @@ const Auth = () => {
                   isPassword={true}
                   value={confirmPassword}
                   error={fieldErrors.confirmPassword}
-                  onChange={(e) => handleFieldChange("confirmPassword", e.target.value)}
-                  onBlur={(e) => handleFieldBlur("confirmPassword", e.target.value)}
+                  onChange={(e) =>
+                    handleFieldChange("confirmPassword", e.target.value)
+                  }
+                  onBlur={(e) =>
+                    handleFieldBlur("confirmPassword", e.target.value)
+                  }
                 />
               )}
 
@@ -431,12 +466,12 @@ const Auth = () => {
                 disabled={loading}
                 className="w-full bg-brand-light hover:bg-brand-light/90 text-white font-medium py-3"
               >
-                {loading 
-                  ? "Loading..." 
-                  : isForgotPassword 
-                  ? "Send Reset Email" 
-                  : isSignUp 
-                  ? "Sign Up" 
+                {loading
+                  ? "Loading..."
+                  : isForgotPassword
+                  ? "Send Reset Email"
+                  : isSignUp
+                  ? "Sign Up"
                   : "Sign In"}
               </Button>
 
@@ -447,17 +482,20 @@ const Auth = () => {
                     <span className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or</span>
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Or
+                    </span>
                   </div>
                 </div>
               )}
 
-              {/* Google Login - Demo Mode (Not shown in forgot password mode) */}
+              {/* Google Login (Not shown in forgot password mode) */}
               {!isForgotPassword && (
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleGoogleLogin}
+                  onClick={onGoogleSignIn}
+                  disabled={loading}
                   className="w-full border-border text-brand hover:bg-muted"
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -478,7 +516,7 @@ const Auth = () => {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  Login with Google
+                  {loading ? "Loading..." : "Login with Google"}
                 </Button>
               )}
 
@@ -491,7 +529,14 @@ const Auth = () => {
                       : "Don't have an account?"}{" "}
                     <button
                       type="button"
-                      onClick={() => setIsSignUp(!isSignUp)}
+                      onClick={() => {
+                        setIsSignUp(!isSignUp);
+                        // Clear form when switching
+                        setPassword("");
+                        setConfirmPassword("");
+                        setAcceptTerms(false);
+                        setFieldErrors({});
+                      }}
                       className="text-brand-light hover:underline font-medium"
                     >
                       {isSignUp ? "Sign In" : "Sign Up"}
