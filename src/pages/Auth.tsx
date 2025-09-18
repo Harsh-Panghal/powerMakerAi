@@ -13,7 +13,14 @@ import {
   handleEmailSignUp,
   handleEmailSignIn,
 } from "../config/firebase config/firebase.auth";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { firestore, auth } from "../config/firebase config/firebase.config";
 import saveUserWithReferral from "../functions/saveUserWithReferral";
 import { sendPasswordResetEmail } from "firebase/auth";
@@ -43,7 +50,8 @@ const Auth = () => {
       title: "Error",
       description: errorMessage,
       variant: "destructive",
-      duration: 2000, // 2 seconds
+      className: "border-error bg-error/10 text-error",
+      duration: 5000, // 3 seconds
     });
   };
 
@@ -52,8 +60,27 @@ const Auth = () => {
     toast({
       title: "Success",
       description: successMessage,
-      duration: 2000, // 2 seconds
+      className: "border-brand bg-brand/10 text-brand",
+      duration: 5000, // 3 seconds
     });
+  };
+
+  // Function to check if user exists in Firestore
+  const checkUserExists = async (email: string): Promise<boolean> => {
+    try {
+      // Query the users collection to find a user with the given email
+      const usersRef = collection(firestore, "users");
+      const q = query(
+        usersRef,
+        where("email", "==", email.trim().toLowerCase())
+      );
+      const querySnapshot = await getDocs(q);
+
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error("Error checking user existence:", error);
+      return false;
+    }
   };
 
   // Validation functions
@@ -152,7 +179,7 @@ const Auth = () => {
       navigate("/");
     } catch (error: any) {
       // Clean up Firebase error messages
-      const errorMessage ="Invalid email or password";
+      const errorMessage = "Invalid email or password";
       showErrorToast(errorMessage);
     } finally {
       setLoading(false);
@@ -160,7 +187,11 @@ const Auth = () => {
   };
 
   // Email-Signup handler
-  const onEmailSignUp = async (email: string, password: string, confirmPassword: string) => {
+  const onEmailSignUp = async (
+    email: string,
+    password: string,
+    confirmPassword: string
+  ) => {
     if (password !== confirmPassword) {
       showErrorToast("Passwords do not match");
       return;
@@ -169,14 +200,16 @@ const Auth = () => {
     setLoading(true);
     try {
       const user = await handleEmailSignUp(email, password);
-      
+
       // Check if user data already exists to avoid duplicates
       const userDoc = await getDoc(doc(firestore, "users", user.uid));
       if (!userDoc.exists()) {
         await saveUserWithReferral(user.uid, email);
       }
-      
-      showSuccessToast("Account created successfully! Please check your email for verification.");
+
+      showSuccessToast(
+        "Account created successfully! Please check your email for verification."
+      );
       // Switch to sign in form after successful signup
       setIsSignUp(false);
       setPassword("");
@@ -184,7 +217,8 @@ const Auth = () => {
       setAcceptTerms(false);
     } catch (error: any) {
       // Clean up Firebase error messages
-      const errorMessage = error.message?.replace(/^Firebase:\s*/, "") || "Error during sign-up";
+      const errorMessage =
+        error.message?.replace(/^Firebase:\s*/, "") || "Error during sign-up";
       showErrorToast(errorMessage);
     } finally {
       setLoading(false);
@@ -196,30 +230,43 @@ const Auth = () => {
     setLoading(true);
     try {
       const user = await handleGoogleSignIn();
-      
+
       // Check if user data already exists to avoid duplicates
       const userDoc = await getDoc(doc(firestore, "users", user.uid));
       if (!userDoc.exists()) {
         await saveUserWithReferral(user.uid, user.email || "");
       }
-      
+
       showSuccessToast("Successfully signed in with Google!");
       navigate("/");
     } catch (error: any) {
       // Clean up Firebase error messages
-      const errorMessage = error.message?.replace(/^Firebase:\s*/, "") || "Google Sign-In failed";
+      const errorMessage =
+        error.message?.replace(/^Firebase:\s*/, "") || "Google Sign-In failed";
       showErrorToast(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  // Forgot Password handler
+  // Forgot Password handler with user existence check
   const handleForgotPassword = async (email: string) => {
     setLoading(true);
     try {
+      // First check if user exists in your Firestore database
+      const userExists = await checkUserExists(email.trim());
+
+      if (!userExists) {
+        showErrorToast(
+          "No account found with this email address. Please sign up first."
+        );
+        return;
+      }
+
+      // If user exists, send password reset email
       await sendPasswordResetEmail(auth, email.trim());
       showSuccessToast("Password reset email sent! Please check your inbox.");
+
       // Clear form and go back to sign in
       setIsForgotPassword(false);
       setEmail("");
@@ -227,7 +274,7 @@ const Auth = () => {
       setFieldErrors({});
     } catch (error: any) {
       let errorMessage = "Failed to send password reset email";
-      
+
       // Handle specific Firebase errors
       if (error.code === "auth/user-not-found") {
         errorMessage = "No account found with this email address";
@@ -235,8 +282,10 @@ const Auth = () => {
         errorMessage = "Invalid email address";
       } else if (error.code === "auth/too-many-requests") {
         errorMessage = "Too many requests. Please try again later";
+      } else if (error.message) {
+        errorMessage = error.message.replace(/^Firebase:\s*/, "");
       }
-      
+
       showErrorToast(errorMessage);
     } finally {
       setLoading(false);
