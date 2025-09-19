@@ -176,7 +176,7 @@ const Auth = () => {
     try {
       await handleEmailSignIn(email, password);
       showSuccessToast("Successfully signed in!");
-      navigate("/");
+      // navigate("/");
     } catch (error: any) {
       // Clean up Firebase error messages
       const errorMessage = "Invalid email or password";
@@ -238,7 +238,7 @@ const Auth = () => {
       }
 
       showSuccessToast("Successfully signed in with Google!");
-      navigate("/");
+      // navigate("/");
     } catch (error: any) {
       // Clean up Firebase error messages
       const errorMessage =

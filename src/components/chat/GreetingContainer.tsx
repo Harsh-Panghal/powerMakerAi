@@ -29,6 +29,8 @@ import { useChatStore } from "@/store/chatStore";
 import { ImagePreview } from "./ImagePreview";
 import { processImage, getImagesFromClipboard, type ImageData } from "@/utils/imageUtils";
 import { useToast } from "@/hooks/use-toast";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store/store";
 
 const promptSuggestionsByModel = {
   "model-0-1": [
@@ -118,6 +120,7 @@ export function GreetingContainer() {
   const navigate = useNavigate();
   const { selectedModel, setModel, startChat } = useChatStore();
   const { toast } = useToast();
+  const { user } = useSelector((state: RootState) => state.auth);
   const maxLength = 1000;
   const maxImages = 10; // Set maximum number of images allowed
 
@@ -217,6 +220,11 @@ export function GreetingContainer() {
     });
   };
 
+  const firstName = ((fullName: string = "") => {
+    const first = fullName.trim().split(" ")[0] || "";
+    return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+  })(user?.displayName || "");
+
   return (
     <>
       {/* Greeting Container */}
@@ -224,7 +232,7 @@ export function GreetingContainer() {
         <div className="max-w-4xl w-full text-center space-y-8">
           {/* Greeting */}
           <div className="space-y-2">
-            <h1 className="text-4xl font-semibold text-brand">Hello, Harsh!</h1>
+            <h1 className="text-4xl font-semibold text-brand">Hello, {firstName} !</h1>
             <h2 className="text-2xl text-brand">
               What would you like to make?
             </h2>

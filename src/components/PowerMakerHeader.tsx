@@ -63,6 +63,13 @@ import { Badge } from "@/components/ui/badge";
 import { useChatStore } from "@/store/chatStore";
 import { useToast } from "@/components/ui/use-toast";
 import { PowerMakerTour, usePowerMakerTour } from "./PowerMakerTour";
+import { handleSignOut } from "@/config/firebase config/firebase.auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { AvatarImage } from "@/components/ui/avatar";
+import { useSelector } from "react-redux";
+import { RootState } from "../store/store";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../config/firebase config/firebase.config";
 
 const modelOptions = [
   {
@@ -85,7 +92,21 @@ const modelOptions = [
   },
 ];
 
+// interface userProps {
+//   user?: {
+//     reloadUserInfo?: {
+//       photoUrl?: string;
+//       displayName?: string;
+//     };
+//   } | null;
+// }
+const getFirstName = (displayName?: string): string => {
+  if (!displayName) return "";
+  return displayName.split(" ")[0];
+};
+
 export function PowerMakerHeader() {
+  const queryClient = useQueryClient();
   const { toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const {
@@ -115,7 +136,18 @@ export function PowerMakerHeader() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showTour, setShowTour] = useState(false);
-  
+  const { user } = useSelector((state: RootState) => state.auth);
+  const [userIcon, setUserIcon] = useState<any | null>(null);
+
+  // Firebase authentication (user sign in/out)
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUserIcon(currentUser);
+    });
+
+    return () => unsubscribe();
+  }, [userIcon]);
+
   // Use connection status from store
   const connectionStatus = storeConnectionStatus;
 
@@ -152,7 +184,7 @@ export function PowerMakerHeader() {
   useEffect(() => {
     // Start connection simulation on component mount
     simulateConnectionFlow();
-    
+
     // Check for demo user
     const storedUser = localStorage.getItem("demoUser");
     if (storedUser) {
@@ -163,13 +195,15 @@ export function PowerMakerHeader() {
       }
     }
   }, [simulateConnectionFlow]);
-  
+
   // Show toast notifications based on connection status changes
   useEffect(() => {
     if (connectionStatus === "connected") {
       toast({
         title: "Connection Established",
-        description: `Successfully connected to ${activeConnection?.name || 'CRM'}`,
+        description: `Successfully connected to ${
+          activeConnection?.name || "CRM"
+        }`,
         className: "border-success bg-success/10 text-success-dark",
       });
     } else if (connectionStatus === "failed") {
@@ -192,15 +226,11 @@ export function PowerMakerHeader() {
     }
   }, [isLoggedIn, hasCompletedTour]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("demoUser");
-    setIsLoggedIn(false);
-    setDemoUser(null);
-    toast({
-      title: "Success",
-      description: "Successfully signed out! (Demo Mode)",
-    });
-    setShowLogoutDialog(false);
+  const handleLogout = async () => {
+    const didLogout = await handleSignOut();
+    if (!didLogout) return;
+    queryClient.removeQueries({ queryKey: ["recentChats"] });
+    navigate("/");
   };
 
   const handleInviteWithLink = () => {
@@ -245,6 +275,22 @@ export function PowerMakerHeader() {
     console.log("Deleting account...");
     setShowDeleteDialog(false);
   };
+
+  console.log("user-pic", userIcon?.reloadUserInfo?.photoUrl);
+
+  const firstName = ((fullName: string = "") => {
+    const first = fullName.trim().split(" ")[0] || "";
+    return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+  })(user?.displayName || "");
+
+  console.log("Debug user data:", {
+    userIcon: userIcon,
+    userIconPhotoURL: userIcon?.photoURL,
+    userIconReloadPhotoUrl: userIcon?.reloadUserInfo?.photoUrl,
+    reduxUser: user,
+    // reduxUserPhotoURL: user?.photoURL,
+    firstName: firstName,
+  });
 
   return (
     <>
@@ -517,67 +563,60 @@ export function PowerMakerHeader() {
             </SheetContent>
           </Sheet>
 
-          {/* User Authentication Section - Demo Mode */}
-          {isLoggedIn ? (
-            // Hardcoded logged in user
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 h-auto"
-                  data-guide="user-menu"
-                >
-                  <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
-                    <AvatarFallback className="bg-brand text-white font-medium text-xs sm:text-sm">
-                      {demoUser?.name?.charAt(0).toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden md:inline text-sm font-medium text-foreground">
-                    {demoUser?.name || "User"}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-48"
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 h-auto"
                 data-guide="user-menu"
               >
-                <DropdownMenuItem onClick={() => setShowProfileDialog(true)}>
-                  <User className="w-4 h-4 mr-2" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Invite
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    resetTour();
-                    setShowTour(true);
-                  }}
-                >
-                  <HelpCircle className="w-4 h-4 mr-2" />
-                  Take a Tour
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setShowLogoutDialog(true)}
-                  className="text-destructive"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Log Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            // Show Sign In Button
-            <Button
-              onClick={() => navigate("/auth")}
-              className="bg-brand-light hover:bg-brand-light/90 text-white"
+                <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
+                  <AvatarImage
+                    src={userIcon?.photoURL}
+                    alt="Avatar"
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                  <AvatarFallback className="text-sm bg-blue-500 text-white font-medium">
+                    {firstName?.charAt(0)?.toUpperCase() || "H"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="hidden md:inline text-sm font-medium text-foreground">
+                  {firstName}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-48"
+              data-guide="user-menu"
             >
-              <LogIn className="w-4 h-4 mr-2" />
-              Sign In
-            </Button>
-          )}
+              <DropdownMenuItem onClick={() => setShowProfileDialog(true)}>
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Invite
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  resetTour();
+                  setShowTour(true);
+                }}
+              >
+                <HelpCircle className="w-4 h-4 mr-2" />
+                Take a Tour
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setShowLogoutDialog(true)}
+                className="text-destructive"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Log Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 

@@ -1,8 +1,8 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth, Auth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
-// import { AppDispatch } from "../../store/store";
-// import { clearUser, setAuthLoading, setisAuthenticated, User } from "../../redux/AuthSlice";
+import { AppDispatch } from "../../store/store";
+import { clearUser, setAuthLoading, setisAuthenticated, User } from "../../redux/AuthSlice";
 import { getStorage } from "firebase/storage";
 
 // Define the firebase config structure
@@ -27,23 +27,23 @@ const storage = getStorage(app);
 export { auth, firestore, storage };
 
 // Monitor auth state and dispatch actions
-// export const monitorAuthState = (dispatch: AppDispatch) => {
-//   const auth = getAuth(app);
-//   onAuthStateChanged(auth, (user: User | null) => {
-//     if (user) {
-//       const userData = {
-//         uid: user.uid,
-//         email: user.email,
-//         displayName: user.displayName,
-//         phoneNumber: user.phoneNumber,
-//         providerData: user.providerData,
-//       };
-//       // //console.log(userData)
-//       // //console.log(user)
-//       dispatch(setisAuthenticated(userData));
-//     } else {
-//       dispatch(clearUser());
-//     }
-//     dispatch(setAuthLoading(false))
-//   });
-// };
+export const monitorAuthState = (dispatch: AppDispatch) => {
+  const auth = getAuth(app);
+  onAuthStateChanged(auth, (user: User | null) => {
+    if (user) {
+      const userData = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        phoneNumber: user.phoneNumber,
+        providerData: user.providerData,
+      };
+      // //console.log(userData)
+      // //console.log(user)
+      dispatch(setisAuthenticated(userData));
+    } else {
+      dispatch(clearUser());
+    }
+    dispatch(setAuthLoading(false))
+  });
+};

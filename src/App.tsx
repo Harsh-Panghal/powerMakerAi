@@ -8,6 +8,10 @@ import Greeting from "./pages/Greeting";
 import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import { Provider } from "react-redux";
+import store from "./store/store";
+// import { P } from "node_modules/framer-motion/dist/types.d-Cjd591yU";
+
 
 const queryClient = new QueryClient();
 
@@ -16,7 +20,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <Provider store={store}>
+        <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />}>
             <Route index element={<Greeting />} />
@@ -27,6 +32,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </Provider>
     </TooltipProvider>
   </QueryClientProvider>
 );
