@@ -3,10 +3,11 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../config/firebase config/firebase.config";
 import { secureAxios } from "../config/firebase config/firebase.auth";
 import { useDispatch, useSelector } from "react-redux";
-import { setIsCrmConnected } from "../redux/CrmSlice";
+import { setConnections, setIsCrmConnected } from "../redux/CrmSlice";
 import { RootState } from "../store/store";
 import { useToast } from "@/hooks/use-toast";
 
+// ✅ Setup secureAxios interceptors once
 secureAxios.interceptors.request.use(async (config) => {
   const user = auth.currentUser;
   if (user) {
@@ -16,21 +17,17 @@ secureAxios.interceptors.request.use(async (config) => {
   return config;
 });
 
-// 🔁 Retry once on 401 due to expired token
 secureAxios.interceptors.response.use(
-  response => response,
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
-    // Avoid infinite loop
     if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
       originalRequest._retry = true;
-
       const user = auth.currentUser;
       if (user) {
-        const token = await user.getIdToken(true); // Refresh the token
+        const token = await user.getIdToken(true);
         originalRequest.headers.Authorization = `Bearer ${token}`;
-        return secureAxios(originalRequest); // Retry the request
+        return secureAxios(originalRequest);
       }
     }
     return Promise.reject(error);
@@ -40,165 +37,127 @@ secureAxios.interceptors.response.use(
 const AppInitializer = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
   const { toast } = useToast();
-  const { retryTrigger } = useSelector((state: RootState) => state.crm);
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { retryTrigger, connections } = useSelector((state: RootState) => state.crm);
 
-  // Helper function to show success toast
-  const showSuccessToast = (message: string) => {
-    toast({
-      title: "Success",
-      description: message,
-      className: "border-brand bg-brand/10 text-brand",
-      duration: 3000,
-    });
-  };
-
-  // Helper function to show error toast
-  const showErrorToast = (message: string) => {
-    toast({
-      title: "Error",
-      description: message,
-      variant: "destructive",
-      className: "border-error bg-error/10 text-error",
-      duration: 4000,
-    });
-  };
-
-  // Helper function to safely parse JSON response
-  const safeJsonParse = async (response: Response) => {
-    const text = await response.text();
-    
-    // Check if response is HTML (common for error pages)
-    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-      console.error('Received HTML instead of JSON:', text.substring(0, 200));
-      throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}`);
-    }
-    
-    try {
-      return JSON.parse(text);
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError, 'Response text:', text);
-      throw new Error('Invalid JSON response from server');
-    }
-  };
-
+  // 🔑 1) Run chat/auth only once on login
   useEffect(() => {
-    const tryCrmConnection = async () => {
-      try {
-        console.log('Attempting CRM connection to:', `${import.meta.env.VITE_BACKEND_API}/users/crm-connection`);
-        
-        const crmRes = await fetch(`${import.meta.env.VITE_BACKEND_API}/users/crm-connection`, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        
-        console.log('CRM response status:', crmRes.status, crmRes.statusText);
-        
-        if (!crmRes.ok) {
-          throw new Error(`HTTP error! status: ${crmRes.status}`);
-        }
-        
-        const crmData = await safeJsonParse(crmRes);
-        
-        if (crmData.success) {
-          dispatch(setIsCrmConnected({ connected: crmData.success, connectionName: crmData.connectionName }));
-          // Uncomment if you want to show success toast for CRM connection
-          // showSuccessToast("Dataverse connection established");
-        } else {
-          dispatch(setIsCrmConnected({ connected: crmData.success, connectionName: crmData.connectionName }));
-          showErrorToast(crmData.message || "Failed to connect to CRM");
-        }
-
-      } catch (error) {
-        console.error("CRM connection error:", error);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
         dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
-        showErrorToast("Connection error. Please try again");
+        return;
       }
-    };
 
-    tryCrmConnection();
-  }, [retryTrigger, toast, dispatch]);
+      try {
+        const token = await user.getIdToken(true);
+        // console.log("User logged in, token:", token);
+        // verify user
+        const verifyRes = await fetch(
+          `${import.meta.env.VITE_BACKEND_API}/chat/auth`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ userId: user.uid }),
+            credentials: "include",
+          }
+        );
 
-  useEffect(() => {
-    const initializeApp = () => {
-      onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-          console.log("User not signed in");
+        if (!verifyRes.ok) {
           dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
           return;
         }
 
-        try {
-          const token = await user.getIdToken(true);
+        // fetch connections once
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_API}/users/get-crm-connection-names`,
+          { credentials: "include" }
+        );
+        const data = await res.json();
 
-          // Step 1: Verify Firebase token with backend
-          const verifyRes = await fetch(
-            `${import.meta.env.VITE_BACKEND_API}/chat/auth`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ userId: user.uid }),
-              credentials: "include",
-            }
-          );
+        if (!data.success || !data.connections?.length) {
+          dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "No CRM connections found",
+          });
+          return;
+        }
 
-          if (!verifyRes.ok) {
-            console.error("Token verification failed:", verifyRes.status, verifyRes.statusText);
-            dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
-            showErrorToast("Authentication failed. Please sign in again");
-            return;
-          }
+        dispatch(setConnections(data.connections));
+      } catch (err) {
+        console.error("Auth init error:", err);
+        dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
+      }
+    });
 
-          // Step 2: Fetch conversation history
-          await secureAxios.get("/chat/conversationhistory");
+    return () => unsubscribe();
+  }, [dispatch, toast]);
 
-          // Step 3: Connect to CRM
-          console.log('Attempting CRM connection during initialization to:', `${import.meta.env.VITE_BACKEND_API}/users/crm-connection`);
-          
-          const crmRes = await fetch(`${import.meta.env.VITE_BACKEND_API}/users/crm-connection`, {
-            method: "GET",
+  // 🔁 2) Run CRM connect logic when retryTrigger OR connections change
+  useEffect(() => {
+    if (!connections?.length) return;
+
+    const connectToActiveCrm = async () => {
+      const activeConnection = connections.find((c: any) => c.isActive);
+      if (!activeConnection) {
+        dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Connection failed. No connections are active.",
+        });
+        return;
+      }
+
+      try {
+        const crmRes = await fetch(
+          `${import.meta.env.VITE_BACKEND_API}/users/crm-connection`,
+          {
+            method: "POST", // ✅ use POST since body is required
             credentials: "include",
             headers: {
               "Content-Type": "application/json",
             },
+            body: JSON.stringify({ connectionName: activeConnection.connectionName }),
+          }
+        );
+
+        const crmData = await crmRes.json();
+        if (crmData.success) {
+          dispatch(setIsCrmConnected({
+            connected: true,
+            connectionName: activeConnection.connectionName,
+          }));
+          toast({
+            title: "Success",
+            description: `${crmData.message} with ${activeConnection.connectionName}`,
           });
-
-          console.log('CRM initialization response status:', crmRes.status, crmRes.statusText);
-          
-          if (!crmRes.ok) {
-            throw new Error(`HTTP error! status: ${crmRes.status}`);
-          }
-
-          const crmData = await safeJsonParse(crmRes);
-          
-          if (crmData.success) {
-            dispatch(setIsCrmConnected({ connected: crmData.success, connectionName: crmData.connectionName }));
-            // Optionally show success toast for CRM connection during initialization
-            // showSuccessToast("CRM connection established");
-          } else {
-            dispatch(setIsCrmConnected({ connected: crmData.success, connectionName: crmData.connectionName }));
-            // Only show error toast if there's a specific error message
-            if (crmData.message && crmData.message !== "No CRM connection found") {
-              showErrorToast(crmData.message);
-            }
-          }
-
-        } catch (error) {
-          console.error("Initialization error:", error);
-          dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
-          showErrorToast("Failed to initialize application. Please refresh the page");
+        } else {
+          dispatch(setIsCrmConnected({
+            connected: false,
+            connectionName: "",
+          }));
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: crmData.message || "Failed to connect to CRM",
+          });
         }
-      });
+      } catch (err) {
+        dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "CRM connection error",
+        });
+      }
     };
 
-    initializeApp();
-  }, [isAuthenticated, dispatch, toast]);
+    connectToActiveCrm();
+  }, [retryTrigger, dispatch, toast]);
 
   return <>{children}</>;
 };

@@ -23,7 +23,6 @@ interface ChatState {
   concatenatedPrompts: string;
   creditStatus?: boolean;
   chatId: string | null; // Add chatId to the state
-  recentImages: string[]; // Add this for storing recent images
 }
 
 const initialState: ChatState = {
@@ -42,8 +41,7 @@ const initialState: ChatState = {
   chatTitle: "",
   concatenatedPrompts: "",
   chatId: null, // Initialize chatId as null,
-  creditStatus: true,
-  recentImages: [], // Add this- initialize as empty array
+  creditStatus: true
 };
 
 const chatSlice = createSlice({
@@ -89,10 +87,6 @@ const chatSlice = createSlice({
     setDeveloperModeEnable: (state, action: PayloadAction<boolean>) => {
       state.developerModeEnable = action.payload;
     },
-    // Add this new reducer for setting recent images
-    setRecentImages: (state, action: PayloadAction<string[]>) => {
-      state.recentImages = action.payload;
-    },
     newChat: (state) => {
       state.input = "";
       state.recentPrompt = "";
@@ -103,7 +97,6 @@ const chatSlice = createSlice({
       state.developerModeText = [];
       state.recommendationVisible = false;
       state.recommendation = [];
-      state.recentImages = []; // Add this to clear images on new chat
     },
     setConcatenatedPrompts: (state, action: PayloadAction<string>) => {
       state.concatenatedPrompts = action.payload;
@@ -136,7 +129,6 @@ export const {
   saveResult,
   setDeveloperModeEnable,
   setDeveloperModeText,
-  setRecentImages, // Add this export
   newChat,
   setChatHistory,
   clearChatHistory,

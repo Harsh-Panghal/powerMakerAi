@@ -23,6 +23,10 @@ import {
 } from "@/components/ui/drawer";
 import { FloatingInput } from "@/components/ui/floating-input";
 import { useChatStore, type Connection } from "@/store/chatStore";
+import { RootState } from "../store/store";
+import { useToast } from "@/hooks/use-toast";
+import { setConnections, setRetryTrigger } from "../redux/CrmSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 interface CrmConnectionDetailProps {
   isOpen: boolean;

@@ -17,6 +17,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isAuthLoading: boolean
   user: User | null;
+  showSignIn: boolean;
 }
 
 // Initial state
@@ -24,6 +25,7 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isAuthLoading: true,
   user: null,
+  showSignIn: false,
 };
 
 // Create the auth slice
@@ -39,14 +41,14 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
     },
-    // setShowSignIn(state, action: PayloadAction<boolean>) {
-    //   state.showSignIn = action.payload;
-    // },
+    setShowSignIn(state, action: PayloadAction<boolean>) {
+      state.showSignIn = action.payload;
+    },
     setAuthLoading(state, action: PayloadAction<boolean>) {
       state.isAuthLoading = action.payload;
     }
   },
 });
 
-export const { setisAuthenticated, clearUser, setAuthLoading } = authSlice.actions;
+export const { setisAuthenticated, clearUser, setShowSignIn, setAuthLoading } = authSlice.actions;
 export default authSlice.reducer;

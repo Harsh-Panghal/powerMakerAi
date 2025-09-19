@@ -7,6 +7,8 @@ interface CrmState {
   runCrmActionResult: any | null;
   isCrmConnected: CrmConnectionData;
   retryTrigger: boolean;
+  isActiveConnection: string;
+  connections: Connection[];
 }
 
 interface CrmConnectionData {
@@ -14,12 +16,19 @@ interface CrmConnectionData {
   connectionName: string;
 }
 
+interface Connection {
+  connectionName: string;
+  isActive: boolean;
+}
+
 const initialState: CrmState = {
   crmActionData: "",
   traceData: "",
   runCrmActionResult: null,
+  isActiveConnection: "",
   isCrmConnected: { connected: null, connectionName: "" },
   retryTrigger: false,
+  connections: [],
 };
 
 const crmSlice = createSlice({
@@ -36,9 +45,15 @@ const crmSlice = createSlice({
     setRunCrmActionResult: (state, action: PayloadAction<any>) => {
       state.runCrmActionResult = action.payload;
     },
+    setIsActiveConnection: (state, action: PayloadAction<string>) => {
+      state.isActiveConnection = action.payload;
+    },
 
     setIsCrmConnected: (state, action: PayloadAction<CrmConnectionData>) => {
       state.isCrmConnected = action.payload;
+    },
+    setConnections: (state, action: PayloadAction<Connection[]>) => {
+      state.connections = action.payload;
     },
     setRetryTrigger: (state) => {
       state.retryTrigger = !state.retryTrigger; // flip to re-run useEffect
@@ -52,6 +67,6 @@ const crmSlice = createSlice({
   },
 });
 
-export const { setCrmActionData, setRunCrmActionResult, setTraceData, setIsCrmConnected, setRetryTrigger } = crmSlice.actions;
+export const { setCrmActionData, setRunCrmActionResult, setTraceData, setIsCrmConnected, setRetryTrigger, setIsActiveConnection, setConnections } = crmSlice.actions;
 
 export default crmSlice.reducer;
