@@ -276,21 +276,21 @@ export function PowerMakerHeader() {
     setShowDeleteDialog(false);
   };
 
-  console.log("user-pic", userIcon?.reloadUserInfo?.photoUrl);
+  // console.log("user-pic", userIcon?.reloadUserInfo?.photoUrl);
 
   const firstName = ((fullName: string = "") => {
     const first = fullName.trim().split(" ")[0] || "";
     return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   })(user?.displayName || "");
 
-  console.log("Debug user data:", {
-    userIcon: userIcon,
-    userIconPhotoURL: userIcon?.photoURL,
-    userIconReloadPhotoUrl: userIcon?.reloadUserInfo?.photoUrl,
-    reduxUser: user,
-    // reduxUserPhotoURL: user?.photoURL,
-    firstName: firstName,
-  });
+  // console.log("Debug user data:", {
+  //   userIcon: userIcon,
+  //   userIconPhotoURL: userIcon?.photoURL,
+  //   userIconReloadPhotoUrl: userIcon?.reloadUserInfo?.photoUrl,
+  //   reduxUser: user,
+  //   // reduxUserPhotoURL: user?.photoURL,
+  //   firstName: firstName,
+  // });
 
   return (
     <>

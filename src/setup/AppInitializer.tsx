@@ -41,7 +41,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
   const { toast } = useToast();
   const { retryTrigger } = useSelector((state: RootState) => state.crm);
-  const { isAuthenticated,  } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   // Helper function to show success toast
   const showSuccessToast = (message: string) => {
@@ -64,9 +64,29 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
+  // Helper function to safely parse JSON response
+  const safeJsonParse = async (response: Response) => {
+    const text = await response.text();
+    
+    // Check if response is HTML (common for error pages)
+    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+      console.error('Received HTML instead of JSON:', text.substring(0, 200));
+      throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}`);
+    }
+    
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError, 'Response text:', text);
+      throw new Error('Invalid JSON response from server');
+    }
+  };
+
   useEffect(() => {
     const tryCrmConnection = async () => {
       try {
+        console.log('Attempting CRM connection to:', `${import.meta.env.VITE_BACKEND_API}/users/crm-connection`);
+        
         const crmRes = await fetch(`${import.meta.env.VITE_BACKEND_API}/users/crm-connection`, {
           method: "GET",
           credentials: "include",
@@ -75,7 +95,14 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
           },
         });
         
-        const crmData = await crmRes.json();
+        console.log('CRM response status:', crmRes.status, crmRes.statusText);
+        
+        if (!crmRes.ok) {
+          throw new Error(`HTTP error! status: ${crmRes.status}`);
+        }
+        
+        const crmData = await safeJsonParse(crmRes);
+        
         if (crmData.success) {
           dispatch(setIsCrmConnected({ connected: crmData.success, connectionName: crmData.connectionName }));
           // Uncomment if you want to show success toast for CRM connection
@@ -86,20 +113,20 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
         }
 
       } catch (error) {
-        console.error("Initialization error:", error);
+        console.error("CRM connection error:", error);
         dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
         showErrorToast("Connection error. Please try again");
       }
     };
 
     tryCrmConnection();
-  }, [retryTrigger, toast, dispatch]); // Added toast and dispatch to dependencies
+  }, [retryTrigger, toast, dispatch]);
 
   useEffect(() => {
     const initializeApp = () => {
       onAuthStateChanged(auth, async (user) => {
         if (!user) {
-          //console.log("User not signed in");
+          console.log("User not signed in");
           dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
           return;
         }
@@ -122,7 +149,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
           );
 
           if (!verifyRes.ok) {
-            console.error("Token verification failed");
+            console.error("Token verification failed:", verifyRes.status, verifyRes.statusText);
             dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
             showErrorToast("Authentication failed. Please sign in again");
             return;
@@ -132,6 +159,8 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
           await secureAxios.get("/chat/conversationhistory");
 
           // Step 3: Connect to CRM
+          console.log('Attempting CRM connection during initialization to:', `${import.meta.env.VITE_BACKEND_API}/users/crm-connection`);
+          
           const crmRes = await fetch(`${import.meta.env.VITE_BACKEND_API}/users/crm-connection`, {
             method: "GET",
             credentials: "include",
@@ -140,7 +169,14 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
             },
           });
 
-          const crmData = await crmRes.json();
+          console.log('CRM initialization response status:', crmRes.status, crmRes.statusText);
+          
+          if (!crmRes.ok) {
+            throw new Error(`HTTP error! status: ${crmRes.status}`);
+          }
+
+          const crmData = await safeJsonParse(crmRes);
+          
           if (crmData.success) {
             dispatch(setIsCrmConnected({ connected: crmData.success, connectionName: crmData.connectionName }));
             // Optionally show success toast for CRM connection during initialization
@@ -162,7 +198,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
     };
 
     initializeApp();
-  }, [isAuthenticated, dispatch, toast]); // Added toast to dependencies
+  }, [isAuthenticated, dispatch, toast]);
 
   return <>{children}</>;
 };
