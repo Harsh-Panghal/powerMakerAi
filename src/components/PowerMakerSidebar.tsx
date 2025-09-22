@@ -61,6 +61,12 @@ import {
 } from "@/components/ui/sidebar";
 import { useChatStore } from "@/store/chatStore";
 import { useToast } from "@/hooks/use-toast";
+import { firestore, storage } from "../config/firebase config/firebase.config";
+import { useDispatch, useSelector } from "react-redux";
+import { Timestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { doc, getDoc, arrayUnion, updateDoc, setDoc } from "firebase/firestore";
+import { RootState } from "../store/store";
 
 const recentChats = [
   "API Config Entity Design",
@@ -92,8 +98,11 @@ export function PowerMakerSidebar() {
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
+  // Feedback form state
   const [rating, setRating] = useState(0);
-  const [feedbackType, setFeedbackType] = useState("");
+  const [feedbackType, setFeedbackType] = useState<
+    "testimonial" | "feature" | "compliment" | "bug" | "other"
+  >("compliment");
   const [feedbackText, setFeedbackText] = useState("");
   const [connectionList, setConnectionList] = useState(connections);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -104,6 +113,12 @@ export function PowerMakerSidebar() {
   const isCollapsed = state === "collapsed";
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const dispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Chat store integration
   const {
@@ -122,7 +137,7 @@ export function PowerMakerSidebar() {
   // Get displayed chats based on showAllChats state with streaming placeholder
   const getCombinedChats = () => {
     const chats = [...recentThreads];
-    
+
     // Add streaming placeholder at the beginning if active
     if (isStreamingActive && streamingPlaceholder) {
       chats.unshift({
@@ -133,7 +148,7 @@ export function PowerMakerSidebar() {
         model: "streaming",
       });
     }
-    
+
     return chats;
   };
 
@@ -173,19 +188,79 @@ export function PowerMakerSidebar() {
     setIsSettingsOpen(true);
   };
 
-  const handleFeedbackSubmit = () => {
-    console.log("Feedback submitted:", { feedbackType, feedbackText, rating });
-    setIsFeedbackOpen(false);
-    setFeedbackType("");
-    setFeedbackText("");
-    setRating(0);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file && file.type.startsWith("image/")) {
+            const imageURL = URL.createObjectURL(file);
+            setSelectedFile(file);
+            setPreview(imageURL);
+        }
+    };
+
+  const handleFeedbackSubmit = async () => {
+    if (!feedbackText || rating === 0 || !feedbackType || !user) return;
+
+    setLoading(true);
+
+    try {
+      let imageUrl = "";
+
+      // Upload image if present
+      if (selectedFile) {
+        const imageRef = ref(
+          storage,
+          `feedbacks/${Date.now()}-${selectedFile.name}`
+        );
+        await uploadBytes(imageRef, selectedFile);
+        imageUrl = await getDownloadURL(imageRef);
+      }
+
+      // Set document reference: one document per user
+      const feedbackDocRef = doc(firestore, "feedbacks", user.uid);
+      const docSnap = await getDoc(feedbackDocRef);
+
+      const newEntry = {
+        feedbackText,
+        rating,
+        imageUrl: imageUrl || null,
+        timestamp: Timestamp.now(),
+        type: feedbackType,
+      };
+
+      if (docSnap.exists()) {
+        await updateDoc(feedbackDocRef, {
+          feedbacks: arrayUnion(newEntry),
+        });
+      } else {
+        await setDoc(feedbackDocRef, {
+          feedbacks: [newEntry],
+        });
+      }
+
+      // Using toast instead of dispatch
+      toast({
+        title: "Success",
+        description: "Feedback submitted successfully!",
+        variant: "success",
+      });
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      // Using toast for error as well
+      toast({
+        title: "Error",
+        description: "Failed to submit feedback. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCleanChatConfirm = () => {
     setIsDeletingAll(true);
-    
+
     // Get all thread IDs for animation
-    const allThreadIds = recentThreads.map(thread => thread.id);
+    const allThreadIds = recentThreads.map((thread) => thread.id);
     setDeletingAllIds(allThreadIds);
 
     // Close the dialog first
@@ -202,10 +277,10 @@ export function PowerMakerSidebar() {
     // After all animations are done, actually delete the threads
     setTimeout(() => {
       clearAllThreads(); // This should be implemented in your chat store
-      
+
       // Navigate to home page since all chats are deleted
       navigate("/");
-      
+
       // Show success toast
       toast({
         title: "All chats deleted",
@@ -337,7 +412,9 @@ export function PowerMakerSidebar() {
         <span className="mr-2">🧹</span>
         Clean Chat
         {recentThreads.length === 0 && (
-          <span className="ml-auto text-xs text-muted-foreground">(No chats)</span>
+          <span className="ml-auto text-xs text-muted-foreground">
+            (No chats)
+          </span>
         )}
       </Button>
       <Button
@@ -474,9 +551,10 @@ export function PowerMakerSidebar() {
                 displayedChats.map((thread, index) => {
                   const isActiveThread = currentThread?.id === thread.id;
                   const isStreamingItem = thread.model === "streaming";
-                  const isBeingDeleted = deletingChatId === thread.id || 
-                                        (isDeletingAll && deletingAllIds.includes(thread.id));
-                  
+                  const isBeingDeleted =
+                    deletingChatId === thread.id ||
+                    (isDeletingAll && deletingAllIds.includes(thread.id));
+
                   return (
                     <SidebarMenuItem
                       key={thread.id}
@@ -490,7 +568,8 @@ export function PowerMakerSidebar() {
                         transitionDelay:
                           isAnimating && !isCollapsed
                             ? `${index * 50 + 200}ms`
-                            : isDeletingAll && deletingAllIds.includes(thread.id)
+                            : isDeletingAll &&
+                              deletingAllIds.includes(thread.id)
                             ? `${deletingAllIds.indexOf(thread.id) * 100}ms`
                             : "0ms",
                       }}
@@ -501,15 +580,21 @@ export function PowerMakerSidebar() {
                             ? "bg-sidebar-accent border-l-2 border-l-brand text-brand"
                             : "hover:bg-sidebar-accent"
                         }`}
-                        onMouseEnter={() => !isBeingDeleted && setHoveredChat(index)}
+                        onMouseEnter={() =>
+                          !isBeingDeleted && setHoveredChat(index)
+                        }
                         onMouseLeave={() => setHoveredChat(null)}
                       >
                         <SidebarMenuButton
                           className={`flex-1 justify-start p-0 h-auto min-w-0 ${
-                            isStreamingItem ? "cursor-default" : "cursor-pointer"
+                            isStreamingItem
+                              ? "cursor-default"
+                              : "cursor-pointer"
                           }`}
                           onClick={() =>
-                            editingChatId !== thread.id && !isBeingDeleted && !isStreamingItem
+                            editingChatId !== thread.id &&
+                            !isBeingDeleted &&
+                            !isStreamingItem
                               ? handleChatClick(thread.id)
                               : undefined
                           }
@@ -579,8 +664,14 @@ export function PowerMakerSidebar() {
                                       <span>{thread.title}</span>
                                       <div className="flex space-x-1">
                                         <div className="w-2 h-2 bg-brand rounded-full animate-pulse"></div>
-                                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                                        <div
+                                          className="w-2 h-2 bg-brand rounded-full animate-pulse"
+                                          style={{ animationDelay: "0.2s" }}
+                                        ></div>
+                                        <div
+                                          className="w-2 h-2 bg-brand rounded-full animate-pulse"
+                                          style={{ animationDelay: "0.4s" }}
+                                        ></div>
                                       </div>
                                     </div>
                                   ) : (
@@ -588,69 +679,72 @@ export function PowerMakerSidebar() {
                                   )}
                                 </span>
                                 <span className="text-xs text-muted-foreground truncate w-full whitespace-nowrap">
-                                  {isStreamingItem ? (
-                                    "Assistant is thinking..."
-                                  ) : (
-                                    `${thread.messages.length} messages • ${thread.createdAt.toLocaleDateString()}`
-                                  )}
+                                  {isStreamingItem
+                                    ? "Assistant is thinking..."
+                                    : `${
+                                        thread.messages.length
+                                      } messages • ${thread.createdAt.toLocaleDateString()}`}
                                 </span>
                               </>
                             )}
                           </div>
                         </SidebarMenuButton>
-                        {editingChatId !== thread.id && !isCollapsed && !isBeingDeleted && !isStreamingItem && (
-                          <div className="flex-shrink-0 ml-2">
-                            <Popover
-                              open={chatMenuOpen === index}
-                              onOpenChange={(open) =>
-                                setChatMenuOpen(open ? index : null)
-                              }
-                            >
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
-                                    hoveredChat === index || isMobile
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  }`}
-                                >
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-32 p-1 z-50"
-                                side="right"
-                                align="start"
-                                sideOffset={3}
-                                avoidCollisions={true}
-                                alignOffset={10}
+                        {editingChatId !== thread.id &&
+                          !isCollapsed &&
+                          !isBeingDeleted &&
+                          !isStreamingItem && (
+                            <div className="flex-shrink-0 ml-2">
+                              <Popover
+                                open={chatMenuOpen === index}
+                                onOpenChange={(open) =>
+                                  setChatMenuOpen(open ? index : null)
+                                }
                               >
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full justify-start text-xs"
-                                  onClick={() =>
-                                    handleRenameChat(thread.id, thread.title)
-                                  }
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={`w-6 h-6 p-0 transition-opacity duration-200 ease-in-out ${
+                                      hoveredChat === index || isMobile
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    }`}
+                                  >
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-32 p-1 z-50"
+                                  side="right"
+                                  align="start"
+                                  sideOffset={3}
+                                  avoidCollisions={true}
+                                  alignOffset={10}
                                 >
-                                  <Pencil className="w-3 h-3 mr-2" />
-                                  Rename
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
-                                  onClick={() => handleDeleteChat(thread.id)}
-                                >
-                                  <Trash2 className="w-3 h-3 mr-2" />
-                                  Delete
-                                </Button>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                        )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-full justify-start text-xs"
+                                    onClick={() =>
+                                      handleRenameChat(thread.id, thread.title)
+                                    }
+                                  >
+                                    <Pencil className="w-3 h-3 mr-2" />
+                                    Rename
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
+                                    onClick={() => handleDeleteChat(thread.id)}
+                                  >
+                                    <Trash2 className="w-3 h-3 mr-2" />
+                                    Delete
+                                  </Button>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          )}
                       </div>
                     </SidebarMenuItem>
                   );
@@ -777,7 +871,7 @@ export function PowerMakerSidebar() {
       )}
 
       {/* Responsive Feedback - Drawer for mobile, Dialog for desktop */}
-      
+
       {isMobile ? (
         <Drawer open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
           <DrawerContent className="max-h-[90vh]">
@@ -790,14 +884,27 @@ export function PowerMakerSidebar() {
               </p>
               <div>
                 <Label htmlFor="feedback-type">Feedback Type</Label>
-                <Select value={feedbackType} onValueChange={setFeedbackType}>
+                <Select
+                  value={feedbackType}
+                  onValueChange={(value) =>
+                    setFeedbackType(
+                      value as
+                        | "testimonial"
+                        | "feature"
+                        | "compliment"
+                        | "bug"
+                        | "other"
+                    )
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select feedback type" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="testimonial">Testimonial</SelectItem>
+                    <SelectItem value="feature">Feature</SelectItem>
                     <SelectItem value="compliment">Compliment</SelectItem>
-                    <SelectItem value="suggestion">Suggestion</SelectItem>
-                    <SelectItem value="issue">Issue</SelectItem>
+                    <SelectItem value="bug">Bug</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -817,14 +924,50 @@ export function PowerMakerSidebar() {
                 {renderStarRating()}
               </div>
               <div>
-                <Label htmlFor="feedback-image">Upload Image (optional)</Label>
-                <Input id="feedback-image" type="file" accept="image/*" />
+                <Label>Upload Image (optional)</Label>
+                <div className="mt-1 feedback-img-area max-w-full min-h-[135px] border border-[#1FA2D0] border-dashed rounded-md flex items-center justify-center flex-col relative p-4">
+                  {/* Hidden File Input */}
+                  <input
+                    type="file"
+                    name="feedback-img"
+                    id="feedback-img"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+
+                  {/* Label triggers input whether or not preview exists */}
+                  <label
+                    htmlFor="feedback-img"
+                    className="flex flex-col items-center justify-center cursor-pointer"
+                  >
+                    {preview ? (
+                      <img
+                        src={preview}
+                        alt="Uploaded Preview"
+                        className="max-h-[100px] object-contain rounded-md mb-2 hover:opacity-80 transition"
+                      />
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-[#1FA2D0] mb-2" />
+                        <span className="text-[#1FA2D0] text-sm font-normal">
+                          Upload Image
+                        </span>
+                      </>
+                    )}
+                    {preview && (
+                      <span className="text-[#1FA2D0] text-xs font-normal underline">
+                        Change Image
+                      </span>
+                    )}
+                  </label>
+                </div>
               </div>
               <Button onClick={handleFeedbackSubmit} className="w-full">
-                Send Feedback
+                {loading ? "Sending..." : "Send Feedback"}
               </Button>
             </div>
-            </DrawerContent>
+          </DrawerContent>
         </Drawer>
       ) : (
         <Dialog open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
@@ -838,14 +981,27 @@ export function PowerMakerSidebar() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="feedback-type">Feedback Type</Label>
-                <Select value={feedbackType} onValueChange={setFeedbackType}>
+                <Select
+                  value={feedbackType}
+                  onValueChange={(value) =>
+                    setFeedbackType(
+                      value as
+                        | "testimonial"
+                        | "feature"
+                        | "compliment"
+                        | "bug"
+                        | "other"
+                    )
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select feedback type" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="testimonial">Testimonial</SelectItem>
+                    <SelectItem value="feature">Feature</SelectItem>
                     <SelectItem value="compliment">Compliment</SelectItem>
-                    <SelectItem value="suggestion">Suggestion</SelectItem>
-                    <SelectItem value="issue">Issue</SelectItem>
+                    <SelectItem value="bug">Bug</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -865,11 +1021,47 @@ export function PowerMakerSidebar() {
                 {renderStarRating()}
               </div>
               <div>
-                <Label htmlFor="feedback-image">Upload Image (optional)</Label>
-                <Input id="feedback-image" type="file" accept="image/*" />
+                <Label>Upload Image (optional)</Label>
+                <div className="mt-1 feedback-img-area max-w-full min-h-[135px] border border-[#1FA2D0] border-dashed rounded-md flex items-center justify-center flex-col relative p-4">
+                  {/* Hidden File Input */}
+                  <input
+                    type="file"
+                    name="feedback-img"
+                    id="feedback-img"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+
+                  {/* Label triggers input whether or not preview exists */}
+                  <label
+                    htmlFor="feedback-img"
+                    className="flex flex-col items-center justify-center cursor-pointer"
+                  >
+                    {preview ? (
+                      <img
+                        src={preview}
+                        alt="Uploaded Preview"
+                        className="max-h-[100px] object-contain rounded-md mb-2 hover:opacity-80 transition"
+                      />
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-[#1FA2D0] mb-2" />
+                        <span className="text-[#1FA2D0] text-sm font-normal">
+                          Upload Image
+                        </span>
+                      </>
+                    )}
+                    {preview && (
+                      <span className="text-[#1FA2D0] text-xs font-normal underline">
+                        Change Image
+                      </span>
+                    )}
+                  </label>
+                </div>
               </div>
               <Button onClick={handleFeedbackSubmit} className="w-full">
-                Send Feedback
+                {loading ? "Sending..." : "Send Feedback"}
               </Button>
             </div>
           </DialogContent>
@@ -885,7 +1077,9 @@ export function PowerMakerSidebar() {
             </DrawerHeader>
             <div className="px-4 pb-4">
               <p className="text-sm text-muted-foreground mb-6">
-                This will permanently delete all {recentThreads.length} conversation{recentThreads.length !== 1 ? 's' : ''}. This action cannot be undone.
+                This will permanently delete all {recentThreads.length}{" "}
+                conversation{recentThreads.length !== 1 ? "s" : ""}. This action
+                cannot be undone.
               </p>
               <div className="flex flex-col gap-3">
                 <Button
@@ -894,7 +1088,9 @@ export function PowerMakerSidebar() {
                   className="w-full"
                   disabled={isDeletingAll}
                 >
-                  {isDeletingAll ? "Deleting..." : `Yes, Delete All (${recentThreads.length})`}
+                  {isDeletingAll
+                    ? "Deleting..."
+                    : `Yes, Delete All (${recentThreads.length})`}
                 </Button>
                 <Button
                   variant="outline"
@@ -914,7 +1110,9 @@ export function PowerMakerSidebar() {
             <DialogHeader>
               <DialogTitle>Delete All Chats?</DialogTitle>
               <DialogDescription>
-                This will permanently delete all {recentThreads.length} conversation{recentThreads.length !== 1 ? 's' : ''}. This action cannot be undone.
+                This will permanently delete all {recentThreads.length}{" "}
+                conversation{recentThreads.length !== 1 ? "s" : ""}. This action
+                cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2">
@@ -925,12 +1123,14 @@ export function PowerMakerSidebar() {
               >
                 Cancel
               </Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 onClick={handleCleanChatConfirm}
                 disabled={isDeletingAll}
               >
-                {isDeletingAll ? "Deleting..." : `Yes, Delete All (${recentThreads.length})`}
+                {isDeletingAll
+                  ? "Deleting..."
+                  : `Yes, Delete All (${recentThreads.length})`}
               </Button>
             </div>
           </DialogContent>
