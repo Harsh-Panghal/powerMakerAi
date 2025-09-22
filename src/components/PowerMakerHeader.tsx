@@ -92,14 +92,6 @@ const modelOptions = [
   },
 ];
 
-// interface userProps {
-//   user?: {
-//     reloadUserInfo?: {
-//       photoUrl?: string;
-//       displayName?: string;
-//     };
-//   } | null;
-// }
 const getFirstName = (displayName?: string): string => {
   if (!displayName) return "";
   return displayName.split(" ")[0];
@@ -136,17 +128,22 @@ export function PowerMakerHeader() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  
+  // Use Redux state as primary source
   const { user } = useSelector((state: RootState) => state.auth);
-  const [userIcon, setUserIcon] = useState<any | null>(null);
+  
+  // Local state for current Firebase user (for real-time updates)
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
-  // Firebase authentication (user sign in/out)
+  // Firebase authentication listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUserIcon(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      // console.log("Firebase auth state changed:", firebaseUser);
+      setCurrentUser(firebaseUser);
     });
 
     return () => unsubscribe();
-  }, [userIcon]);
+  }, []);
 
   // Use connection status from store
   const connectionStatus = storeConnectionStatus;
@@ -276,19 +273,22 @@ export function PowerMakerHeader() {
     setShowDeleteDialog(false);
   };
 
-  // console.log("user-pic", userIcon?.reloadUserInfo?.photoUrl);
-
+  // Get user data with fallback logic
+  const userData = currentUser || user;
+  const userPhotoURL = currentUser?.photoURL;
+  const userDisplayName = currentUser?.displayName || user?.displayName;
+  
   const firstName = ((fullName: string = "") => {
     const first = fullName.trim().split(" ")[0] || "";
     return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
-  })(user?.displayName || "");
+  })(userDisplayName || "");
 
+  // Debug logging
   // console.log("Debug user data:", {
-  //   userIcon: userIcon,
-  //   userIconPhotoURL: userIcon?.photoURL,
-  //   userIconReloadPhotoUrl: userIcon?.reloadUserInfo?.photoUrl,
+  //   currentUser: currentUser,
   //   reduxUser: user,
-  //   // reduxUserPhotoURL: user?.photoURL,
+  //   userPhotoURL: userPhotoURL,
+  //   userDisplayName: userDisplayName,
   //   firstName: firstName,
   // });
 
@@ -372,20 +372,6 @@ export function PowerMakerHeader() {
 
         {/* right section */}
         <div className="flex items-center space-x-1 sm:space-x-4">
-          {/* Take a Tour Button */}
-          {/* <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              resetTour();
-              setShowTour(true);
-            }}
-            className="hidden sm:flex items-center text-muted-foreground hover:text-foreground"
-          >
-            <HelpCircle className="w-4 h-4 mr-1" />
-            Take a Tour
-          </Button> */}
-
           {/* Connection Status */}
           <div
             className="hidden md:flex items-center space-x-2 text-sm"
@@ -572,17 +558,26 @@ export function PowerMakerHeader() {
                 data-guide="user-menu"
               >
                 <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
-                  <AvatarImage
-                    src={userIcon?.photoURL}
-                    alt="Avatar"
-                    className="w-full h-full rounded-full object-cover"
-                  />
+                  {userPhotoURL ? (
+                    <AvatarImage
+                      src={userPhotoURL}
+                      alt="User Avatar"
+                      className="w-full h-full rounded-full object-cover"
+                      onError={(e) => {
+                        // console.log("Avatar image failed to load:", userPhotoURL);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                      onLoad={() => {
+                        // console.log("Avatar image loaded successfully:", userPhotoURL);
+                      }}
+                    />
+                  ) : null}
                   <AvatarFallback className="text-sm bg-blue-500 text-white font-medium">
-                    {firstName?.charAt(0)?.toUpperCase() || "H"}
+                    {firstName?.charAt(0)?.toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <span className="hidden md:inline text-sm font-medium text-foreground">
-                  {firstName}
+                  {firstName || "User"}
                 </span>
               </Button>
             </DropdownMenuTrigger>
