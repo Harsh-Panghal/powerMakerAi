@@ -78,6 +78,7 @@ import {
   arrayUnion,
   increment,
 } from "firebase/firestore";
+import { setRetryTrigger } from "../redux/CrmSlice";
 
 const modelOptions = [
   {
@@ -107,6 +108,7 @@ const getFirstName = (displayName?: string): string => {
 
 export function PowerMakerHeader() {
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
   const { toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const {
@@ -116,19 +118,11 @@ export function PowerMakerHeader() {
     notifications,
     openNotifications,
     closeNotifications,
-    activeConnection,
     highlightedNotificationId,
-    connectionStatus: storeConnectionStatus,
-    simulateConnectionFlow,
   } = useChatStore();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [demoUser, setDemoUser] = useState<{
-    email: string;
-    name: string;
-  } | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   // Invite form state
@@ -140,7 +134,12 @@ export function PowerMakerHeader() {
   const [showTour, setShowTour] = useState(false);
 
   // Use Redux state as primary source
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated } = useSelector(
+    (state: RootState) => state.auth
+  );
+  const { isCrmConnected, connections } = useSelector(
+    (state: RootState) => state.crm
+  );
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -151,96 +150,98 @@ export function PowerMakerHeader() {
   // Firebase authentication listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      // console.log("Firebase auth state changed:", firebaseUser);
       setCurrentUser(firebaseUser);
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Use connection status from store
-  const connectionStatus = storeConnectionStatus;
-
   const { hasCompletedTour, resetTour } = usePowerMakerTour();
 
-  // Connection status configuration
-  const connectionConfig = {
-    connecting: {
-      icon: <Loader2 className="w-4 h-4 text-warning animate-spin" />,
-      text: "Connecting...",
-      textColor: "text-warning",
-    },
-    failed: {
-      icon: <AlertCircle className="w-4 h-4 text-destructive" />,
-      text: `Failed to connect to ${activeConnection?.name || "CRM"}`,
-      textColor: "text-destructive",
-    },
-    connected: {
-      icon: (
-        <img
-          src="/Dataverse_scalable.svg"
-          alt={activeConnection?.name || "Connection"}
-          className="w-4 h-4 text-success"
-        />
-      ),
-      text: activeConnection?.name || "CRM",
-      textColor: "text-success-dark",
-    },
+  // Connection status configuration based on Redux state from AppInitializer
+  const getConnectionStatus = () => {
+    // No connections available
+    if (!connections || connections.length === 0) {
+      return {
+        icon: <AlertCircle className="w-4 h-4 text-destructive" />,
+        text: "No CRM connections found",
+        textColor: "text-destructive",
+        status: "no-connections",
+      };
+    }
+
+    // Find active connection
+    const activeConnection = connections.find((c: any) => c.isActive);
+
+    if (!activeConnection) {
+      return {
+        icon: <AlertCircle className="w-4 h-4 text-destructive" />,
+        text: "No active connection",
+        textColor: "text-destructive",
+        status: "no-active",
+      };
+    }
+
+    // Check connection status
+    if (isCrmConnected.connected === null) {
+      return {
+        icon: <Loader2 className="w-4 h-4 text-warning animate-spin" />,
+        text: "Connecting...",
+        textColor: "text-warning",
+        status: "connecting",
+      };
+    } else if (isCrmConnected.connected === false) {
+      return {
+        icon: <AlertCircle className="w-4 h-4 text-destructive" />,
+        text: `Failed to connect to ${activeConnection.connectionName}`,
+        textColor: "text-destructive",
+        status: "failed",
+      };
+    } else {
+      // Successfully connected
+      return {
+        icon: (
+          <img
+            src="/Dataverse_scalable.svg"
+            alt={activeConnection.connectionName}
+            className="w-4 h-4 text-success"
+          />
+        ),
+        text: activeConnection.connectionName,
+        textColor: "text-success-dark",
+        status: "connected",
+      };
+    }
   };
 
-  const currentConnection = connectionConfig[connectionStatus];
-
-  // Initialize connection flow and check for demo user
-  useEffect(() => {
-    // Start connection simulation on component mount
-    simulateConnectionFlow();
-
-    // Check for demo user
-    const storedUser = localStorage.getItem("demoUser");
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      if (userData.isLoggedIn) {
-        setIsLoggedIn(true);
-        setDemoUser(userData);
-      }
-    }
-  }, [simulateConnectionFlow]);
-
-  // Show toast notifications based on connection status changes
-  useEffect(() => {
-    if (connectionStatus === "connected") {
-      toast({
-        title: "Connection Established",
-        description: `Successfully connected to ${
-          activeConnection?.name || "CRM"
-        }`,
-        className: "border-success bg-success/10 text-success-dark",
-      });
-    } else if (connectionStatus === "failed") {
-      toast({
-        title: "Connection Failed",
-        description: "Unable to connect to CRM. Retrying...",
-        variant: "destructive",
-      });
-    }
-  }, [connectionStatus, activeConnection?.name, toast]);
+  const currentConnection = getConnectionStatus();
 
   // Auto-show tour for new users
   useEffect(() => {
-    if (isLoggedIn && hasCompletedTour === false) {
+    if (isAuthenticated && hasCompletedTour === false) {
       const timer = setTimeout(() => {
         setShowTour(true);
-      }, 2000); // Show after 2 seconds for new users
+      }, 2000);
 
       return () => clearTimeout(timer);
     }
-  }, [isLoggedIn, hasCompletedTour]);
+  }, [isAuthenticated, hasCompletedTour]);
 
   const handleLogout = async () => {
     const didLogout = await handleSignOut();
     if (!didLogout) return;
     queryClient.removeQueries({ queryKey: ["recentChats"] });
     navigate("/");
+  };
+
+  // Handle connection status click - retry connection if failed
+  const handleConnectionClick = () => {
+    if (
+      currentConnection.status === "failed" ||
+      currentConnection.status === "no-active"
+    ) {
+      dispatch(setRetryTrigger());
+    }
   };
 
   // Fetch the user's referral link from Firestore
@@ -285,7 +286,6 @@ export function PowerMakerHeader() {
     timeoutRef.current = setTimeout(() => setCopied(false), 2000);
   };
 
-  // Handle invite send
   // Handle invite send
   const handleSendInvite = async () => {
     if (inviteMode === "link") {
@@ -385,13 +385,13 @@ export function PowerMakerHeader() {
         if (userSnap.exists()) {
           await updateDoc(userRef, {
             referredTo: arrayUnion(inviteEmail.trim()),
-            credits: increment(10), // 🪙 Add 10 tokens
+            credits: increment(10),
             "referralRewards.sharedLinkCount": increment(1),
           });
         } else {
           await setDoc(userRef, {
             referredTo: [inviteEmail.trim()],
-            credits: 110, // if it's a new user, assume base 100 + 10
+            credits: 110,
             referralRewards: {
               sharedLinkCount: 1,
               signedUpFromReferrals: 0,
@@ -420,12 +420,6 @@ export function PowerMakerHeader() {
       setSending(false);
     }
   };
-  console.log("Sending invite with:", {
-    inviteEmail: inviteEmail.trim(),
-    inviteLink: inviteLink,
-    inviterId: user.uid,
-    backendAPI: import.meta.env.VITE_BACKEND_API,
-  });
 
   const handleDeleteAccount = () => {
     console.log("Deleting account...");
@@ -441,15 +435,6 @@ export function PowerMakerHeader() {
     const first = fullName.trim().split(" ")[0] || "";
     return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   })(userDisplayName || "");
-
-  // Debug logging
-  // console.log("Debug user data:", {
-  //   currentUser: currentUser,
-  //   reduxUser: user,
-  //   userPhotoURL: userPhotoURL,
-  //   userDisplayName: userDisplayName,
-  //   firstName: firstName,
-  // });
 
   return (
     <>
@@ -531,26 +516,70 @@ export function PowerMakerHeader() {
 
         {/* right section */}
         <div className="flex items-center space-x-1 sm:space-x-4">
-          {/* Connection Status */}
+          {/* Connection Status - Now using data from AppInitializer */}
+          {isAuthenticated && (
+            <div
+              className={`hidden md:flex items-center space-x-2 text-sm ${
+                currentConnection.status === "failed" ||
+                currentConnection.status === "no-active"
+                  ? "cursor-pointer hover:opacity-80"
+                  : ""
+              }`}
+              data-tour="connection-status"
+              onClick={
+                currentConnection.status === "failed" ||
+                currentConnection.status === "no-active"
+                  ? handleConnectionClick
+                  : undefined
+              }
+              title={
+                currentConnection.status === "failed" ||
+                currentConnection.status === "no-active"
+                  ? "Click to retry connection"
+                  : ""
+              }
+            >
+              {currentConnection.icon}
+              <span
+                className={`${currentConnection.textColor} hidden lg:inline`}
+              >
+                {currentConnection.text}
+              </span>
+              <span className={`${currentConnection.textColor} lg:hidden`}>
+                {currentConnection.status === "connecting"
+                  ? "Connecting..."
+                  : currentConnection.status === "failed"
+                  ? "Failed"
+                  : currentConnection.status === "connected"
+                  ? "Connected"
+                  : "No Connection"}
+              </span>
+            </div>
+          )}
+
+          {/* Mobile Connection Status - Just icon, also clickable if failed */}
           <div
-            className="hidden md:flex items-center space-x-2 text-sm"
-            data-tour="connection-status"
+            className={`md:hidden ${
+              currentConnection.status === "failed" ||
+              currentConnection.status === "no-active"
+                ? "cursor-pointer hover:opacity-80"
+                : ""
+            }`}
+            onClick={
+              currentConnection.status === "failed" ||
+              currentConnection.status === "no-active"
+                ? handleConnectionClick
+                : undefined
+            }
+            title={
+              currentConnection.status === "failed" ||
+              currentConnection.status === "no-active"
+                ? "Click to retry connection"
+                : ""
+            }
           >
             {currentConnection.icon}
-            <span className={`${currentConnection.textColor} hidden lg:inline`}>
-              {currentConnection.text}
-            </span>
-            <span className={`${currentConnection.textColor} lg:hidden`}>
-              {connectionStatus === "connecting"
-                ? "Connecting..."
-                : connectionStatus === "failed"
-                ? "Failed"
-                : "Connected"}
-            </span>
           </div>
-
-          {/* Mobile Connection Status - Just icon */}
-          <div className="md:hidden">{currentConnection.icon}</div>
 
           {/* Notification Bell */}
           <Sheet
@@ -723,11 +752,7 @@ export function PowerMakerHeader() {
                       alt="User Avatar"
                       className="w-full h-full rounded-full object-cover"
                       onError={(e) => {
-                        // console.log("Avatar image failed to load:", userPhotoURL);
                         e.currentTarget.style.display = "none";
-                      }}
-                      onLoad={() => {
-                        // console.log("Avatar image loaded successfully:", userPhotoURL);
                       }}
                     />
                   ) : null}
