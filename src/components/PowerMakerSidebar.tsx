@@ -181,7 +181,7 @@ export function PowerMakerSidebar() {
   };
 
   const handleHelpClick = () => {
-    window.open("/help", "_blank");
+    window.open("https://powermakerai.com/Documentation/", "_blank");
   };
 
   const handleSettingsClick = () => {
@@ -432,7 +432,7 @@ export function PowerMakerSidebar() {
       <Button
         variant="ghost"
         className="w-full justify-start"
-        onClick={() => window.open("/privacy-policy", "_blank")}
+        onClick={() => window.open("https://powermakerai.com/src/privacyPolicy.html", "_blank")}
         data-tour="privacy-terms"
       >
         <span className="mr-2">🔒</span>
@@ -441,7 +441,7 @@ export function PowerMakerSidebar() {
       <Button
         variant="ghost"
         className="w-full justify-start"
-        onClick={() => window.open("/terms-of-use", "_blank")}
+        onClick={() => window.open("https://powermakerai.com/src/terms.html", "_blank")}
       >
         <span className="mr-2">📋</span>
         Terms of Use
@@ -805,6 +805,7 @@ export function PowerMakerSidebar() {
           <SidebarMenuButton
             className={`w-full ${
               isCollapsed ? "justify-start pl-1.5" : "justify-start"
+
             } text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer`}
             onClick={handleHelpClick}
             data-tour="help-icon"
