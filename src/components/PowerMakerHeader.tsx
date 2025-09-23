@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Menu,
@@ -66,10 +66,18 @@ import { PowerMakerTour, usePowerMakerTour } from "./PowerMakerTour";
 import { handleSignOut } from "@/config/firebase config/firebase.auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { AvatarImage } from "@/components/ui/avatar";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store/store";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../config/firebase config/firebase.config";
+import { auth, firestore } from "../config/firebase config/firebase.config";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  setDoc,
+  arrayUnion,
+  increment,
+} from "firebase/firestore";
 
 const modelOptions = [
   {
@@ -123,15 +131,20 @@ export function PowerMakerHeader() {
   } | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  // Invite form state
   const [inviteMode, setInviteMode] = useState<"email" | "link">("email");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLink, setInviteLink] = useState<string>("");
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showTour, setShowTour] = useState(false);
-  
+
   // Use Redux state as primary source
   const { user } = useSelector((state: RootState) => state.auth);
-  
+  const [sending, setSending] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Local state for current Firebase user (for real-time updates)
   const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -230,9 +243,33 @@ export function PowerMakerHeader() {
     navigate("/");
   };
 
+  // Fetch the user's referral link from Firestore
+  useEffect(() => {
+    const fetchReferralLink = async () => {
+      if (!user?.uid) return;
+
+      try {
+        const docRef = doc(firestore, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setInviteLink(data.referralLink || "");
+        } else {
+          console.warn("User document not found");
+        }
+      } catch (error) {
+        console.error("Error fetching referral link:", error);
+      }
+    };
+
+    fetchReferralLink();
+  }, [user?.uid]);
+
+  // Invite handlers with link and email
   const handleInviteWithLink = () => {
     setInviteMode("link");
-    setInviteEmail("https://powermaker.com/invite/abc123def456");
+    setInviteEmail(inviteLink);
   };
 
   const handleInviteWithEmail = () => {
@@ -240,33 +277,155 @@ export function PowerMakerHeader() {
     setInviteEmail("");
   };
 
+  // Handle invite link copy
   const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(inviteEmail);
-      toast({
-        title: "Link copied!",
-        description: "Invite link has been copied to clipboard",
-      });
-    } catch (err) {
-      toast({
-        title: "Failed to copy",
-        description: "Could not copy link to clipboard",
-        variant: "destructive",
-      });
-    }
+    navigator.clipboard.writeText(inviteEmail);
+    setCopied(true);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSendInvite = () => {
+  // Handle invite send
+  // Handle invite send
+  const handleSendInvite = async () => {
     if (inviteMode === "link") {
       handleCopyLink();
-    } else {
+      return;
+    }
+
+    // Validation for email mode
+    if (!inviteEmail) {
       toast({
-        title: "Invite sent!",
-        description: `Invitation sent to ${inviteEmail}`,
+        title: "Email required",
+        description: "Please enter an email address.",
+        variant: "destructive",
       });
-      setInviteEmail("");
+      return;
+    }
+
+    if (!inviteLink) {
+      toast({
+        title: "Referral link missing",
+        description: "Referral link not found. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user?.uid) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to send invites.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inviteEmail)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSending(true);
+
+    try {
+      // 1. Get current user doc
+      const userRef = doc(firestore, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      let referredTo: string[] = [];
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        referredTo = userData.referredTo || [];
+
+        // 2. Check if email is already invited
+        if (referredTo.includes(inviteEmail)) {
+          toast({
+            title: "Already invited",
+            description: "This email has already been invited.",
+          });
+          setSending(false);
+          return;
+        }
+      }
+
+      // 3. Send invite via backend
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_API}/users/send-invite`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: inviteEmail.trim(),
+            inviteLink: inviteLink,
+            inviterId: user.uid,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast({
+          title: "Invite sent!",
+          description: "Invite sent successfully!",
+          className: "border-success bg-success/10 text-success-dark",
+        });
+
+        // 4. Update Firestore: add email to sentTo, increment credits
+        if (userSnap.exists()) {
+          await updateDoc(userRef, {
+            referredTo: arrayUnion(inviteEmail.trim()),
+            credits: increment(10), // 🪙 Add 10 tokens
+            "referralRewards.sharedLinkCount": increment(1),
+          });
+        } else {
+          await setDoc(userRef, {
+            referredTo: [inviteEmail.trim()],
+            credits: 110, // if it's a new user, assume base 100 + 10
+            referralRewards: {
+              sharedLinkCount: 1,
+              signedUpFromReferrals: 0,
+            },
+          });
+        }
+
+        setInviteEmail("");
+      } else {
+        console.error("Backend error:", data);
+        toast({
+          title: "Failed to send invite",
+          description: data.error || data.message || "Failed to send invite.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error("Send invite error:", err);
+      toast({
+        title: "Error",
+        description:
+          "Network error. Please check your connection and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
     }
   };
+  console.log("Sending invite with:", {
+    inviteEmail: inviteEmail.trim(),
+    inviteLink: inviteLink,
+    inviterId: user.uid,
+    backendAPI: import.meta.env.VITE_BACKEND_API,
+  });
 
   const handleDeleteAccount = () => {
     console.log("Deleting account...");
@@ -277,7 +436,7 @@ export function PowerMakerHeader() {
   const userData = currentUser || user;
   const userPhotoURL = currentUser?.photoURL;
   const userDisplayName = currentUser?.displayName || user?.displayName;
-  
+
   const firstName = ((fullName: string = "") => {
     const first = fullName.trim().split(" ")[0] || "";
     return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
@@ -565,7 +724,7 @@ export function PowerMakerHeader() {
                       className="w-full h-full rounded-full object-cover"
                       onError={(e) => {
                         // console.log("Avatar image failed to load:", userPhotoURL);
-                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.style.display = "none";
                       }}
                       onLoad={() => {
                         // console.log("Avatar image loaded successfully:", userPhotoURL);
@@ -869,8 +1028,28 @@ export function PowerMakerHeader() {
                   <Button
                     onClick={handleSendInvite}
                     className="w-full h-12 bg-brand hover:bg-brand/90 text-white text-base"
+                    disabled={
+                      (inviteMode === "email" && (sending || !inviteEmail)) ||
+                      (inviteMode === "link" && !inviteLink)
+                    }
                   >
-                    {inviteMode === "link" ? "Copy Link" : "Send"}
+                    {inviteMode === "link" ? (
+                      copied ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Copied!
+                        </>
+                      ) : (
+                        "Copy Link"
+                      )
+                    ) : sending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -941,8 +1120,28 @@ export function PowerMakerHeader() {
                   <Button
                     onClick={handleSendInvite}
                     className="bg-brand hover:bg-brand/90 text-white"
+                    disabled={
+                      (inviteMode === "email" && (sending || !inviteEmail)) ||
+                      (inviteMode === "link" && !inviteLink)
+                    }
                   >
-                    {inviteMode === "link" ? "Copy Link" : "Send"}
+                    {inviteMode === "link" ? (
+                      copied ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Copied!
+                        </>
+                      ) : (
+                        "Copy Link"
+                      )
+                    ) : sending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send"
+                    )}
                   </Button>
                 </div>
               </div>
