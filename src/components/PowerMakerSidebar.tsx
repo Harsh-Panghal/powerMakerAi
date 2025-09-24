@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Plus,
@@ -66,14 +67,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { Timestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { doc, getDoc, arrayUnion, updateDoc, setDoc } from "firebase/firestore";
-import { RootState } from "../store/store";
-
-const recentChats = [
-  "API Config Entity Design",
-  "API Config Entity Design",
-  "API Config Entity Design",
-  "Account Plugin Trace Logs",
-];
+import { RootState, AppDispatch } from "../store/store";
+import { 
+  newChat, 
+  setChatId, 
+  setShowResult, 
+  setRecentPrompt,
+  setResultData,
+  clearChatHistory 
+} from "../redux/ChatSlice";
+import { setFullHistory } from "../redux/chatHistorySlice";
+import { setCurrentModel } from "../redux/ModelSlice";
+import { useParams } from "react-router-dom";
 
 const connections = [
   { id: 1, name: "Connection Name 1", isActive: true },
@@ -83,6 +88,13 @@ const connections = [
   { id: 5, name: "Connection Name 5", isActive: false },
   { id: 6, name: "Connection Name 6", isActive: false },
 ];
+
+interface Chat {
+  chatId: string;
+  title: string;
+  model: number;
+  createdAt: string;
+}
 
 export function PowerMakerSidebar() {
   const [showAllChats, setShowAllChats] = useState(false);
@@ -98,6 +110,7 @@ export function PowerMakerSidebar() {
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
+  
   // Feedback form state
   const [rating, setRating] = useState(0);
   const [feedbackType, setFeedbackType] = useState<
@@ -109,54 +122,95 @@ export function PowerMakerSidebar() {
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [deletingAllIds, setDeletingAllIds] = useState<string[]>([]);
   const editInputRef = useRef<HTMLInputElement>(null);
+  
   const { state, setOpen } = useSidebar();
   const isCollapsed = state === "collapsed";
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const dispatch = useDispatch();
-  const { user } = useSelector((state: RootState) => state.auth);
+  // Redux state
+  const dispatch: AppDispatch = useDispatch();
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { chatId: currentChatId, showResult } = useSelector((state: RootState) => state.chat);
+  const { currentModel } = useSelector((state: RootState) => state.model);
+  
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { toggleSidebar } = useSidebar();
 
-  // Chat store integration
+  const { chatId } = useParams();
+  const [activeChatId, setActiveChatId] = useState<string | null>(
+    chatId ?? null
+  );
+
+  // Fetch recent chats from API
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: ["recentChats"],
+    queryFn: async () => {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_API}/chat/recentchats`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+      if (!response.ok) throw new Error("Network response was not ok");
+      return response.json();
+    },
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  // Update Redux state when URL changes
+  useEffect(() => {
+    if (chatId) {
+      dispatch(setChatId(chatId));
+      dispatch(setShowResult(true));
+      setActiveChatId(chatId);
+    } else {
+      setActiveChatId(null);
+    }
+  }, [chatId, dispatch]);
+
+  // Update current model when chat data changes
+  useEffect(() => {
+    if (data && chatId) {
+      const foundChat = data.chats.find(
+        (chat: Chat) => chat.chatId === chatId
+      );
+      if (foundChat) {
+        dispatch(setCurrentModel(foundChat.model));
+      }
+    }
+  }, [data, chatId, dispatch]);
+
+  // Sort chats by creation date
+  const sortedChats = [...(data?.chats || [])].sort(
+    (a: Chat, b: Chat) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  // Get displayed chats based on showAllChats state
+  const displayedChats = showAllChats
+    ? sortedChats
+    : sortedChats.slice(0, INITIAL_CHAT_LIMIT);
+  
+  const hasMoreChats = sortedChats.length > INITIAL_CHAT_LIMIT;
+
+  // Chat store integration (keeping existing useChatStore for compatibility)
   const {
-    newChat,
     recentThreads,
     loadThread,
     renameThread,
     deleteThread,
-    clearAllThreads, // Add this function to your chat store
+    clearAllThreads,
     setModel,
     currentThread,
     isStreamingActive,
     streamingPlaceholder,
   } = useChatStore();
-
-  // Get displayed chats based on showAllChats state with streaming placeholder
-  const getCombinedChats = () => {
-    const chats = [...recentThreads];
-
-    // Add streaming placeholder at the beginning if active
-    if (isStreamingActive && streamingPlaceholder) {
-      chats.unshift({
-        id: streamingPlaceholder.id,
-        title: streamingPlaceholder.title,
-        messages: [],
-        createdAt: streamingPlaceholder.timestamp,
-        model: "streaming",
-      });
-    }
-
-    return chats;
-  };
-
-  const combinedChats = getCombinedChats();
-  const displayedChats = showAllChats
-    ? combinedChats
-    : combinedChats.slice(0, INITIAL_CHAT_LIMIT);
-  const hasMoreChats = recentThreads.length > INITIAL_CHAT_LIMIT;
 
   // Track sidebar state changes for animation
   useEffect(() => {
@@ -166,18 +220,70 @@ export function PowerMakerSidebar() {
   }, [isCollapsed]);
 
   const handleLogoClick = () => {
-    // Navigate to greeting page
     navigate("/");
   };
 
   const handleNewChat = () => {
-    newChat();
+    // Close sidebar on mobile
+    if (window.innerWidth <= 600) {
+      toggleSidebar();
+    }
+
+    // Reset chat state using Redux actions
+    dispatch(setShowResult(false));
+    dispatch(setFullHistory({ chatId: "", history: [] }));
+    dispatch(newChat());
+    dispatch(setChatId(null));
+
+    // Navigate to home/greeting page
     navigate("/");
   };
 
-  const handleChatClick = (threadId: string) => {
-    loadThread(threadId);
-    navigate("/chat");
+  const handleChatClick = async (chatId: string) => {
+    try {
+      // Update Redux state
+      dispatch(setChatId(chatId));
+      dispatch(setShowResult(true));
+      setActiveChatId(chatId);
+
+      // Load chat history from backend
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_API}/chat/getchathistory/${chatId}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (response.ok) {
+        const chatData = await response.json();
+        // Update chat history in Redux
+        dispatch(setFullHistory({ 
+          chatId: chatId, 
+          history: chatData.history || [] 
+        }));
+        
+        // Set current model if available
+        if (chatData.model) {
+          dispatch(setCurrentModel(chatData.model));
+        }
+      }
+
+      // Close sidebar on mobile
+      if (window.innerWidth <= 600) {
+        toggleSidebar();
+      }
+
+      // Navigate to chat page
+      navigate(`/chat/${chatId}`);
+    } catch (error) {
+      console.error("Error loading chat:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load chat. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleHelpClick = () => {
@@ -189,13 +295,13 @@ export function PowerMakerSidebar() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file && file.type.startsWith("image/")) {
-            const imageURL = URL.createObjectURL(file);
-            setSelectedFile(file);
-            setPreview(imageURL);
-        }
-    };
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const imageURL = URL.createObjectURL(file);
+      setSelectedFile(file);
+      setPreview(imageURL);
+    }
+  };
 
   const handleFeedbackSubmit = async () => {
     if (!feedbackText || rating === 0 || !feedbackType || !user) return;
@@ -215,7 +321,6 @@ export function PowerMakerSidebar() {
         imageUrl = await getDownloadURL(imageRef);
       }
 
-      // Set document reference: one document per user
       const feedbackDocRef = doc(firestore, "feedbacks", user.uid);
       const docSnap = await getDoc(feedbackDocRef);
 
@@ -237,15 +342,22 @@ export function PowerMakerSidebar() {
         });
       }
 
-      // Using toast instead of dispatch
       toast({
         title: "Success",
         description: "Feedback submitted successfully!",
-        variant: "success",
+        variant: "default",
+        className: "border-green-200 bg-green-50 text-green-900",
       });
+
+      // Reset form
+      setFeedbackText("");
+      setRating(0);
+      setFeedbackType("compliment");
+      setSelectedFile(null);
+      setPreview(null);
+      setIsFeedbackOpen(false);
     } catch (error) {
       console.error("Error submitting feedback:", error);
-      // Using toast for error as well
       toast({
         title: "Error",
         description: "Failed to submit feedback. Please try again.",
@@ -256,43 +368,68 @@ export function PowerMakerSidebar() {
     }
   };
 
-  const handleCleanChatConfirm = () => {
+  // Handle clean chat action
+  const handleCleanChatConfirm = async () => {
     setIsDeletingAll(true);
 
-    // Get all thread IDs for animation
-    const allThreadIds = recentThreads.map((thread) => thread.id);
-    setDeletingAllIds(allThreadIds);
+    try {
+      // Get all chat IDs for animation
+      const allChatIds = sortedChats.map((chat) => chat.chatId);
+      setDeletingAllIds(allChatIds);
 
-    // Close the dialog first
-    setIsCleanChatOpen(false);
+      // Close the dialog first
+      setIsCleanChatOpen(false);
 
-    // Start staggered animation
-    allThreadIds.forEach((threadId, index) => {
-      setTimeout(() => {
-        // This will trigger the opacity and transform animation for each item
-        setDeletingChatId(threadId);
-      }, index * 100); // 100ms delay between each item
-    });
+      // Start staggered animation
+      allChatIds.forEach((chatId, index) => {
+        setTimeout(() => {
+          setDeletingChatId(chatId);
+        }, index * 100);
+      });
 
-    // After all animations are done, actually delete the threads
-    setTimeout(() => {
-      clearAllThreads(); // This should be implemented in your chat store
+      // Delete all chats from backend with new API endpoint
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_API}/chat/delete-all-chats`,
+        {
+          method: "DELETE",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-      // Navigate to home page since all chats are deleted
+      if (!res.ok) throw new Error("Failed to delete chats");
+
+      // Clear Redux state
+      dispatch(setChatId(null));
+      dispatch(setRecentPrompt(""));
+      dispatch(setResultData(""));
+
+      // Navigate to home page
       navigate("/");
 
-      // Show success toast
+      // Refetch chat data
+      refetch();
+
       toast({
         title: "All chats deleted",
         description: "All conversations have been removed successfully.",
         variant: "destructive",
       });
-
-      // Reset states
-      setIsDeletingAll(false);
-      setDeletingAllIds([]);
-      setDeletingChatId(null);
-    }, allThreadIds.length * 100 + 500); // Wait for all animations plus extra buffer
+    } catch (error) {
+      console.error("Failed to clean chats:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete chats. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      // Reset states after animation completes
+      setTimeout(() => {
+        setIsDeletingAll(false);
+        setDeletingAllIds([]);
+        setDeletingChatId(null);
+      }, sortedChats.length * 100 + 500);
+    }
   };
 
   const handleConnectionToggle = (id: number) => {
@@ -309,21 +446,50 @@ export function PowerMakerSidebar() {
     setConnectionList(connections.filter((conn) => conn.id !== id));
   };
 
-  const handleRenameChat = (threadId: string, currentTitle: string) => {
-    setEditingChatId(threadId);
+  // Handle rename action and open modal 
+  const handleRenameChat = (chatId: string, currentTitle: string) => {
+    setEditingChatId(chatId);
     setEditingTitle(currentTitle);
-    setChatMenuOpen(null);
   };
 
-  const handleRenameConfirm = () => {
+  // Handle rename confirm action
+  const handleRenameConfirm = async () => {
     if (editingChatId && editingTitle.trim()) {
-      renameThread(editingChatId, editingTitle.trim());
-      toast({
-        title: "Chat renamed",
-        description: "Chat title has been updated successfully.",
-        variant: "default",
-        className: "border-green-200 bg-green-50 text-green-900",
-      });
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_BACKEND_API}/chat/renamechattitle`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ 
+              chatId: editingChatId, 
+              newTitle: editingTitle.trim() 
+            }),
+          }
+        );
+
+        if (response.ok) {
+          // Refetch chat data to update UI
+          refetch();
+          
+          toast({
+            title: "Chat renamed",
+            description: "Chat title has been updated successfully.",
+            variant: "default",
+            className: "border-green-200 bg-green-50 text-green-900",
+          });
+        } else {
+          throw new Error("Failed to rename chat");
+        }
+      } catch (error) {
+        console.error("Error renaming chat:", error);
+        toast({
+          title: "Error",
+          description: "Failed to rename chat. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
     setEditingChatId(null);
     setEditingTitle("");
@@ -334,27 +500,49 @@ export function PowerMakerSidebar() {
     setEditingTitle("");
   };
 
-  const handleDeleteChat = (threadId: string) => {
-    setDeletingChatId(threadId);
-    setChatMenuOpen(null);
+  // Handle delete action
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      setDeletingChatId(chatId);
+      
+      const response = await fetch(
+         `${import.meta.env.VITE_BACKEND_API
+        }/chat/deletechat/:id?chatId=${chatId}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
 
-    // Check if the deleted chat is the currently active one
-    const isActiveChat = currentThread?.id === threadId;
+      if (!response.ok) throw new Error("Failed to delete chat");
 
-    setTimeout(() => {
-      deleteThread(threadId);
-      toast({
-        title: "Chat deleted",
-        description: "Chat has been removed successfully.",
-        variant: "destructive",
-      });
-      setDeletingChatId(null);
-
-      // Only navigate to home if the deleted chat was the active one
-      if (isActiveChat) {
+      // If deleting current active chat, navigate to home
+      if (chatId === activeChatId) {
+        dispatch(setChatId(null));
+        dispatch(setRecentPrompt(""));
+        dispatch(setResultData(""));
         navigate("/");
       }
-    }, 300);
+
+      // Refetch chat data
+      refetch();
+      
+      toast({
+        title: "Chat deleted",
+        description: "Chat has been deleted successfully.",
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete chat. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setTimeout(() => setDeletingChatId(null), 300);
+    }
   };
 
   // Focus input when editing starts
@@ -407,11 +595,11 @@ export function PowerMakerSidebar() {
           setIsCleanChatOpen(true);
         }}
         data-tour="clean-chat-option"
-        disabled={recentThreads.length === 0}
+        disabled={sortedChats.length === 0}
       >
         <span className="mr-2">🧹</span>
         Clean Chat
-        {recentThreads.length === 0 && (
+        {sortedChats.length === 0 && (
           <span className="ml-auto text-xs text-muted-foreground">
             (No chats)
           </span>
@@ -432,7 +620,12 @@ export function PowerMakerSidebar() {
       <Button
         variant="ghost"
         className="w-full justify-start"
-        onClick={() => window.open("https://powermakerai.com/src/privacyPolicy.html", "_blank")}
+        onClick={() =>
+          window.open(
+            "https://powermakerai.com/src/privacyPolicy.html",
+            "_blank"
+          )
+        }
         data-tour="privacy-terms"
       >
         <span className="mr-2">🔒</span>
@@ -441,7 +634,9 @@ export function PowerMakerSidebar() {
       <Button
         variant="ghost"
         className="w-full justify-start"
-        onClick={() => window.open("https://powermakerai.com/src/terms.html", "_blank")}
+        onClick={() =>
+          window.open("https://powermakerai.com/src/terms.html", "_blank")
+        }
       >
         <span className="mr-2">📋</span>
         Terms of Use
@@ -455,6 +650,7 @@ export function PowerMakerSidebar() {
       className="h-screen border-r border-border/30 shadow-[inset_-8px_0_16px_rgba(0,0,0,0.08)] data-[state=collapsed]:w-16 flex flex-col"
       data-sidebar="true"
     >
+      {/* Logo and title */}
       <SidebarHeader
         className={`p-4 flex-shrink-0 ${
           isCollapsed ? "flex justify-center" : ""
@@ -468,17 +664,16 @@ export function PowerMakerSidebar() {
           data-tour="logo"
         >
           <img src="/logo.svg" alt="Logo" className="w-8 h-8 flex-shrink-0" />
-          {/* Improved animated text elements */}
           <div
             className={`
-      flex items-center space-x-2 overflow-hidden
-      transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
-      ${
-        isCollapsed
-          ? "w-0 opacity-0 -translate-x-2"
-          : "w-auto opacity-100 translate-x-0"
-      }
-    `}
+              flex items-center space-x-2 overflow-hidden
+              transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+              ${
+                isCollapsed
+                  ? "w-0 opacity-0 -translate-x-2"
+                  : "w-auto opacity-100 translate-x-0"
+              }
+            `}
           >
             <span className="font-bold text-brand whitespace-nowrap">
               PowerMaker AI
@@ -498,11 +693,11 @@ export function PowerMakerSidebar() {
       >
         <Button
           className={`
-      w-full bg-transparent border border-border hover:bg-sidebar-accent text-brand 
-      shadow-[2px_2px_4px_rgba(0,0,0,0.1)] 
-      transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
-      ${isCollapsed ? "justify-start pl-1.5" : "justify-center px-4"}
-    `}
+            w-full bg-transparent border border-border hover:bg-sidebar-accent text-brand 
+            shadow-[2px_2px_4px_rgba(0,0,0,0.1)] 
+            transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+            ${isCollapsed ? "justify-start pl-1.5" : "justify-center px-4"}
+          `}
           variant="outline"
           onClick={handleNewChat}
           size={isCollapsed ? "sm" : "default"}
@@ -511,33 +706,33 @@ export function PowerMakerSidebar() {
           <Plus className="w-4 h-4 flex-shrink-0" />
           <span
             className={`
-      whitespace-nowrap overflow-hidden
-      transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
-      ${
-        isCollapsed
-          ? "w-0 opacity-0 -translate-x-2 ml-0"
-          : "w-auto opacity-100 translate-x-0 ml-2"
-      }
-    `}
+              whitespace-nowrap overflow-hidden
+              transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+              ${
+                isCollapsed
+                  ? "w-0 opacity-0 -translate-x-2 ml-0"
+                  : "w-auto opacity-100 translate-x-0 ml-2"
+              }
+            `}
           >
             New Chat
           </span>
         </Button>
       </div>
 
+      {/* Recent Chat List */}
       <SidebarContent className="flex-1 flex flex-col">
-        {/* Recent Chats */}
         <SidebarGroup className="flex-1 flex flex-col">
           <SidebarGroupLabel
             className={`
-  px-4 text-sm font-medium text-muted-foreground flex-shrink-0
-  transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
-  ${
-    isCollapsed
-      ? "opacity-0 h-0 py-0 -translate-x-2"
-      : "opacity-100 h-auto py-2 translate-x-0"
-  }
-`}
+              px-4 text-sm font-medium text-muted-foreground flex-shrink-0
+              transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+              ${
+                isCollapsed
+                  ? "opacity-0 h-0 py-0 -translate-x-2"
+                  : "opacity-100 h-auto py-2 translate-x-0"
+              }
+            `}
             data-tour="recent-chats"
           >
             Recent
@@ -547,36 +742,47 @@ export function PowerMakerSidebar() {
             style={{ height: "calc(100vh - 340px)" }}
           >
             <SidebarMenu>
-              {displayedChats.length > 0 ? (
-                displayedChats.map((thread, index) => {
-                  const isActiveThread = currentThread?.id === thread.id;
-                  const isStreamingItem = thread.model === "streaming";
+              {isLoading ? (
+                // Loading state
+                <div className={`
+                  px-4 py-2 text-sm text-muted-foreground
+                  transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+                  ${
+                    isCollapsed
+                      ? "opacity-0 h-0 py-0 -translate-x-2"
+                      : "opacity-100 h-auto py-2 translate-x-0"
+                  }
+                `}>
+                  Loading chats...
+                </div>
+              ) : displayedChats.length > 0 ? (
+                displayedChats.map((chat, index) => {
+                  const isActiveChat = currentChatId === chat.chatId;
                   const isBeingDeleted =
-                    deletingChatId === thread.id ||
-                    (isDeletingAll && deletingAllIds.includes(thread.id));
+                    deletingChatId === chat.chatId ||
+                    (isDeletingAll && deletingAllIds.includes(chat.chatId));
 
                   return (
                     <SidebarMenuItem
-                      key={thread.id}
+                      key={chat.chatId}
                       className={`transition-all duration-500 ease-in-out ${
                         isBeingDeleted
                           ? "opacity-0 translate-x-8 scale-95 pointer-events-none"
                           : "opacity-100 translate-x-0 scale-100"
                       }`}
                       style={{
-                        // Staggered animation for chat items
                         transitionDelay:
                           isAnimating && !isCollapsed
                             ? `${index * 50 + 200}ms`
                             : isDeletingAll &&
-                              deletingAllIds.includes(thread.id)
-                            ? `${deletingAllIds.indexOf(thread.id) * 100}ms`
+                              deletingAllIds.includes(chat.chatId)
+                            ? `${deletingAllIds.indexOf(chat.chatId) * 100}ms`
                             : "0ms",
                       }}
                     >
                       <div
                         className={`flex items-center px-4 py-1 mx-2 rounded-md group transition-all duration-200 ease-in-out overflow-hidden ${
-                          isActiveThread && !isCollapsed
+                          isActiveChat && !isCollapsed
                             ? "bg-sidebar-accent border-l-2 border-l-brand text-brand"
                             : "hover:bg-sidebar-accent"
                         }`}
@@ -586,113 +792,74 @@ export function PowerMakerSidebar() {
                         onMouseLeave={() => setHoveredChat(null)}
                       >
                         <SidebarMenuButton
-                          className={`flex-1 justify-start p-0 h-auto min-w-0 ${
-                            isStreamingItem
-                              ? "cursor-default"
-                              : "cursor-pointer"
-                          }`}
+                          className="flex-1 justify-start p-0 h-auto min-w-0 cursor-pointer"
                           onClick={() =>
-                            editingChatId !== thread.id &&
-                            !isBeingDeleted &&
-                            !isStreamingItem
-                              ? handleChatClick(thread.id)
+                            editingChatId !== chat.chatId &&
+                            !isBeingDeleted
+                              ? handleChatClick(chat.chatId)
                               : undefined
                           }
-                          disabled={isBeingDeleted || isStreamingItem}
+                          disabled={isBeingDeleted}
                         >
                           <MessageSquare
                             className={`w-3 h-3 mr-2 flex-shrink-0 ${
-                              isActiveThread
+                              isActiveChat
                                 ? "text-brand"
                                 : "text-muted-foreground"
                             }`}
                           />
                           <div
                             className={`
-                            flex flex-col items-start min-w-0 flex-1 overflow-hidden
-                            transition-all duration-300 ease-in-out
-                            ${
-                              isCollapsed
-                                ? "w-0 opacity-0"
-                                : "w-auto opacity-100"
-                            }
-                            ${isAnimating && !isCollapsed ? "delay-200" : ""}
-                          `}
+                              flex flex-col items-start min-w-0 flex-1 overflow-hidden
+                              transition-all duration-300 ease-in-out
+                              ${
+                                isCollapsed
+                                  ? "w-0 opacity-0"
+                                  : "w-auto opacity-100"
+                              }
+                              ${isAnimating && !isCollapsed ? "delay-200" : ""}
+                            `}
                           >
-                            {editingChatId === thread.id ? (
-                              <div
-                                className={`
-  flex flex-col items-start min-w-0 flex-1 overflow-hidden
-  transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
-  ${
-    isCollapsed
-      ? "w-0 opacity-0 -translate-x-2"
-      : "w-auto opacity-100 translate-x-0"
-  }
-`}
-                              >
-                                <div className="flex items-center gap-1 w-full">
-                                  <Input
-                                    ref={editInputRef}
-                                    value={editingTitle}
-                                    onChange={(e) =>
-                                      setEditingTitle(e.target.value)
-                                    }
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter")
-                                        handleRenameConfirm();
-                                      if (e.key === "Escape")
-                                        handleRenameCancel();
-                                    }}
-                                    onBlur={handleRenameConfirm}
-                                    className="text-sm h-6 py-0 px-1 border-0 bg-transparent focus:ring-1 focus:ring-brand"
-                                    maxLength={50}
-                                  />
-                                </div>
+                            {editingChatId === chat.chatId ? (
+                              <div className="flex items-center gap-1 w-full">
+                                <Input
+                                  ref={editInputRef}
+                                  value={editingTitle}
+                                  onChange={(e) =>
+                                    setEditingTitle(e.target.value)
+                                  }
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter")
+                                      handleRenameConfirm();
+                                    if (e.key === "Escape")
+                                      handleRenameCancel();
+                                  }}
+                                  onBlur={handleRenameConfirm}
+                                  className="text-sm h-6 py-0 px-1 border-0 bg-transparent focus:ring-1 focus:ring-brand"
+                                  maxLength={50}
+                                />
                               </div>
                             ) : (
                               <>
                                 <span
                                   className={`text-sm truncate w-full whitespace-nowrap font-medium ${
-                                    isActiveThread
+                                    isActiveChat
                                       ? "text-brand"
                                       : "text-sidebar-foreground"
                                   }`}
                                 >
-                                  {isStreamingItem ? (
-                                    <div className="flex items-center gap-2">
-                                      <span>{thread.title}</span>
-                                      <div className="flex space-x-1">
-                                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse"></div>
-                                        <div
-                                          className="w-2 h-2 bg-brand rounded-full animate-pulse"
-                                          style={{ animationDelay: "0.2s" }}
-                                        ></div>
-                                        <div
-                                          className="w-2 h-2 bg-brand rounded-full animate-pulse"
-                                          style={{ animationDelay: "0.4s" }}
-                                        ></div>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    thread.title
-                                  )}
+                                  {chat.title}
                                 </span>
                                 <span className="text-xs text-muted-foreground truncate w-full whitespace-nowrap">
-                                  {isStreamingItem
-                                    ? "Assistant is thinking..."
-                                    : `${
-                                        thread.messages.length
-                                      } messages • ${thread.createdAt.toLocaleDateString()}`}
+                                  {new Date(chat.createdAt).toLocaleDateString()}
                                 </span>
                               </>
                             )}
                           </div>
                         </SidebarMenuButton>
-                        {editingChatId !== thread.id &&
+                        {editingChatId !== chat.chatId &&
                           !isCollapsed &&
-                          !isBeingDeleted &&
-                          !isStreamingItem && (
+                          !isBeingDeleted && (
                             <div className="flex-shrink-0 ml-2">
                               <Popover
                                 open={chatMenuOpen === index}
@@ -725,9 +892,10 @@ export function PowerMakerSidebar() {
                                     variant="ghost"
                                     size="sm"
                                     className="w-full justify-start text-xs"
-                                    onClick={() =>
-                                      handleRenameChat(thread.id, thread.title)
-                                    }
+                                    onClick={() => {
+                                      setChatMenuOpen(null);
+                                      handleRenameChat(chat.chatId, chat.title);
+                                    }}
                                   >
                                     <Pencil className="w-3 h-3 mr-2" />
                                     Rename
@@ -736,7 +904,10 @@ export function PowerMakerSidebar() {
                                     variant="ghost"
                                     size="sm"
                                     className="w-full justify-start text-xs text-destructive hover:text-destructive hover:bg-destructive/20"
-                                    onClick={() => handleDeleteChat(thread.id)}
+                                    onClick={() => {
+                                      setChatMenuOpen(null);
+                                      handleDeleteChat(chat.chatId);
+                                    }}
                                   >
                                     <Trash2 className="w-3 h-3 mr-2" />
                                     Delete
@@ -752,14 +923,14 @@ export function PowerMakerSidebar() {
               ) : (
                 <div
                   className={`
-  px-4 py-2 text-sm text-muted-foreground
-  transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
-  ${
-    isCollapsed
-      ? "opacity-0 h-0 py-0 -translate-x-2"
-      : "opacity-100 h-auto py-2 translate-x-0"
-  }
-`}
+                    px-4 py-2 text-sm text-muted-foreground
+                    transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+                    ${
+                      isCollapsed
+                        ? "opacity-0 h-0 py-0 -translate-x-2"
+                        : "opacity-100 h-auto py-2 translate-x-0"
+                    }
+                  `}
                 >
                   No recent conversations
                 </div>
@@ -770,14 +941,14 @@ export function PowerMakerSidebar() {
           {hasMoreChats && !isDeletingAll && (
             <div
               className={`
-  px-4 py-2 flex-shrink-0
-  transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
-  ${
-    isCollapsed
-      ? "opacity-0 h-0 py-0 -translate-x-2"
-      : "opacity-100 h-auto py-2 translate-x-0"
-  }
-`}
+                px-4 py-2 flex-shrink-0
+                transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+                ${
+                  isCollapsed
+                    ? "opacity-0 h-0 py-0 -translate-x-2"
+                    : "opacity-100 h-auto py-2 translate-x-0"
+                }
+              `}
             >
               <Button
                 variant="ghost"
@@ -800,12 +971,12 @@ export function PowerMakerSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
+      {/* Footer -> help and setting button */}
       <SidebarFooter className="p-4 border-t border-border transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]">
         <div className={isCollapsed ? "flex flex-col items-center" : ""}>
           <SidebarMenuButton
             className={`w-full ${
               isCollapsed ? "justify-start pl-1.5" : "justify-start"
-
             } text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer`}
             onClick={handleHelpClick}
             data-tour="help-icon"
@@ -813,14 +984,14 @@ export function PowerMakerSidebar() {
             <HelpCircle className="w-4 h-4 flex-shrink-0" />
             <span
               className={`
-        whitespace-nowrap overflow-hidden
-        transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
-        ${
-          isCollapsed
-            ? "w-0 opacity-0 -translate-x-2 ml-0"
-            : "w-auto opacity-100 translate-x-0 ml-2"
-        }
-      `}
+                whitespace-nowrap overflow-hidden
+                transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+                ${
+                  isCollapsed
+                    ? "w-0 opacity-0 -translate-x-2 ml-0"
+                    : "w-auto opacity-100 translate-x-0 ml-2"
+                }
+              `}
             >
               Help
             </span>
@@ -835,14 +1006,14 @@ export function PowerMakerSidebar() {
             <Settings className="w-4 h-4 flex-shrink-0" />
             <span
               className={`
-        whitespace-nowrap overflow-hidden
-        transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
-        ${
-          isCollapsed
-            ? "w-0 opacity-0 -translate-x-2 ml-0"
-            : "w-auto opacity-100 translate-x-0 ml-2"
-        }
-      `}
+                whitespace-nowrap overflow-hidden
+                transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
+                ${
+                  isCollapsed
+                    ? "w-0 opacity-0 -translate-x-2 ml-0"
+                    : "w-auto opacity-100 translate-x-0 ml-2"
+                }
+              `}
             >
               Settings
             </span>
@@ -872,7 +1043,6 @@ export function PowerMakerSidebar() {
       )}
 
       {/* Responsive Feedback - Drawer for mobile, Dialog for desktop */}
-
       {isMobile ? (
         <Drawer open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
           <DrawerContent className="max-h-[90vh]">
@@ -927,7 +1097,6 @@ export function PowerMakerSidebar() {
               <div>
                 <Label>Upload Image (optional)</Label>
                 <div className="mt-1 feedback-img-area max-w-full min-h-[135px] border border-[#1FA2D0] border-dashed rounded-md flex items-center justify-center flex-col relative p-4">
-                  {/* Hidden File Input */}
                   <input
                     type="file"
                     name="feedback-img"
@@ -936,8 +1105,6 @@ export function PowerMakerSidebar() {
                     className="hidden"
                     onChange={handleFileChange}
                   />
-
-                  {/* Label triggers input whether or not preview exists */}
                   <label
                     htmlFor="feedback-img"
                     className="flex flex-col items-center justify-center cursor-pointer"
@@ -964,7 +1131,7 @@ export function PowerMakerSidebar() {
                   </label>
                 </div>
               </div>
-              <Button onClick={handleFeedbackSubmit} className="w-full">
+              <Button onClick={handleFeedbackSubmit} className="w-full" disabled={loading}>
                 {loading ? "Sending..." : "Send Feedback"}
               </Button>
             </div>
@@ -1024,7 +1191,6 @@ export function PowerMakerSidebar() {
               <div>
                 <Label>Upload Image (optional)</Label>
                 <div className="mt-1 feedback-img-area max-w-full min-h-[135px] border border-[#1FA2D0] border-dashed rounded-md flex items-center justify-center flex-col relative p-4">
-                  {/* Hidden File Input */}
                   <input
                     type="file"
                     name="feedback-img"
@@ -1033,8 +1199,6 @@ export function PowerMakerSidebar() {
                     className="hidden"
                     onChange={handleFileChange}
                   />
-
-                  {/* Label triggers input whether or not preview exists */}
                   <label
                     htmlFor="feedback-img"
                     className="flex flex-col items-center justify-center cursor-pointer"
@@ -1061,7 +1225,7 @@ export function PowerMakerSidebar() {
                   </label>
                 </div>
               </div>
-              <Button onClick={handleFeedbackSubmit} className="w-full">
+              <Button onClick={handleFeedbackSubmit} className="w-full" disabled={loading}>
                 {loading ? "Sending..." : "Send Feedback"}
               </Button>
             </div>
@@ -1078,8 +1242,8 @@ export function PowerMakerSidebar() {
             </DrawerHeader>
             <div className="px-4 pb-4">
               <p className="text-sm text-muted-foreground mb-6">
-                This will permanently delete all {recentThreads.length}{" "}
-                conversation{recentThreads.length !== 1 ? "s" : ""}. This action
+                This will permanently delete all {sortedChats.length}{" "}
+                conversation{sortedChats.length !== 1 ? "s" : ""}. This action
                 cannot be undone.
               </p>
               <div className="flex flex-col gap-3">
@@ -1091,7 +1255,7 @@ export function PowerMakerSidebar() {
                 >
                   {isDeletingAll
                     ? "Deleting..."
-                    : `Yes, Delete All (${recentThreads.length})`}
+                    : `Yes, Delete All (${sortedChats.length})`}
                 </Button>
                 <Button
                   variant="outline"
@@ -1111,8 +1275,8 @@ export function PowerMakerSidebar() {
             <DialogHeader>
               <DialogTitle>Delete All Chats?</DialogTitle>
               <DialogDescription>
-                This will permanently delete all {recentThreads.length}{" "}
-                conversation{recentThreads.length !== 1 ? "s" : ""}. This action
+                This will permanently delete all {sortedChats.length}{" "}
+                conversation{sortedChats.length !== 1 ? "s" : ""}. This action
                 cannot be undone.
               </DialogDescription>
             </DialogHeader>
@@ -1131,7 +1295,7 @@ export function PowerMakerSidebar() {
               >
                 {isDeletingAll
                   ? "Deleting..."
-                  : `Yes, Delete All (${recentThreads.length})`}
+                  : `Yes, Delete All (${sortedChats.length})`}
               </Button>
             </div>
           </DialogContent>
