@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +31,13 @@ import { processImage, getImagesFromClipboard, type ImageData } from "@/utils/im
 import { useToast } from "@/hooks/use-toast";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
+import { useChat } from "../../redux/useChat";
+import { useDispatch } from "react-redux";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { setChatId } from "../../redux/ChatSlice";
+import { auth } from "../../config/firebase config/firebase.config";
+import { onAuthStateChanged } from "firebase/auth";
+
 
 const promptSuggestionsByModel = {
   "model-0-1": [
@@ -114,7 +121,7 @@ const modelOptions = [
 ];
 
 export function GreetingContainer() {
-  const [prompt, setPrompt] = useState("");
+  // const [prompt, setPrompt] = useState("");
   const [pastedImages, setPastedImages] = useState<ImageData[]>([]); // Changed to array
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const navigate = useNavigate();
@@ -124,6 +131,27 @@ export function GreetingContainer() {
   const maxLength = 1000;
   const maxImages = 10; // Set maximum number of images allowed
 
+  const { input, setInput, onSent } = useChat();
+  const { chatId: routeChatId } = useParams<{ chatId?: string }>();
+  const storeChatId = useSelector((state: RootState) => state.chat.chatId);
+  const chatId = routeChatId || storeChatId;
+
+  const inputLength = input.trim().length;
+  const isInputEmpty = inputLength === 0;
+
+  const currentModel = useSelector(
+    (state: RootState) => state.model.currentModel
+  );
+
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (routeChatId) {
+      dispatch(setChatId(routeChatId));
+    }
+  }, [routeChatId]);
+
   const currentPromptSuggestions = useMemo(() => {
     return (
       promptSuggestionsByModel[
@@ -132,21 +160,72 @@ export function GreetingContainer() {
     );
   }, [selectedModel]);
 
-  const handlePromptCardClick = (suggestion: string) => {
-    setPrompt(suggestion);
+
+
+  const handlePromptCardClick = (prompt: string) => {
+    if (!prompt.trim()) return;
+
+    // Create a new chat, then send prompt
+    newChatMutation
+      .mutateAsync()
+      .then(async (data) => {
+        // //console.log("Card click - new chat:", data);
+        navigate(`/c/${data.chatId}`);
+        await onSent(prompt, data.chatId, 0, currentModel);
+        queryClient.invalidateQueries({ queryKey: ["recentChats"] });
+      })
+      .catch((err) => {
+        console.error("Error from card click:", err);
+      });
   };
 
-  const handleSend = () => {
-    if (prompt.trim() || pastedImages.length > 0) {
-      startChat(prompt.trim(), pastedImages.length > 0 ? pastedImages : undefined);
-      setPrompt("");
-      setPastedImages([]); // Clear all images
-      navigate("/chat");
+   //handle newchat api
+  const newChatMutation = useMutation({
+    mutationFn: async () => {
+      return await fetch(`${import.meta.env.VITE_BACKEND_API}/chat/newchat`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ currentModel }),
+      }).then((res) => res.json());
+    },
+    onSuccess: async (data) => {
+      //console.log("New chat created with ID:", data);
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
+      navigate(`/c/${data.chatId}`);
+      // send the prompt using the new chatId
+      queryClient.invalidateQueries({ queryKey: ["recentChats"] });
+      queryClient.invalidateQueries({ queryKey: ["recentChats"] });
+
+      // REMOVE THIS: becoz it tigger twice, once when onSuccess mutation and once from handleprompt
+      // await onSent(input, data.chatId, 0, currentModel); // Send the prompt to the chat      
+    },
+  });
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    try {
+      if (!chatId) {
+        const data = await newChatMutation.mutateAsync();
+        if (data?.chatId) {
+          navigate(`/c/${data.chatId}`);
+          await onSent(input, data.chatId, 0, currentModel);
+          queryClient.invalidateQueries({ queryKey: ["recentChats"] });
+        }
+      } else {
+        await onSent(input, chatId, 0, currentModel);
+        queryClient.invalidateQueries({ queryKey: ["recentChats"] });
+      }
+    } catch (error) {
+      console.error("Error handling prompt input:", error);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !isInputEmpty) {
       e.preventDefault();
       handleSend();
     }
@@ -321,8 +400,8 @@ export function GreetingContainer() {
             {/* Textarea */}
             <Textarea
               placeholder={`Type your message or paste ${pastedImages.length === 0 ? 'images' : 'more images'}... (${pastedImages.length}/${maxImages} images)`}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value.slice(0, maxLength))}
+              value={input}
+              onChange={(e) => dispatch(setInput(e.target.value))}
               onKeyDown={handleKeyDown}
               onPaste={handlePaste}
               className="w-full min-h-[100px] pr-28 lg:pr-30 pb-14 resize-none border-brand-light focus:ring-brand-light leading-[1.4] align-top"
@@ -334,7 +413,7 @@ export function GreetingContainer() {
             <div className="absolute right-3 bottom-3 flex items-center space-x-3">
               {/* Character Counter */}
               <span className="text-xs text-muted-foreground">
-                {prompt.length}/{maxLength}
+                {input.length}/{maxLength}
               </span>
 
               {/* Images Counter */}
@@ -347,7 +426,7 @@ export function GreetingContainer() {
               {/* Send Button */}
               <Button
                 onClick={handleSend}
-                disabled={(!prompt.trim() && pastedImages.length === 0) || isProcessingImage}
+                disabled={(!input.trim() && pastedImages.length === 0) || isProcessingImage}
                 size="sm"
                 className="w-8 h-8 p-0 rounded-full bg-success-light hover:bg-success text-success-dark"
                 aria-label="Send message"
