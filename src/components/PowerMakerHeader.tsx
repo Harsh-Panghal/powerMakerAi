@@ -79,22 +79,24 @@ import {
   increment,
 } from "firebase/firestore";
 import { setRetryTrigger } from "../redux/CrmSlice";
+import { setCurrentModel } from "../redux/ModelSlice"; // Adjust path
+import { setChatId } from "../redux/ChatSlice";
 
 const modelOptions = [
   {
-    value: "model-0-1",
+    value: 0,
     title: "Model 0.1",
     subtitle: "CRM Customization",
     icon: Settings,
   },
   {
-    value: "model-0-2",
+    value: 1,
     title: "Model 0.2",
     subtitle: "Plugin Tracing",
     icon: Database,
   },
   {
-    value: "model-0-3",
+    value: 2,
     title: "Model 0.3",
     subtitle: "CRM Expert",
     icon: Key,
@@ -436,6 +438,26 @@ export function PowerMakerHeader() {
     return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   })(userDisplayName || "");
 
+  const chatId = useSelector((state: RootState) => state.chat.chatId);
+  const currentModel = useSelector(
+    (state: RootState) => state.model.currentModel
+  );
+
+  const handleModelSwitch = (newModel: number) => {
+    // Check if chatId is not null
+    if (chatId !== null && newModel !== currentModel) {
+      dispatch(setCurrentModel(newModel));
+      dispatch(setChatId(null)); // This is crucial!
+      // setIsOpen(false);
+      navigate("/");
+    } else {
+      dispatch(setCurrentModel(newModel));
+      // setIsOpen(false);
+      // If chatId is null, do not switch model
+      //console.log("No active chat to switch model.");
+    }
+  };
+  
   return (
     <>
       <header
@@ -459,27 +481,24 @@ export function PowerMakerHeader() {
             data-tour="model-selector"
           >
             <Select
-              value={selectedModel}
-              onValueChange={(value) => {
-                setModel(value);
-                navigate("/");
-              }}
+              value={currentModel.toString()}
+              onValueChange={(value) => handleModelSwitch(parseInt(value))}
               data-guide="model-selector"
             >
               <SelectTrigger className="w-full min-w-[100px] sm:min-w-[140px] max-w-[120px] sm:max-w-[200px] h-8 border border-border/40 bg-background/80 backdrop-blur-sm hover:bg-muted/30 transition-colors duration-200 rounded-md shadow-sm">
                 <SelectValue>
                   <span className="text-xs sm:text-sm font-medium text-brand truncate">
                     <span className="hidden lg:inline">
-                      {selectedModel === "model-0-1"
+                      {currentModel === 0
                         ? "0.1 - CRM Customization"
-                        : selectedModel === "model-0-2"
+                        : currentModel === 1
                         ? "0.2 - Plugin Tracing"
                         : "0.3 - CRM Expert"}
                     </span>
                     <span className="lg:hidden">
-                      {selectedModel === "model-0-1"
+                      {currentModel === 0
                         ? "0.1 - CRM"
-                        : selectedModel === "model-0-2"
+                        : currentModel === 1
                         ? "0.2 - Plugin"
                         : "0.3 - Expert"}
                     </span>
@@ -492,7 +511,7 @@ export function PowerMakerHeader() {
                   return (
                     <SelectItem
                       key={option.value}
-                      value={option.value}
+                      value={option.value.toString()}
                       className="focus:bg-accent/50 focus:text-brand"
                     >
                       <div className="flex items-center gap-2">
