@@ -275,7 +275,7 @@ export function PowerMakerSidebar() {
       }
 
       // Navigate to chat page
-      navigate(`/chat/${chatId}`);
+      navigate(`/c/${chatId}`);
     } catch (error) {
       console.error("Error loading chat:", error);
       toast({

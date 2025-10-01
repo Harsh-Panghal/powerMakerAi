@@ -10,8 +10,6 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { Provider } from "react-redux";
 import store from "./store/store";
-// import { P } from "node_modules/framer-motion/dist/types.d-Cjd591yU";
-
 
 const queryClient = new QueryClient();
 
@@ -22,16 +20,18 @@ const App = () => (
       <Sonner />
       <Provider store={store}>
         <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />}>
-            <Route index element={<Greeting />} />
-            <Route path="chat" element={<Chat />} />
-          </Route>
-          <Route path="/auth" element={<Auth />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />}>
+              <Route index element={<Greeting />} />
+              <Route path="chat" element={<Chat />} />
+              {/* Add the dynamic chat route */}
+              <Route path="c/:chatId" element={<Chat />} />
+            </Route>
+            <Route path="/auth" element={<Auth />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </Provider>
     </TooltipProvider>
   </QueryClientProvider>

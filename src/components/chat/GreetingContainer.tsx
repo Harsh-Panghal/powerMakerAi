@@ -195,7 +195,7 @@ export function GreetingContainer() {
       //console.log("New chat created with ID:", data);
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ["chats"] });
-      navigate(`/c/${data.chatId}`);
+      // navigate(`/c/${data.chatId}`);
       // send the prompt using the new chatId
       queryClient.invalidateQueries({ queryKey: ["recentChats"] });
       queryClient.invalidateQueries({ queryKey: ["recentChats"] });

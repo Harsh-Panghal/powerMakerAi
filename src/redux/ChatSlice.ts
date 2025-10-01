@@ -6,6 +6,12 @@ interface SavedResultinLocalInterface {
   developerModeText: string[];
 }
 
+interface CurrentThread {
+  title: string;
+  model: string | number;
+  chatId?: string;
+}
+
 interface ChatState {
   input: string;
   recentPrompt: string;
@@ -23,6 +29,7 @@ interface ChatState {
   concatenatedPrompts: string;
   creditStatus?: boolean;
   chatId: string | null; // Add chatId to the state
+  currentThread: CurrentThread | null; // Add currentThread
 }
 
 const initialState: ChatState = {
@@ -40,8 +47,9 @@ const initialState: ChatState = {
   savedResultsInLocal: [], // Default empty chat list
   chatTitle: "",
   concatenatedPrompts: "",
-  chatId: null, // Initialize chatId as null,
-  creditStatus: true
+  chatId: null, // Initialize chatId as null
+  creditStatus: true,
+  currentThread: null, // Initialize currentThread as null
 };
 
 const chatSlice = createSlice({
@@ -97,6 +105,7 @@ const chatSlice = createSlice({
       state.developerModeText = [];
       state.recommendationVisible = false;
       state.recommendation = [];
+      state.currentThread = null; // Clear current thread on new chat
     },
     setConcatenatedPrompts: (state, action: PayloadAction<string>) => {
       state.concatenatedPrompts = action.payload;
@@ -113,6 +122,10 @@ const chatSlice = createSlice({
     },
     setChatId: (state, action: PayloadAction<string | null>) => {
       state.chatId = action.payload;
+    },
+    // Add setter for currentThread
+    setCurrentThread: (state, action: PayloadAction<CurrentThread | null>) => {
+      state.currentThread = action.payload;
     },
   },
 });
@@ -136,6 +149,7 @@ export const {
   setChatId,
   setConcatenatedPrompts,
   setCreditStatus,
+  setCurrentThread, // Export the new action
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

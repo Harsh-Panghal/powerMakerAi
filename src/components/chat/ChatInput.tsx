@@ -2,15 +2,6 @@ import { useState, useEffect } from "react";
 import { Send, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Database, Key, Settings } from "lucide-react";
-import { useChatStore } from "@/store/chatStore";
 import { useNavigate, useParams } from "react-router-dom";
 import { ImagePreview } from "./ImagePreview";
 import {
@@ -22,39 +13,16 @@ import { useToast } from "@/hooks/use-toast";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store/store";
-import { setInput } from "../../redux/ChatSlice"; // Update path as per your Redux slice
+import { setInput } from "../../redux/ChatSlice";
 import { useChat } from "../../redux/useChat";
-
-const modelOptions = [
-  {
-    value: "model-0-1",
-    title: "Model 0.1",
-    subtitle: "CRM Customization",
-    icon: Settings,
-  },
-  {
-    value: "model-0-2",
-    title: "Model 0.2",
-    subtitle: "Plugin Tracing",
-    icon: Database,
-  },
-  {
-    value: "model-0-3",
-    title: "Model 0.3",
-    subtitle: "CRM Expert",
-    icon: Key,
-  },
-];
 
 interface PromptSearchBarProps {
   handleSend: () => void;
 }
 
 export function ChatInput({ handleSend }: PromptSearchBarProps) {
-  // const [message, setMessage] = useState("");
   const [pastedImages, setPastedImages] = useState<ImageData[]>([]);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
-  const { selectedModel, setModel, sendMessage } = useChatStore();
   const navigate = useNavigate();
   const { toast } = useToast();
   const maxLength = 1000;
@@ -63,14 +31,12 @@ export function ChatInput({ handleSend }: PromptSearchBarProps) {
   const dispatch = useDispatch();
   const { input } = useChat();
   const { chatId } = useSelector((state: RootState) => state.chat);
+  
+  // Get current model from Redux instead of useChatStore
+  const currentModel = useSelector((state: RootState) => state.model.currentModel);
 
   const inputLength = input.trim().length;
   const isInputEmpty = inputLength === 0;
-
-  const handleModelChange = (newModel: string) => {
-    setModel(newModel);
-    navigate("/");
-  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !isInputEmpty) {
