@@ -127,14 +127,20 @@ const Chat = () => {
   };
 
   // Helper function to get model display name
-  const getModelDisplayName = (modelId: string | number) => {
+  const getModelDisplayName = (modelId: number) => {
     const modelMap: Record<string, string> = {
-      "model-0-1": "Model 0.1 - CRM Customization",
-      "model-0-2": "Model 0.2 - Plugin Tracing",
-      "model-0-3": "Model 0.3 - CRM Expert",
+      0: "Model 0.1 - CRM Customization",
+      1: "Model 0.2 - Plugin Tracing",
+      2: "Model 0.3 - CRM Expert",
     };
     return modelMap[modelId] || modelId;
   };
+
+  const { recentPrompt } = useSelector(
+    (state: RootState) => state.chat
+  );
+  const history =
+    useSelector((state: RootState) => state.chatHistory[chatId ?? ""]) || [];
 
   return (
     <div
@@ -161,7 +167,7 @@ const Chat = () => {
                   {currentThread?.title || "New Conversation"}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Model: {getModelDisplayName(currentThread?.model || currentModel)}
+                  {getModelDisplayName(currentModel)}
                 </p>
               </>
             )}
