@@ -24,12 +24,15 @@ interface ChatState {
   savedResults: { prompt: string; response: string }[];
   developerModeText: string[];
   developerModeEnable: boolean;
-  savedResultsInLocal: SavedResultinLocalInterface[]; // Store chat history
+  savedResultsInLocal: SavedResultinLocalInterface[];
   chatTitle: string;
   concatenatedPrompts: string;
   creditStatus?: boolean;
-  chatId: string | null; // Add chatId to the state
-  currentThread: CurrentThread | null; // Add currentThread
+  chatId: string | null;
+  currentThread: CurrentThread | null;
+  // Preview state
+  isPreviewOpen: boolean;
+  previewContent: string;
 }
 
 const initialState: ChatState = {
@@ -44,12 +47,15 @@ const initialState: ChatState = {
   savedResults: [],
   developerModeText: [],
   developerModeEnable: false,
-  savedResultsInLocal: [], // Default empty chat list
+  savedResultsInLocal: [],
   chatTitle: "",
   concatenatedPrompts: "",
-  chatId: null, // Initialize chatId as null
+  chatId: null,
   creditStatus: true,
-  currentThread: null, // Initialize currentThread as null
+  currentThread: null,
+  // Initialize preview state
+  isPreviewOpen: false,
+  previewContent: "",
 };
 
 const chatSlice = createSlice({
@@ -105,7 +111,9 @@ const chatSlice = createSlice({
       state.developerModeText = [];
       state.recommendationVisible = false;
       state.recommendation = [];
-      state.currentThread = null; // Clear current thread on new chat
+      state.currentThread = null;
+      state.isPreviewOpen = false;
+      state.previewContent = "";
     },
     setConcatenatedPrompts: (state, action: PayloadAction<string>) => {
       state.concatenatedPrompts = action.payload;
@@ -113,7 +121,6 @@ const chatSlice = createSlice({
     setChatTitle: (state, action: PayloadAction<string>) => {
       state.chatTitle = action.payload;
     },
-    // for local chat history
     setChatHistory: (state, action: PayloadAction<any[]>) => {
       state.savedResultsInLocal = action.payload;
     },
@@ -123,9 +130,17 @@ const chatSlice = createSlice({
     setChatId: (state, action: PayloadAction<string | null>) => {
       state.chatId = action.payload;
     },
-    // Add setter for currentThread
     setCurrentThread: (state, action: PayloadAction<CurrentThread | null>) => {
       state.currentThread = action.payload;
+    },
+    // Preview actions
+    openPreview: (state, action: PayloadAction<string>) => {
+      state.isPreviewOpen = true;
+      state.previewContent = action.payload;
+    },
+    closePreview: (state) => {
+      state.isPreviewOpen = false;
+      state.previewContent = "";
     },
   },
 });
@@ -149,7 +164,9 @@ export const {
   setChatId,
   setConcatenatedPrompts,
   setCreditStatus,
-  setCurrentThread, // Export the new action
+  setCurrentThread,
+  openPreview,
+  closePreview,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

@@ -7,8 +7,9 @@ import { FollowUpPromptCard } from './FollowUpPromptCard';
 import { TablesView } from './TablesView';
 import { TraceLogFilters } from './TraceLogFilters';
 import { PluginTraceLogs } from './PluginTraceLogs';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
+import { openPreview } from '@/redux/ChatSlice';
 import { useChat } from '@/redux/useChat';
 
 interface AssistantActionsProps {
@@ -18,7 +19,7 @@ interface AssistantActionsProps {
     type: 'user' | 'assistant';
     timestamp: Date;
     isStreaming?: boolean;
-    images: Array<{ data: string; name: string; size: number; type: string }>;
+    images?: Array<{ data: string; name: string; size: number; type: string }>;
   };
 }
 
@@ -46,6 +47,7 @@ const quickPrompts = [
 ];
 
 export function AssistantActions({ message }: AssistantActionsProps) {
+  const dispatch = useDispatch();
   const [showTables, setShowTables] = useState(false);
   const [showTraceLogFilters, setShowTraceLogFilters] = useState(false);
   const [showPluginTraceLogs, setShowPluginTraceLogs] = useState(false);
@@ -58,9 +60,7 @@ export function AssistantActions({ message }: AssistantActionsProps) {
   const { onSent } = useChat();
 
   const handlePreview = () => {
-    // You need to implement openPreview - either in Redux or as a separate function
-    console.log('Preview content:', message.content);
-    // For now, you can open a modal or drawer with the content
+    dispatch(openPreview(message.content));
   };
 
   const handleQuickPrompt = (promptText: string) => {

@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, Copy, Download } from 'lucide-react';
 import { 
   Sheet, 
@@ -12,12 +12,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useChatStore } from '@/store/chatStore';
 import { useToast } from '@/hooks/use-toast';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/store/store';
+import { closePreview } from '@/redux/ChatSlice';
 
 export function PreviewDrawer() {
-  const { isPreviewOpen, previewContent, closePreview } = useChatStore();
+  const dispatch = useDispatch();
+  const { isPreviewOpen, previewContent } = useSelector((state: RootState) => state.chat);
   const { toast } = useToast();
+
+  const handleClose = () => {
+    dispatch(closePreview());
+  };
 
   const handleCopyContent = async () => {
     try {
@@ -97,7 +104,7 @@ export function PreviewDrawer() {
   };
 
   return (
-    <Sheet open={isPreviewOpen} onOpenChange={(open) => !open && closePreview()}>
+    <Sheet open={isPreviewOpen} onOpenChange={(open) => !open && handleClose()}>
       <SheetContent side="right" className="w-full sm:w-[600px] sm:max-w-[90vw]" showClose={false}>
         <SheetHeader className="space-y-1">
           <div className="flex items-center justify-between">
@@ -154,7 +161,7 @@ export function PreviewDrawer() {
             {previewContent.length} characters • {previewContent.split(' ').length} words
           </div>
           <SheetClose asChild>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleClose}>
               <X className="w-3 h-3 mr-1.5" />
               Close
             </Button>
