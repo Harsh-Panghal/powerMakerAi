@@ -3,23 +3,13 @@ import { MessageList } from "@/components/chat/MessageList";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { PreviewDrawer } from "@/components/chat/PreviewDrawer";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useChat } from "../redux/useChat";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store/store";
-import { setChatId, setCurrentThread } from "../redux/ChatSlice";
-
-// Define the expected response type from backend
-interface ChatDataResponse {
-  chatId: string;
-  title: string;
-  model: string | number;
-  messages?: any[];
-  createdAt?: string;
-  updatedAt?: string;
-}
+import { setChatId, setCurrentThread, setInput } from "../redux/ChatSlice";
 
 const Chat = () => {
   const { chatId: routeChatId } = useParams<{ chatId?: string }>();
@@ -39,39 +29,7 @@ const Chat = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  // Fetch chat details when chatId changes
-  const { data: chatData, isLoading: isChatLoading } = useQuery<ChatDataResponse | null>({
-    queryKey: ["chat", chatId],
-    queryFn: async () => {
-      if (!chatId) return null;
-      
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_API}/chat/${chatId}`,
-        {
-          credentials: "include",
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch chat");
-      }
-      
-      return response.json();
-    },
-    enabled: !!chatId, // Only run if chatId exists
-  });
-
-  // Update currentThread when chat data is loaded
-  useEffect(() => {
-    if (chatData) {
-      dispatch(setCurrentThread({
-        title: chatData.title || "New Conversation",
-        model: chatData.model || currentModel,
-        chatId: chatData.chatId || chatId || "",
-      }));
-    }
-  }, [chatData, dispatch, currentModel, chatId]);
-
+  // Update chatId in Redux when route changes
   useEffect(() => {
     if (routeChatId) {
       dispatch(setChatId(routeChatId));
@@ -107,22 +65,31 @@ const Chat = () => {
   const handlePrompt = async () => {
     if (!input.trim()) return;
 
+    // Save the input before clearing
+    const messageToSend = input;
+
     try {
       if (!chatId) {
         // Create new chat first
         const data = await newChatMutation.mutateAsync();
         if (data?.chatId) {
           navigate(`/c/${data.chatId}`);
-          await onSent(input, data.chatId, 0, currentModel);
+          // Clear input immediately after getting chatId
+          dispatch(setInput(""));
+          await onSent(messageToSend, data.chatId, 0, currentModel);
           queryClient.invalidateQueries({ queryKey: ["recentChats"] });
         }
       } else {
+        // Clear input immediately before sending
+        dispatch(setInput(""));
         // Use existing chat
-        await onSent(input, chatId, 0, currentModel);
+        await onSent(messageToSend, chatId, 0, currentModel);
         queryClient.invalidateQueries({ queryKey: ["recentChats"] });
       }
     } catch (error) {
       console.error("Error handling prompt input:", error);
+      // Optionally restore the input on error
+      dispatch(setInput(messageToSend));
     }
   };
 
@@ -135,12 +102,6 @@ const Chat = () => {
     };
     return modelMap[modelId] || modelId;
   };
-
-  const { recentPrompt } = useSelector(
-    (state: RootState) => state.chat
-  );
-  const history =
-    useSelector((state: RootState) => state.chatHistory[chatId ?? ""]) || [];
 
   return (
     <div
@@ -156,21 +117,12 @@ const Chat = () => {
         {/* Chat Header */}
         <div className="p-2 border-b border-border bg-layout-main">
           <div className="max-w-4xl px-4">
-            {isChatLoading ? (
-              <div className="animate-pulse">
-                <div className="h-5 bg-gray-200 rounded w-48 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-32"></div>
-              </div>
-            ) : (
-              <>
-                <h2 className="text-md sm:text-md font-semibold text-brand break-words">
-                  {currentThread?.title || "New Conversation"}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {getModelDisplayName(currentModel)}
-                </p>
-              </>
-            )}
+            <h2 className="text-md sm:text-md font-semibold text-brand break-words">
+              {currentThread?.title || "New Conversation"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {getModelDisplayName(currentModel)}
+            </p>
           </div>
         </div>
 

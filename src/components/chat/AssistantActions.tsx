@@ -4,13 +4,22 @@ import { Eye, Sparkles, Plus, FileCode, Code, HelpCircle, Table2, Filter } from 
 import { Button } from '@/components/ui/button';
 import { LoadingProgressBar } from '@/components/ui/loading-progress-bar';
 import { FollowUpPromptCard } from './FollowUpPromptCard';
-import { Message, useChatStore } from '@/store/chatStore';
 import { TablesView } from './TablesView';
 import { TraceLogFilters } from './TraceLogFilters';
 import { PluginTraceLogs } from './PluginTraceLogs';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import { useChat } from '@/redux/useChat';
 
 interface AssistantActionsProps {
-  message: Message;
+  message: {
+    id: string;
+    content: string;
+    type: 'user' | 'assistant';
+    timestamp: Date;
+    isStreaming?: boolean;
+    images: Array<{ data: string; name: string; size: number; type: string }>;
+  };
 }
 
 const quickPrompts = [
@@ -37,7 +46,6 @@ const quickPrompts = [
 ];
 
 export function AssistantActions({ message }: AssistantActionsProps) {
-  const { openPreview, sendMessage, selectedModel } = useChatStore();
   const [showTables, setShowTables] = useState(false);
   const [showTraceLogFilters, setShowTraceLogFilters] = useState(false);
   const [showPluginTraceLogs, setShowPluginTraceLogs] = useState(false);
@@ -45,12 +53,20 @@ export function AssistantActions({ message }: AssistantActionsProps) {
   const [isLoadingTraceLogs, setIsLoadingTraceLogs] = useState(false);
   const [isLoadingTables, setIsLoadingTables] = useState(false);
 
+  const { currentModel } = useSelector((state: RootState) => state.model);
+  const { chatId } = useSelector((state: RootState) => state.chat);
+  const { onSent } = useChat();
+
   const handlePreview = () => {
-    openPreview(message.content);
+    // You need to implement openPreview - either in Redux or as a separate function
+    console.log('Preview content:', message.content);
+    // For now, you can open a modal or drawer with the content
   };
 
   const handleQuickPrompt = (promptText: string) => {
-    sendMessage(promptText);
+    if (chatId) {
+      onSent(promptText, chatId, 0, currentModel);
+    }
   };
 
   const handleShowTraceLogs = async () => {
@@ -78,6 +94,7 @@ export function AssistantActions({ message }: AssistantActionsProps) {
     setShowPluginTraceLogs(false);
     setShowTraceLogFilters(true);
   };
+
   const handleShowTables = async () => {
     setIsLoadingTables(true);
     
@@ -109,7 +126,7 @@ export function AssistantActions({ message }: AssistantActionsProps) {
             </Button>
           </motion.div>
           
-          {selectedModel === 'model-0-1' && (
+          {currentModel === 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -128,7 +145,7 @@ export function AssistantActions({ message }: AssistantActionsProps) {
             </motion.div>
           )}
           
-          {selectedModel === 'model-0-2' && (
+          {currentModel === 1 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -158,7 +175,6 @@ export function AssistantActions({ message }: AssistantActionsProps) {
           <h4 className="text-sm font-medium text-muted-foreground mb-3">Quick Prompts</h4>
           <div className="grid gap-2">
             {quickPrompts.map((prompt, index) => {
-              const IconComponent = prompt.icon;
               return (
                 <motion.div
                   key={prompt.text}
@@ -179,7 +195,7 @@ export function AssistantActions({ message }: AssistantActionsProps) {
       </div>
       
       {/* Conditional Modals */}
-      {selectedModel === 'model-0-1' && (
+      {currentModel === 0 && (
         <>
           <TablesView
             isOpen={showTables}
@@ -195,10 +211,9 @@ export function AssistantActions({ message }: AssistantActionsProps) {
             colorScheme="primary"
           />
         </>
-        
       )}
       
-      {selectedModel === 'model-0-2' && (
+      {currentModel === 1 && (
         <>
           <TraceLogFilters
             isOpen={showTraceLogFilters}

@@ -6,7 +6,6 @@ import {
   setResultData,
   setLoading,
   setShowResult,
-  newChat,
   setRecommendationVisible,
   setRecommendation,
   setChatTitle,
@@ -25,6 +24,7 @@ interface OpenAPIResponse {
   timestamp: string;
   crm_action: string | null;
   tracing_filters: string | null;
+  status?: boolean;
 }
 
 export const useChat = () => {
@@ -48,9 +48,6 @@ export const useChat = () => {
 
   const handleResponse = useCallback(
     async (responseData: OpenAPIResponse) => {
-      // Manually set crm_action for testing
-      // const crm_action =
-      //   "create a new entity account with a primary attribute Name and a globaloptionset attribute Bookings and a integer attribute age Invoice";
       const {
         response,
         next_user_responses,
@@ -59,32 +56,38 @@ export const useChat = () => {
         title,
       } = responseData;
 
-      // Fetch currentModel from Redux state
+      // Set chat title and result data
       dispatch(setChatTitle(title));
       dispatch(setResultData(response));
-      dispatch(setRecommendation(next_user_responses));
+      dispatch(setRecommendation(next_user_responses || []));
 
       if (currentModel === 0) {
         if (crm_action !== null && crm_action !== "") {
-          const crmAction = JSON.parse(crm_action);
-          dispatch(setCrmActionData(crmAction));
-          dispatch(setDeveloperModeEnable(true));
-          dispatch(setRecommendationVisible(false));
-          // //console.log("model no0 with crm action", currentModel )
+          try {
+            const crmAction = JSON.parse(crm_action);
+            dispatch(setCrmActionData(crmAction));
+            dispatch(setDeveloperModeEnable(true));
+            dispatch(setRecommendationVisible(false));
+          } catch (error) {
+            console.error("Error parsing crm_action:", error);
+            dispatch(setRecommendationVisible(true));
+            dispatch(setDeveloperModeEnable(false));
+          }
         } else {
-          //console.log("crm action is null");
           dispatch(setRecommendationVisible(true));
           dispatch(setDeveloperModeEnable(false));
         }
       } else if (currentModel === 1) {
         if (tracing_filters !== null && tracing_filters !== "") {
-          const traceData = JSON.parse(tracing_filters);
-          dispatch(setTraceData(traceData));
-          dispatch(setRecommendationVisible(false));
-          // //console.log("model no1 with tracing", currentModel)
+          try {
+            const traceData = JSON.parse(tracing_filters);
+            dispatch(setTraceData(traceData));
+            dispatch(setRecommendationVisible(false));
+          } catch (error) {
+            console.error("Error parsing tracing_filters:", error);
+            dispatch(setRecommendationVisible(true));
+          }
         } else {
-          // //console.log("model no1 with tracing", currentModel)
-          //console.log("tracing_filters is null");
           dispatch(setRecommendationVisible(true));
         }
       } else {
@@ -94,53 +97,115 @@ export const useChat = () => {
     [currentModel, dispatch]
   );
 
-  const runChatMutation = useRunChat(); // 💡 here!
+  const runChatMutation = useRunChat();
+  
   const onSent = useCallback(
     async (
-      prompt: string = input,
+      prompt: string,
       chatId: string,
       action: number = 0,
       model: number = 0
     ) => {
-      if (!prompt.trim()) return;
+      console.log("=== onSent called ===");
+      console.log("Prompt:", prompt);
+      console.log("ChatId:", chatId);
+      console.log("Action:", action);
+      console.log("Model:", model);
 
-      dispatch(newChat());
+      if (!prompt.trim()) {
+        console.warn("Empty prompt provided");
+        return;
+      }
+
+      // Set loading states
+      console.log("Setting loading state to true...");
       dispatch(setLoading(true));
       dispatch(setShowResult(true));
       dispatch(setRecentPrompt(prompt));
       dispatch(setCreditStatus(true));
-      //console.log(model);
+      
+      // Clear previous result data when starting new request
+      dispatch(setResultData(""));
+      dispatch(setRecommendationVisible(false));
 
       try {
-        // call the chat api
+        console.log("Calling API mutation...");
+        
+        // Call the chat API
         const responseData = await runChatMutation.mutateAsync({
           prompt,
           chatId: chatId ?? "",
           action,
           model,
         });
-        if ("status" in responseData && !responseData.status) {
+        
+        console.log("Response received:", responseData);
+        console.log("Response type:", typeof responseData);
+        console.log("Response keys:", Object.keys(responseData || {}));
+
+        // Check for credit status
+        if ("status" in responseData && responseData.status === false) {
+          console.warn("Credit status is false");
           dispatch(setCreditStatus(false));
+          dispatch(setLoading(false));
           return;
         }
 
-        if (prompt !== "" || responseData.response !== "") {
+        // Validate response data
+        if (!responseData || typeof responseData !== "object") {
+          console.error("Invalid response format:", responseData);
+          throw new Error("Invalid response format");
+        }
+
+        if (!responseData.response) {
+          console.error("No response text in API response");
+          console.error("Response data:", JSON.stringify(responseData, null, 2));
+          throw new Error("No response text in API response");
+        }
+
+        console.log("Response validation passed");
+        console.log("Response text length:", responseData.response.length);
+
+        // Add to history only if we have valid prompt and response
+        if (prompt.trim() && responseData.response.trim()) {
+          console.log("Adding to history...");
           dispatch(
             addToHistory({
               chatId: chatId ?? "",
-              entry: { prompt: prompt, response: responseData.response },
+              entry: { 
+                prompt: prompt.trim(), 
+                response: responseData.response.trim() 
+              },
             })
           );
+          console.log("Added to history");
         }
-        // handling response
-        handleResponse(responseData);
+        
+        // Handle response
+        console.log("Handling response...");
+        await handleResponse(responseData);
+        console.log("Response handled successfully");
       } catch (error) {
-        console.error("Error handling the response:", error);
+        console.error("Error in onSent:");
+        console.error("Error object:", error);
+        console.error("Error message:", error instanceof Error ? error.message : "Unknown error");
+        console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+        
+        // Show specific error message
+        const errorMessage = error instanceof Error 
+          ? `Error: ${error.message}` 
+          : "Something went wrong. Please try again.";
+        
+        console.log("Setting error message:", errorMessage);
+        dispatch(setResultData(errorMessage));
+        dispatch(setRecommendationVisible(false));
       } finally {
+        console.log("Setting loading to false");
         dispatch(setLoading(false));
+        console.log("=== onSent completed ===\n");
       }
     },
-    [dispatch, input, handleResponse, concatenatedPrompts]
+    [dispatch, handleResponse, runChatMutation]
   );
 
   return {

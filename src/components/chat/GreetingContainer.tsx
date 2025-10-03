@@ -35,12 +35,11 @@ import { useChat } from "../../redux/useChat";
 import { useDispatch } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { setChatId } from "../../redux/ChatSlice";
-import { auth } from "../../config/firebase config/firebase.config";
-import { onAuthStateChanged } from "firebase/auth";
+import { setCurrentModel } from "../../redux/ModelSlice";
 
 
 const promptSuggestionsByModel = {
-  "model-0-1": [
+  0: [
     {
       title:
         "Create a custom entity to store API configuration details and suggest relevant columns.",
@@ -61,7 +60,7 @@ const promptSuggestionsByModel = {
       icon: Settings,
     },
   ],
-  "model-0-2": [
+  1: [
     {
       title: "Show all plugin trace logs for the account entity.",
       icon: Search,
@@ -79,7 +78,7 @@ const promptSuggestionsByModel = {
       icon: Timer,
     },
   ],
-  "model-0-3": [
+  2: [
     {
       title: "List all attributes of the Account entity..",
       icon: List,
@@ -99,33 +98,33 @@ const promptSuggestionsByModel = {
   ],
 };
 
-const modelOptions = [
-  {
-    value: "model-0-1",
-    title: "Model 0.1",
-    subtitle: "CRM Customization",
-    icon: Settings,
-  },
-  {
-    value: "model-0-2",
-    title: "Model 0.2",
-    subtitle: "Plugin Tracing",
-    icon: Database,
-  },
-  {
-    value: "model-0-3",
-    title: "Model 0.3",
-    subtitle: "CRM Expert",
-    icon: Key,
-  },
-];
+// const modelOptions = [
+//   {
+//     value: "model-0-1",
+//     title: "Model 0.1",
+//     subtitle: "CRM Customization",
+//     icon: Settings,
+//   },
+//   {
+//     value: "model-0-2",
+//     title: "Model 0.2",
+//     subtitle: "Plugin Tracing",
+//     icon: Database,
+//   },
+//   {
+//     value: "model-0-3",
+//     title: "Model 0.3",
+//     subtitle: "CRM Expert",
+//     icon: Key,
+//   },
+// ];
 
 export function GreetingContainer() {
   // const [prompt, setPrompt] = useState("");
   const [pastedImages, setPastedImages] = useState<ImageData[]>([]); // Changed to array
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const navigate = useNavigate();
-  const { selectedModel, setModel, startChat } = useChatStore();
+  // const { selectedModel, setModel, startChat } = useChatStore();
   const { toast } = useToast();
   const { user } = useSelector((state: RootState) => state.auth);
   const maxLength = 1000;
@@ -155,10 +154,10 @@ export function GreetingContainer() {
   const currentPromptSuggestions = useMemo(() => {
     return (
       promptSuggestionsByModel[
-        selectedModel as keyof typeof promptSuggestionsByModel
-      ] || promptSuggestionsByModel["model-0-1"]
+        currentModel as keyof typeof promptSuggestionsByModel
+      ] || promptSuggestionsByModel[0]
     );
-  }, [selectedModel]);
+  }, [currentModel]);
 
 
 
@@ -204,6 +203,7 @@ export function GreetingContainer() {
       // await onSent(input, data.chatId, 0, currentModel); // Send the prompt to the chat      
     },
   });
+  
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -324,7 +324,7 @@ export function GreetingContainer() {
           <div className="flex gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible transition-all duration-300 prompt-cards-scroll" data-tour="prompt-cards">
             {currentPromptSuggestions.map((suggestion, index) => (
               <PromptCard
-                key={`${selectedModel}-${index}`}
+                key={`${currentModel}-${index}`}
                 title={suggestion.title}
                 icon={suggestion.icon}
                 onClick={() => handlePromptCardClick(suggestion.title)}

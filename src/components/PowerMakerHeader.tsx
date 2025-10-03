@@ -103,10 +103,10 @@ const modelOptions = [
   },
 ];
 
-const getFirstName = (displayName?: string): string => {
-  if (!displayName) return "";
-  return displayName.split(" ")[0];
-};
+// const getFirstName = (displayName?: string): string => {
+//   if (!displayName) return "";
+//   return displayName.split(" ")[0];
+// };
 
 export function PowerMakerHeader() {
   const queryClient = useQueryClient();

@@ -68,13 +68,13 @@ import { Timestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { doc, getDoc, arrayUnion, updateDoc, setDoc } from "firebase/firestore";
 import { RootState, AppDispatch } from "../store/store";
-import { 
-  newChat, 
-  setChatId, 
-  setShowResult, 
+import {
+  newChat,
+  setChatId,
+  setShowResult,
   setRecentPrompt,
   setResultData,
-  clearChatHistory 
+  clearChatHistory,
 } from "../redux/ChatSlice";
 import { setFullHistory } from "../redux/chatHistorySlice";
 import { setCurrentModel } from "../redux/ModelSlice";
@@ -110,7 +110,7 @@ export function PowerMakerSidebar() {
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
-  
+
   // Feedback form state
   const [rating, setRating] = useState(0);
   const [feedbackType, setFeedbackType] = useState<
@@ -122,7 +122,7 @@ export function PowerMakerSidebar() {
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [deletingAllIds, setDeletingAllIds] = useState<string[]>([]);
   const editInputRef = useRef<HTMLInputElement>(null);
-  
+
   const { state, setOpen } = useSidebar();
   const isCollapsed = state === "collapsed";
   const navigate = useNavigate();
@@ -130,10 +130,14 @@ export function PowerMakerSidebar() {
 
   // Redux state
   const dispatch: AppDispatch = useDispatch();
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const { chatId: currentChatId, showResult } = useSelector((state: RootState) => state.chat);
+  const { user, isAuthenticated } = useSelector(
+    (state: RootState) => state.auth
+  );
+  const { chatId: currentChatId, showResult } = useSelector(
+    (state: RootState) => state.chat
+  );
   const { currentModel } = useSelector((state: RootState) => state.model);
-  
+
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -177,9 +181,7 @@ export function PowerMakerSidebar() {
   // Update current model when chat data changes
   useEffect(() => {
     if (data && chatId) {
-      const foundChat = data.chats.find(
-        (chat: Chat) => chat.chatId === chatId
-      );
+      const foundChat = data.chats.find((chat: Chat) => chat.chatId === chatId);
       if (foundChat) {
         dispatch(setCurrentModel(foundChat.model));
       }
@@ -196,21 +198,21 @@ export function PowerMakerSidebar() {
   const displayedChats = showAllChats
     ? sortedChats
     : sortedChats.slice(0, INITIAL_CHAT_LIMIT);
-  
+
   const hasMoreChats = sortedChats.length > INITIAL_CHAT_LIMIT;
 
   // Chat store integration (keeping existing useChatStore for compatibility)
-  const {
-    recentThreads,
-    loadThread,
-    renameThread,
-    deleteThread,
-    clearAllThreads,
-    setModel,
-    currentThread,
-    isStreamingActive,
-    streamingPlaceholder,
-  } = useChatStore();
+  // const {
+  //   recentThreads,
+  //   loadThread,
+  //   renameThread,
+  //   deleteThread,
+  //   clearAllThreads,
+  //   setModel,
+  //   currentThread,
+  //   isStreamingActive,
+  //   streamingPlaceholder,
+  // } = useChatStore();
 
   // Track sidebar state changes for animation
   useEffect(() => {
@@ -240,50 +242,7 @@ export function PowerMakerSidebar() {
   };
 
   const handleChatClick = async (chatId: string) => {
-    try {
-      // Update Redux state
-      dispatch(setChatId(chatId));
-      dispatch(setShowResult(true));
-      setActiveChatId(chatId);
-
-      // Load chat history from backend
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_API}/chat/getchathistory/${chatId}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-
-      if (response.ok) {
-        const chatData = await response.json();
-        // Update chat history in Redux
-        dispatch(setFullHistory({ 
-          chatId: chatId, 
-          history: chatData.history || [] 
-        }));
-        
-        // Set current model if available
-        if (chatData.model) {
-          dispatch(setCurrentModel(chatData.model));
-        }
-      }
-
-      // Close sidebar on mobile
-      if (window.innerWidth <= 600) {
-        toggleSidebar();
-      }
-
-      // Navigate to chat page
-      navigate(`/c/${chatId}`);
-    } catch (error) {
-      console.error("Error loading chat:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load chat. Please try again.",
-        variant: "destructive",
-      });
-    }
+    navigate(`/c/${chatId}`);
   };
 
   const handleHelpClick = () => {
@@ -446,7 +405,7 @@ export function PowerMakerSidebar() {
     setConnectionList(connections.filter((conn) => conn.id !== id));
   };
 
-  // Handle rename action and open modal 
+  // Handle rename action and open modal
   const handleRenameChat = (chatId: string, currentTitle: string) => {
     setEditingChatId(chatId);
     setEditingTitle(currentTitle);
@@ -462,9 +421,9 @@ export function PowerMakerSidebar() {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ 
-              chatId: editingChatId, 
-              newTitle: editingTitle.trim() 
+            body: JSON.stringify({
+              chatId: editingChatId,
+              newTitle: editingTitle.trim(),
             }),
           }
         );
@@ -472,7 +431,7 @@ export function PowerMakerSidebar() {
         if (response.ok) {
           // Refetch chat data to update UI
           refetch();
-          
+
           toast({
             title: "Chat renamed",
             description: "Chat title has been updated successfully.",
@@ -504,9 +463,10 @@ export function PowerMakerSidebar() {
   const handleDeleteChat = async (chatId: string) => {
     try {
       setDeletingChatId(chatId);
-      
+
       const response = await fetch(
-         `${import.meta.env.VITE_BACKEND_API
+        `${
+          import.meta.env.VITE_BACKEND_API
         }/chat/deletechat/:id?chatId=${chatId}`,
         {
           method: "DELETE",
@@ -527,7 +487,7 @@ export function PowerMakerSidebar() {
 
       // Refetch chat data
       refetch();
-      
+
       toast({
         title: "Chat deleted",
         description: "Chat has been deleted successfully.",
@@ -744,7 +704,8 @@ export function PowerMakerSidebar() {
             <SidebarMenu>
               {isLoading ? (
                 // Loading state
-                <div className={`
+                <div
+                  className={`
                   px-4 py-2 text-sm text-muted-foreground
                   transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]
                   ${
@@ -752,7 +713,8 @@ export function PowerMakerSidebar() {
                       ? "opacity-0 h-0 py-0 -translate-x-2"
                       : "opacity-100 h-auto py-2 translate-x-0"
                   }
-                `}>
+                `}
+                >
                   Loading chats...
                 </div>
               ) : displayedChats.length > 0 ? (
@@ -794,8 +756,7 @@ export function PowerMakerSidebar() {
                         <SidebarMenuButton
                           className="flex-1 justify-start p-0 h-auto min-w-0 cursor-pointer"
                           onClick={() =>
-                            editingChatId !== chat.chatId &&
-                            !isBeingDeleted
+                            editingChatId !== chat.chatId && !isBeingDeleted
                               ? handleChatClick(chat.chatId)
                               : undefined
                           }
@@ -851,7 +812,9 @@ export function PowerMakerSidebar() {
                                   {chat.title}
                                 </span>
                                 <span className="text-xs text-muted-foreground truncate w-full whitespace-nowrap">
-                                  {new Date(chat.createdAt).toLocaleDateString()}
+                                  {new Date(
+                                    chat.createdAt
+                                  ).toLocaleDateString()}
                                 </span>
                               </>
                             )}
@@ -1131,7 +1094,11 @@ export function PowerMakerSidebar() {
                   </label>
                 </div>
               </div>
-              <Button onClick={handleFeedbackSubmit} className="w-full" disabled={loading}>
+              <Button
+                onClick={handleFeedbackSubmit}
+                className="w-full"
+                disabled={loading}
+              >
                 {loading ? "Sending..." : "Send Feedback"}
               </Button>
             </div>
@@ -1225,7 +1192,11 @@ export function PowerMakerSidebar() {
                   </label>
                 </div>
               </div>
-              <Button onClick={handleFeedbackSubmit} className="w-full" disabled={loading}>
+              <Button
+                onClick={handleFeedbackSubmit}
+                className="w-full"
+                disabled={loading}
+              >
                 {loading ? "Sending..." : "Send Feedback"}
               </Button>
             </div>

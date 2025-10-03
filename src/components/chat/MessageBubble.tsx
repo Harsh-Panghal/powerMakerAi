@@ -1,19 +1,31 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Bot, Expand } from 'lucide-react';
-import { Message, useChatStore } from '@/store/chatStore';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 import { AssistantActions } from './AssistantActions';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface MessageBubbleProps {
-  message: Message;
+  message: {
+    id: string;
+    content: string;
+    type: 'user' | 'assistant';
+    timestamp: Date;
+    isStreaming?: boolean;
+    images: Array<{ data: string; name: string; size: number; type: string }>;
+  };
   isLast?: boolean;
 }
 
 export function MessageBubble({ message, isLast }: MessageBubbleProps) {
   const [showTimestamp, setShowTimestamp] = useState(false);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
-  const { currentThread } = useChatStore();
+  
+  // Get data from Redux (memoized to avoid unnecessary rerenders)
+  const chatId = useSelector((state: RootState) => state.chat.chatId);
+  const recentPrompt = useSelector((state: RootState) => state.chat.recentPrompt);
+  const resultData = useSelector((state: RootState) => state.chat.resultData);
 
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -26,15 +38,16 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
   const isUser = message.type === 'user';
   const isStreaming = message.isStreaming && !message.content;
 
-  // Check if this is the last assistant message in the thread
+  // FIXED: Check if this is the last assistant message that should show actions
   const shouldShowActions = () => {
-    if (isUser || message.isStreaming || !message.content) return false;
+    // Don't show for user messages or streaming messages
+    if (isUser || message.isStreaming) return false;
     
-    const messages = currentThread?.messages || [];
-    const lastMessage = messages[messages.length - 1];
+    // Don't show if there's no content
+    if (!message.content || !message.content.trim()) return false;
     
-    // Only show actions if this is the very last message and it's an assistant message
-    return lastMessage?.id === message.id && lastMessage.type === 'assistant';
+    // Show actions if this is the last assistant message (passed via isLast prop)
+    return isLast === true;
   };
 
   const handleImageClick = (imageSrc: string) => {
@@ -85,18 +98,15 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                   {/* Compact Images Display */}
                   {message.images && message.images.length > 0 && (
                     <div className="mb-3">
-                      {/* Images counter for multiple images */}
                       {message.images.length > 1 && (
                         <div className="text-xs opacity-75 mb-2">
                           {message.images.length} image{message.images.length > 1 ? 's' : ''}
                         </div>
                       )}
                       
-                      {/* Compact Images Grid */}
                       <div className="flex flex-wrap gap-2">
                         {message.images.map((image, index) => (
                           <div key={index} className="relative group cursor-pointer">
-                            {/* Compact Image Thumbnail */}
                             <div 
                               className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 border-border hover:border-primary/50 transition-colors"
                               onClick={() => handleImageClick(image.data)}
@@ -107,12 +117,10 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                                 className="w-full h-full object-cover"
                               />
                               
-                              {/* Expand icon overlay */}
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                                 <Expand className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                               </div>
                               
-                              {/* Image index badge */}
                               <div className="absolute bottom-0 left-0 bg-black/70 text-white text-xs rounded-tr-lg px-1.5 py-0.5 min-w-[16px] text-center">
                                 {index + 1}
                               </div>
@@ -129,7 +137,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                       {message.content.split('\n').map((line, index) => {
                         // Handle table formatting
                         if (line.includes('|') && line.includes('---')) {
-                          return null; // Skip separator lines
+                          return null;
                         }
                         if (line.includes('|')) {
                           const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
@@ -160,7 +168,6 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                           );
                         }
                         
-                        // Regular text
                         return line ? <p key={index} className="mb-2 break-words overflow-wrap-anywhere">{line}</p> : <br key={index} />;
                       })}
                     </div>
@@ -168,7 +175,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
                 </div>
               )}
 
-              {/* Streaming Animation for Assistant Messages */}
+              {/* Streaming Animation */}
               {message.isStreaming && message.content && (
                 <motion.span
                   animate={{ opacity: [1, 0.3, 1] }}
