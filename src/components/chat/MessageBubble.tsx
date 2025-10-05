@@ -178,7 +178,7 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
               {isStreaming && hasContent && (
                 <motion.span
                   animate={{ opacity: [1, 0.3, 1] }}
-                  transition={{ duration: 0.8, repeat: Infinity }}
+                  transition={{ duration: 0.3, repeat: Infinity }}
                   className="inline-block w-2 h-4 bg-current ml-1 align-middle animate-pulse"
                 />
               )}

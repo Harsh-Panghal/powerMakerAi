@@ -6,7 +6,7 @@ import { PreviewDrawer } from "@/components/chat/PreviewDrawer";
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useChat } from "../redux/useChat";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store/store";
 import { setChatId, setCurrentThread, setInput } from "../redux/ChatSlice";
@@ -17,17 +17,39 @@ const Chat = () => {
   const chatId = routeChatId || storeChatId;
 
   const { input, onSent } = useChat();
-  
+
   const currentModel = useSelector(
     (state: RootState) => state.model.currentModel
   );
 
-  // Get currentThread from Redux
-  const currentThread = useSelector((state: RootState) => state.chat.currentThread);
+  // Get currentThread and chatTitle from Redux
+  const currentThread = useSelector(
+    (state: RootState) => state.chat.currentThread
+  );
+  // ⭐ NEW: Get the actual chat title from the API response
+  const chatTitle = useSelector((state: RootState) => state.chat.chatTitle);
 
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  // Fetch recent chats to get the title
+  const { data: recentChatsData } = useQuery({
+    queryKey: ["recentChats"],
+    queryFn: async () => {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_API}/chat/recentchats`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+      if (!response.ok) throw new Error("Network response was not ok");
+      return response.json();
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
 
   // Update chatId in Redux when route changes
   useEffect(() => {
@@ -50,18 +72,21 @@ const Chat = () => {
     },
     onSuccess: async (data) => {
       // Set the new thread immediately
-      dispatch(setCurrentThread({
-        title: "New Conversation",
-        model: currentModel,
-        chatId: data.chatId,
-      }));
-      
+      dispatch(
+        setCurrentThread({
+          title: "New Conversation",
+          model: currentModel,
+          chatId: data.chatId,
+        })
+      );
+
       // Invalidate queries to refresh chat list
       queryClient.invalidateQueries({ queryKey: ["chats"] });
       queryClient.invalidateQueries({ queryKey: ["recentChats"] });
     },
   });
 
+  // Function to handle the prompt
   const handlePrompt = async () => {
     if (!input.trim()) return;
 
@@ -103,6 +128,27 @@ const Chat = () => {
     return modelMap[modelId] || modelId;
   };
 
+  // ⭐ NEW: Determine which title to display
+  const displayTitle = () => {
+    // First, try to get title from recent chats data (for existing chats)
+    if (chatId && recentChatsData?.chats) {
+      const currentChat = recentChatsData.chats.find(
+        (chat: any) => chat.chatId === chatId
+      );
+      if (currentChat?.title) {
+        return currentChat.title;
+      }
+    }
+
+    // Then check chatTitle from API response (for new messages)
+    if (chatTitle && chatTitle.trim()) {
+      return chatTitle;
+    }
+
+    // Fall back to currentThread title or "New Conversation"
+    return currentThread?.title || "New Conversation";
+  };
+
   return (
     <div
       className="flex-1 flex flex-col bg-layout-main h-[82%]"
@@ -118,7 +164,7 @@ const Chat = () => {
         <div className="p-2 border-b border-border bg-layout-main">
           <div className="max-w-4xl px-4">
             <h2 className="text-md sm:text-md font-semibold text-brand break-words">
-              {currentThread?.title || "New Conversation"}
+              {displayTitle()}
             </h2>
             <p className="text-sm text-muted-foreground">
               {getModelDisplayName(currentModel)}

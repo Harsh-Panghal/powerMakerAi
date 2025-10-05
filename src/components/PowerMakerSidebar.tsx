@@ -201,19 +201,6 @@ export function PowerMakerSidebar() {
 
   const hasMoreChats = sortedChats.length > INITIAL_CHAT_LIMIT;
 
-  // Chat store integration (keeping existing useChatStore for compatibility)
-  // const {
-  //   recentThreads,
-  //   loadThread,
-  //   renameThread,
-  //   deleteThread,
-  //   clearAllThreads,
-  //   setModel,
-  //   currentThread,
-  //   isStreamingActive,
-  //   streamingPlaceholder,
-  // } = useChatStore();
-
   // Track sidebar state changes for animation
   useEffect(() => {
     setIsAnimating(true);
@@ -431,13 +418,6 @@ export function PowerMakerSidebar() {
         if (response.ok) {
           // Refetch chat data to update UI
           refetch();
-
-          toast({
-            title: "Chat renamed",
-            description: "Chat title has been updated successfully.",
-            variant: "default",
-            className: "border-green-200 bg-green-50 text-green-900",
-          });
         } else {
           throw new Error("Failed to rename chat");
         }
@@ -487,12 +467,6 @@ export function PowerMakerSidebar() {
 
       // Refetch chat data
       refetch();
-
-      toast({
-        title: "Chat deleted",
-        description: "Chat has been deleted successfully.",
-        variant: "destructive",
-      });
     } catch (error) {
       console.error("Error deleting chat:", error);
       toast({
