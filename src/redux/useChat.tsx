@@ -46,6 +46,28 @@ export const useChat = () => {
   );
   const { currentModel } = useSelector((state: RootState) => state.model);
 
+  // ⭐ NEW: Streaming function for smooth word-by-word animation
+  const streamText = useCallback(
+    async (text: string, onUpdate: (chunk: string) => void) => {
+      let displayedText = '';
+      
+      // Split by words for natural streaming
+      const words = text.split(' ');
+      
+      for (let i = 0; i < words.length; i++) {
+        // Add space before word (except first word)
+        displayedText += (i > 0 ? ' ' : '') + words[i];
+        onUpdate(displayedText);
+        
+        // Adjust speed: 20ms = fast, 40ms = medium, 60ms = slow
+        await new Promise(resolve => setTimeout(resolve, 35));
+      }
+      
+      return displayedText;
+    },
+    []
+  );
+
   const handleResponse = useCallback(
     async (responseData: OpenAPIResponse) => {
       const {
@@ -56,9 +78,17 @@ export const useChat = () => {
         title,
       } = responseData;
 
-      // Set chat title and result data
+      // Set chat title
       dispatch(setChatTitle(title));
-      dispatch(setResultData(response));
+      
+      // ⭐ UPDATED: Stream the response instead of setting it all at once
+      console.log("Starting response streaming...");
+      await streamText(response, (chunk) => {
+        dispatch(setResultData(chunk));
+      });
+      console.log("Response streaming completed");
+
+      // Set recommendations after streaming completes
       dispatch(setRecommendation(next_user_responses || []));
 
       if (currentModel === 0) {
@@ -94,7 +124,7 @@ export const useChat = () => {
         dispatch(setRecommendationVisible(true));
       }
     },
-    [currentModel, dispatch]
+    [currentModel, dispatch, streamText]
   );
 
   const runChatMutation = useRunChat();
@@ -124,7 +154,7 @@ export const useChat = () => {
       dispatch(setRecentPrompt(prompt));
       dispatch(setCreditStatus(true));
       
-      // Clear previous result data when starting new request
+      // ⭐ IMPORTANT: Clear previous result data to show "thinking" indicator
       dispatch(setResultData(""));
       dispatch(setRecommendationVisible(false));
 
@@ -166,7 +196,12 @@ export const useChat = () => {
         console.log("Response validation passed");
         console.log("Response text length:", responseData.response.length);
 
-        // Add to history only if we have valid prompt and response
+        // ⭐ UPDATED: Handle response with streaming (loading will be set to false after streaming)
+        console.log("Handling response with streaming...");
+        await handleResponse(responseData);
+        console.log("Response handled successfully");
+
+        // ⭐ UPDATED: Add to history AFTER streaming completes
         if (prompt.trim() && responseData.response.trim()) {
           console.log("Adding to history...");
           dispatch(
@@ -181,23 +216,21 @@ export const useChat = () => {
           console.log("Added to history");
         }
         
-        // Handle response
-        console.log("Handling response...");
-        await handleResponse(responseData);
-        console.log("Response handled successfully");
       } catch (error) {
         console.error("Error in onSent:");
         console.error("Error object:", error);
         console.error("Error message:", error instanceof Error ? error.message : "Unknown error");
         console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
         
-        // Show specific error message
+        // ⭐ UPDATED: Stream error message as well
         const errorMessage = error instanceof Error 
           ? `Error: ${error.message}` 
           : "Something went wrong. Please try again.";
         
-        console.log("Setting error message:", errorMessage);
-        dispatch(setResultData(errorMessage));
+        console.log("Streaming error message:", errorMessage);
+        await streamText(errorMessage, (chunk) => {
+          dispatch(setResultData(chunk));
+        });
         dispatch(setRecommendationVisible(false));
       } finally {
         console.log("Setting loading to false");
@@ -205,7 +238,7 @@ export const useChat = () => {
         console.log("=== onSent completed ===\n");
       }
     },
-    [dispatch, handleResponse, runChatMutation]
+    [dispatch, handleResponse, runChatMutation, streamText]
   );
 
   return {

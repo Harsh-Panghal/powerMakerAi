@@ -1,3 +1,5 @@
+// Updated MessageList.tsx with thinking indicator
+
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
@@ -14,8 +16,8 @@ export function MessageList() {
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const dispatch = useDispatch();
-
   // Get data from Redux store - use proper selectors to avoid unnecessary rerenders
+
   const chatId = useSelector((state: RootState) => state.chat.chatId);
   const recentPrompt = useSelector((state: RootState) => state.chat.recentPrompt);
   const resultData = useSelector((state: RootState) => state.chat.resultData);
@@ -55,15 +57,14 @@ export function MessageList() {
     staleTime: Infinity,
     retry: 1,
   });
-
-  // Log fetch errors
+ // Log fetch errors
   useEffect(() => {
     if (fetchError) {
       console.error('Chat history fetch error:', fetchError);
     }
   }, [fetchError]);
 
-  // Parse and store chat history in Redux
+   // Parse and store chat history in Redux
   useEffect(() => {
     if (data?.history && data?.history.length !== 0 && chatId) {
       const parsed = [];
@@ -75,7 +76,7 @@ export function MessageList() {
             prompt: userMsg.parts?.[0]?.text || "",
             response: modelMsg.parts?.[0]?.text || "",
           });
-          i++; // Skip the model message
+          i++;
         }
       }
       dispatch(setFullHistory({ chatId, history: parsed }));
@@ -112,16 +113,16 @@ export function MessageList() {
     createMessage(`assistant-${chatId}-${index}`, item.response, 'assistant'),
   ]);
 
-  // Add current conversation (if exists and not duplicate)
+   // Add current conversation (if exists and not duplicate)
   const currentMessages: any[] = [];
   
-  // FIXED: Better deduplication logic with null safety
+   // FIXED: Better deduplication logic with null safety
   const isCurrentInHistory = recentPrompt && resultData && history.some(item => 
     item.prompt?.trim() === recentPrompt?.trim() && 
     item.response?.trim() === resultData?.trim()
   );
   
-  // Only show current messages if they're not already saved in history
+   // Only show current messages if they're not already saved in history
   if (!isCurrentInHistory) {
     if (recentPrompt && recentPrompt.trim()) {
       currentMessages.push(
@@ -129,10 +130,16 @@ export function MessageList() {
       );
     }
     
-    // Show assistant message if loading OR if there's resultData (including error messages)
-    if (loading || (resultData && resultData.trim())) {
+    // UPDATED: Show thinking indicator when loading with no content
+    if (loading) {
+      // Show streaming message (empty or partial content)
       currentMessages.push(
-        createMessage(`current-assistant`, loading ? '' : resultData, 'assistant', loading)
+        createMessage(`current-assistant`, resultData || '', 'assistant', true)
+      );
+    } else if (resultData && resultData.trim()) {
+      // Show completed message
+      currentMessages.push(
+        createMessage(`current-assistant`, resultData, 'assistant', false)
       );
     }
   }
@@ -164,14 +171,14 @@ export function MessageList() {
     setIsUserScrolling(!isAtBottom);
   };
 
-  // Auto-scroll when messages change (unless user is manually scrolling)
+    // Auto-scroll when messages change (unless user is manually scrolling)
   useEffect(() => {
     if (!isUserScrolling) {
       scrollToBottom(true);
     }
   }, [allMessages.length, resultData, isUserScrolling]);
 
-  // Reset scrolling state when chat changes
+   // Reset scrolling state when chat changes
   useEffect(() => {
     setIsUserScrolling(false);
     scrollToBottom(false);
@@ -179,7 +186,7 @@ export function MessageList() {
 
   return (
     <div className="h-full relative">
-      {/* Messages Container */}
+       {/* Messages Container */}
       <div 
         ref={containerRef}
         onScroll={handleScroll}
@@ -203,13 +210,11 @@ export function MessageList() {
               </motion.div>
             ))}
           </AnimatePresence>
-          
           {/* Invisible element to scroll to */}
           <div ref={messagesEndRef} />
         </div>
       </div>
-
-      {/* Scroll to Bottom Button */}
+ {/* Scroll to Bottom Button */}
       <AnimatePresence>
         {showScrollToBottom && (
           <motion.div

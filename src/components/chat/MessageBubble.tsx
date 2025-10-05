@@ -1,6 +1,8 @@
+// Updated MessageBubble.tsx with improved thinking indicator
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Bot, Expand } from 'lucide-react';
+import { User, Bot, Expand, Loader2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { AssistantActions } from './AssistantActions';
@@ -23,7 +25,6 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
   const [showTimestamp, setShowTimestamp] = useState(false);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   
-  // Get data from Redux (memoized to avoid unnecessary rerenders)
   const chatId = useSelector((state: RootState) => state.chat.chatId);
   const recentPrompt = useSelector((state: RootState) => state.chat.recentPrompt);
   const resultData = useSelector((state: RootState) => state.chat.resultData);
@@ -37,17 +38,12 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
   };
 
   const isUser = message.type === 'user';
-  const isStreaming = message.isStreaming && !message.content;
+  const isStreaming = message.isStreaming;
+  const hasContent = message.content && message.content.trim().length > 0;
 
-  // FIXED: Check if this is the last assistant message that should show actions
   const shouldShowActions = () => {
-    // Don't show for user messages or streaming messages
     if (isUser || message.isStreaming) return false;
-    
-    // Don't show if there's no content
     if (!message.content || !message.content.trim()) return false;
-    
-    // Show actions if this is the last assistant message (passed via isLast prop)
     return isLast === true;
   };
 
@@ -88,11 +84,13 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
               }`}
             >
               {/* Message Content */}
-              {isStreaming ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
+              {isStreaming && !hasContent ? (
+                // UPDATED: Show "Assistant thinking..." indicator
+                <div className="flex items-center gap-2 py-1">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground animate-pulse">
+                    Assistant thinking...
+                  </span>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -133,7 +131,7 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
                   )}
                   
                   {/* Text Content */}
-                  {message.content && (
+                  {hasContent && (
                     <div className="prose prose-sm max-w-full dark:prose-invert text-sm sm:text-base overflow-hidden">
                       {message.content.split('\n').map((line, index) => {
                         // Handle table formatting
@@ -176,12 +174,12 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
                 </div>
               )}
 
-              {/* Streaming Animation */}
-              {message.isStreaming && message.content && (
+              {/* Streaming Animation - UPDATED to show blinking cursor during streaming */}
+              {isStreaming && hasContent && (
                 <motion.span
                   animate={{ opacity: [1, 0.3, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                  className="inline-block w-2 h-4 bg-current ml-1"
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                  className="inline-block w-2 h-4 bg-current ml-1 align-middle animate-pulse"
                 />
               )}
 
@@ -199,7 +197,7 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
               )}
             </motion.div>
 
-            {/* Assistant Actions */}
+            {/* Assistant Actions - Only show when not streaming and has content */}
             {shouldShowActions() && (
               <div className="mt-3">
                 <AssistantActions message={message} items={items} />
