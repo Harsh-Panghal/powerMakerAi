@@ -197,6 +197,7 @@ export function MessageList() {
               >
                 <MessageBubble 
                   message={message} 
+                  items={data?.followUpPrompts}
                   isLast={index === lastAssistantIndex}
                 />
               </motion.div>

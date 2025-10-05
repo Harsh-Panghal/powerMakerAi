@@ -21,32 +21,10 @@ interface AssistantActionsProps {
     isStreaming?: boolean;
     images?: Array<{ data: string; name: string; size: number; type: string }>;
   };
+  items: string[];
 }
 
-const quickPrompts = [
-  {
-    text: "Create a new entity named 'API Configuration' with ownership type 'Organization' and a primary attribute called 'API Name' of type Text",
-    icon: Sparkles,
-  },
-  {
-    text: "Add an attribute called 'API Endpoint URL' of type Text",
-    icon: Plus,
-  },
-  {
-    text: "Add an attribute called 'Authentication Type' of type Picklist with options 'API Key' 'OAuth 2.0' 'Basic Authentication' and 'None'",
-    icon: FileCode,
-  },
-  {
-    text: "Add an attribute called 'Is Active' of type Boolean",
-    icon: Code,
-  },
-  {
-    text: "Generate schema JSON for the complete API Configuration entity",
-    icon: HelpCircle,
-  },
-];
-
-export function AssistantActions({ message }: AssistantActionsProps) {
+export function AssistantActions({ message, items }: AssistantActionsProps) {
   const dispatch = useDispatch();
   const [showTables, setShowTables] = useState(false);
   const [showTraceLogFilters, setShowTraceLogFilters] = useState(false);
@@ -65,7 +43,7 @@ export function AssistantActions({ message }: AssistantActionsProps) {
 
   const handleQuickPrompt = (promptText: string) => {
     if (chatId) {
-      onSent(promptText, chatId, 0, currentModel);
+      onSent(promptText, chatId ?? "", 0, currentModel);
     }
   };
 
@@ -174,18 +152,18 @@ export function AssistantActions({ message }: AssistantActionsProps) {
         >
           <h4 className="text-sm font-medium text-muted-foreground mb-3">Quick Prompts</h4>
           <div className="grid gap-2">
-            {quickPrompts.map((prompt, index) => {
+            {items.map((prompt, index) => {
               return (
                 <motion.div
-                  key={prompt.text}
+                  key={index}
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 + index * 0.05 }}
                   className="w-full"
                 >
                   <FollowUpPromptCard
-                    title={prompt.text}
-                    onClick={() => handleQuickPrompt(prompt.text)}
+                    title={prompt}
+                    onClick={() => handleQuickPrompt(prompt)}
                   />
                 </motion.div>
               );

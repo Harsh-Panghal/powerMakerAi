@@ -16,9 +16,10 @@ interface MessageBubbleProps {
     images: Array<{ data: string; name: string; size: number; type: string }>;
   };
   isLast?: boolean;
+  items: string[];
 }
 
-export function MessageBubble({ message, isLast }: MessageBubbleProps) {
+export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
   const [showTimestamp, setShowTimestamp] = useState(false);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   
@@ -201,7 +202,7 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
             {/* Assistant Actions */}
             {shouldShowActions() && (
               <div className="mt-3">
-                <AssistantActions message={message} />
+                <AssistantActions message={message} items={items} />
               </div>
             )}
           </div>
