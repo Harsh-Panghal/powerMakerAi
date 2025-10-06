@@ -128,7 +128,7 @@ const Chat = () => {
     return modelMap[modelId] || modelId;
   };
 
-  // ⭐ NEW: Determine which title to display
+  // Determine which title to display
   const displayTitle = () => {
     // First, try to get title from recent chats data (for existing chats)
     if (chatId && recentChatsData?.chats) {

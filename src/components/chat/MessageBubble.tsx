@@ -1,12 +1,9 @@
-// Updated MessageBubble.tsx with improved thinking indicator
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Bot, Expand, Loader2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { AssistantActions } from './AssistantActions';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface MessageBubbleProps {
   message: {
@@ -26,8 +23,6 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   
   const chatId = useSelector((state: RootState) => state.chat.chatId);
-  const recentPrompt = useSelector((state: RootState) => state.chat.recentPrompt);
-  const resultData = useSelector((state: RootState) => state.chat.resultData);
 
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -55,10 +50,297 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
     setExpandedImage(null);
   };
 
+  // Enhanced content parsing with code block support
+  const parseContent = (content: string) => {
+    const lines = content.split('\n');
+    const elements: JSX.Element[] = [];
+    let i = 0;
+    let keyCounter = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+      
+      // Check for code blocks (lines starting with //)
+      if (line.trim().startsWith('//')) {
+        const codeLines: string[] = [];
+        let j = i;
+        
+        // Collect consecutive comment/code lines
+        while (j < lines.length && (lines[j].trim().startsWith('//') || lines[j].trim().startsWith('--'))) {
+          codeLines.push(lines[j]);
+          j++;
+        }
+        
+        if (codeLines.length > 0) {
+          elements.push(renderCodeBlock(codeLines, keyCounter++));
+          i = j;
+          continue;
+        }
+      }
+      
+      // Check if this line is part of a table
+      if (line.includes('|')) {
+        const tableLines: string[] = [];
+        let j = i;
+        
+        // Collect all consecutive lines that contain '|'
+        while (j < lines.length && lines[j].includes('|')) {
+          tableLines.push(lines[j]);
+          j++;
+        }
+        
+        // Check if we have at least a header and separator
+        if (tableLines.length >= 2) {
+          const hasHeaderSeparator = tableLines[1].includes('---') || 
+                                     tableLines[1].includes(':-') || 
+                                     tableLines[1].includes('-:');
+          
+          if (hasHeaderSeparator) {
+            // Parse as markdown table
+            elements.push(renderMarkdownTable(tableLines, keyCounter++));
+            i = j;
+            continue;
+          }
+        }
+        
+        // If not a proper markdown table, render as simple table
+        if (tableLines.length >= 1) {
+          elements.push(renderSimpleTable(tableLines, keyCounter++));
+          i = j;
+          continue;
+        }
+      }
+      
+      // Handle bold text
+      if (line.includes('**')) {
+        const parts = line.split('**');
+        elements.push(
+          <p key={`text-${keyCounter++}`} className="mb-2 break-words overflow-wrap-anywhere">
+            {parts.map((part, partIndex) => 
+              partIndex % 2 === 1 ? 
+                <strong key={partIndex}>{part}</strong> : 
+                part
+            )}
+          </p>
+        );
+      } else if (line.trim()) {
+        // Regular text
+        elements.push(
+          <p key={`text-${keyCounter++}`} className="mb-2 break-words overflow-wrap-anywhere">
+            {line}
+          </p>
+        );
+      } else {
+        // Empty line
+        elements.push(<br key={`br-${keyCounter++}`} />);
+      }
+      
+      i++;
+    }
+    
+    return elements;
+  };
+
+  // Render code/log block with syntax highlighting
+  const renderCodeBlock = (lines: string[], key: number) => {
+    return (
+      <div key={`code-${key}`} className="my-4 rounded-lg overflow-hidden border border-border shadow-sm">
+        <div className="bg-muted/40 px-4 py-2 border-b border-border flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-red-500" />
+          <div className="w-3 h-3 rounded-full bg-yellow-500" />
+          <div className="w-3 h-3 rounded-full bg-green-500" />
+          <span className="text-xs text-muted-foreground ml-2 font-mono">Trace Log</span>
+        </div>
+        <div className="bg-slate-950 dark:bg-slate-900 p-4 overflow-x-auto">
+          <pre className="text-xs sm:text-sm font-mono leading-relaxed">
+            {lines.map((line, idx) => {
+              const trimmed = line.trim();
+              
+              // Color coding for different log elements
+              if (trimmed.startsWith('// Trace Log Start') || trimmed.startsWith('// ---')) {
+                return (
+                  <div key={idx} className="text-cyan-400 font-semibold">
+                    {line}
+                  </div>
+                );
+              } else if (trimmed.startsWith('// Operation:') || trimmed.startsWith('// Entity:')) {
+                return (
+                  <div key={idx} className="text-purple-400">
+                    {line}
+                  </div>
+                );
+              } else if (trimmed.startsWith('// Record ID:')) {
+                return (
+                  <div key={idx} className="text-amber-400">
+                    {line}
+                  </div>
+                );
+              } else if (trimmed.startsWith('// Stage:')) {
+                return (
+                  <div key={idx} className="text-green-400 font-semibold">
+                    {line}
+                  </div>
+                );
+              } else if (trimmed.startsWith('// Message:') || trimmed.startsWith('// Trace:')) {
+                return (
+                  <div key={idx} className="text-blue-300">
+                    {line}
+                  </div>
+                );
+              } else if (trimmed.startsWith('// Input Parameters:') || trimmed.startsWith('// Target:')) {
+                return (
+                  <div key={idx} className="text-yellow-300">
+                    {line}
+                  </div>
+                );
+              } else if (trimmed.startsWith('// Retrieving') || trimmed.startsWith('// Checking')) {
+                return (
+                  <div key={idx} className="text-gray-400 italic">
+                    {line}
+                  </div>
+                );
+              } else if (trimmed.startsWith('// Business Rule') || trimmed.startsWith('// Updated Attribute:')) {
+                return (
+                  <div key={idx} className="text-emerald-400">
+                    {line}
+                  </div>
+                );
+              } else if (trimmed.includes('Successfully') || trimmed.includes('Applied')) {
+                return (
+                  <div key={idx} className="text-green-300">
+                    {line}
+                  </div>
+                );
+              } else if (trimmed.startsWith('--')) {
+                return (
+                  <div key={idx} className="text-gray-500">
+                    {line}
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={idx} className="text-gray-300">
+                    {line}
+                  </div>
+                );
+              }
+            })}
+          </pre>
+        </div>
+      </div>
+    );
+  };
+
+  // Render markdown-style table with enhanced styling
+  const renderMarkdownTable = (lines: string[], key: number) => {
+    const headerRow = lines[0].split('|').map(cell => cell.trim()).filter(cell => cell);
+    const alignments = lines[1].split('|').map(cell => {
+      const trimmed = cell.trim();
+      if (trimmed.startsWith(':') && trimmed.endsWith(':')) return 'center';
+      if (trimmed.endsWith(':')) return 'right';
+      return 'left';
+    }).filter((_, i) => i < headerRow.length);
+    
+    const dataRows = lines.slice(2).map(line => 
+      line.split('|').map(cell => cell.trim()).filter(cell => cell)
+    ).filter(row => row.length > 0);
+    
+    return (
+      <div key={`table-${key}`} className="my-4 w-full overflow-x-auto rounded-lg border border-border shadow-sm">
+        <table className="min-w-full border-collapse bg-background">
+          <thead>
+            <tr className="bg-muted/60 border-b border-border">
+              {headerRow.map((header, idx) => (
+                <th 
+                  key={idx} 
+                  className="px-4 py-3 text-left text-sm font-semibold text-foreground border-r border-border last:border-r-0"
+                  style={{ textAlign: alignments[idx] || 'left' }}
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {dataRows.map((row, rowIdx) => (
+              <tr 
+                key={rowIdx} 
+                className={`border-b border-border last:border-b-0 transition-colors hover:bg-muted/30 ${
+                  rowIdx % 2 === 0 ? 'bg-background' : 'bg-muted/20'
+                }`}
+              >
+                {row.map((cell, cellIdx) => (
+                  <td 
+                    key={cellIdx} 
+                    className="px-4 py-3 text-sm text-foreground border-r border-border last:border-r-0 break-words"
+                    style={{ textAlign: alignments[cellIdx] || 'left' }}
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  // Render simple table (no markdown formatting) with enhanced styling
+  const renderSimpleTable = (lines: string[], key: number) => {
+    const rows = lines.map(line => 
+      line.split('|').map(cell => cell.trim()).filter(cell => cell)
+    ).filter(row => row.length > 0);
+    
+    if (rows.length === 0) return null;
+    
+    // First row is header
+    const headerRow = rows[0];
+    const dataRows = rows.slice(1);
+    
+    return (
+      <div key={`table-${key}`} className="my-4 w-full overflow-x-auto rounded-lg border border-border shadow-sm">
+        <table className="min-w-full border-collapse bg-background">
+          <thead>
+            <tr className="bg-muted/60 border-b border-border">
+              {headerRow.map((header, idx) => (
+                <th 
+                  key={idx} 
+                  className="px-4 py-3 text-left text-sm font-semibold text-foreground border-r border-border last:border-r-0"
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {dataRows.map((row, rowIdx) => (
+              <tr 
+                key={rowIdx} 
+                className={`border-b border-border last:border-b-0 transition-colors hover:bg-muted/30 ${
+                  rowIdx % 2 === 0 ? 'bg-background' : 'bg-muted/20'
+                }`}
+              >
+                {row.map((cell, cellIdx) => (
+                  <td 
+                    key={cellIdx} 
+                    className="px-4 py-3 text-sm text-foreground border-r border-border last:border-r-0 break-words"
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   return (
     <>
       <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full px-2 sm:px-4`}>
-        <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] md:max-w-[75%] lg:max-w-[70%]`}>
+        <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] md:max-w-[75%] lg:max-w-[80%]`}>
           {/* Avatar */}
           <div className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
             isUser 
@@ -85,7 +367,6 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
             >
               {/* Message Content */}
               {isStreaming && !hasContent ? (
-                // UPDATED: Show "Assistant thinking..." indicator
                 <div className="flex items-center gap-2 py-1">
                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                   <span className="text-sm text-muted-foreground animate-pulse">
@@ -130,51 +411,16 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
                     </div>
                   )}
                   
-                  {/* Text Content */}
+                  {/* Text Content with Enhanced Table Support */}
                   {hasContent && (
                     <div className="prose prose-sm max-w-full dark:prose-invert text-sm sm:text-base overflow-hidden">
-                      {message.content.split('\n').map((line, index) => {
-                        // Handle table formatting
-                        if (line.includes('|') && line.includes('---')) {
-                          return null;
-                        }
-                        if (line.includes('|')) {
-                          const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
-                          return (
-                            <div key={index} className="w-full overflow-x-auto">
-                              <div className="flex flex-col sm:flex-row border-b border-border/20 py-1 gap-1 sm:gap-0 min-w-0">
-                                {cells.map((cell, cellIndex) => (
-                                  <div key={cellIndex} className={`flex-1 px-1 sm:px-2 text-xs sm:text-sm break-words overflow-hidden text-ellipsis ${cellIndex === 0 ? 'font-medium' : ''}`}>
-                                    {cell}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        }
-                        
-                        // Handle bold text
-                        if (line.includes('**')) {
-                          const parts = line.split('**');
-                          return (
-                            <p key={index} className="mb-2 break-words overflow-wrap-anywhere">
-                              {parts.map((part, partIndex) => 
-                                partIndex % 2 === 1 ? 
-                                  <strong key={partIndex}>{part}</strong> : 
-                                  part
-                              )}
-                            </p>
-                          );
-                        }
-                        
-                        return line ? <p key={index} className="mb-2 break-words overflow-wrap-anywhere">{line}</p> : <br key={index} />;
-                      })}
+                      {parseContent(message.content)}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Streaming Animation - UPDATED to show blinking cursor during streaming */}
+              {/* Streaming Animation */}
               {isStreaming && hasContent && (
                 <motion.span
                   animate={{ opacity: [1, 0.3, 1] }}
@@ -197,7 +443,7 @@ export function MessageBubble({ message, isLast, items }: MessageBubbleProps) {
               )}
             </motion.div>
 
-            {/* Assistant Actions - Only show when not streaming and has content */}
+            {/* Assistant Actions */}
             {shouldShowActions() && (
               <div className="mt-3">
                 <AssistantActions message={message} items={items} />

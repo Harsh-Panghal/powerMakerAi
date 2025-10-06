@@ -98,7 +98,7 @@ interface Chat {
 
 export function PowerMakerSidebar() {
   const [showAllChats, setShowAllChats] = useState(false);
-  const INITIAL_CHAT_LIMIT = 9;
+  const INITIAL_CHAT_LIMIT = 12;
   const [hoveredChat, setHoveredChat] = useState<number | null>(null);
   const isMobile = useIsMobile();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -785,11 +785,12 @@ export function PowerMakerSidebar() {
                                 >
                                   {chat.title}
                                 </span>
-                                <span className="text-xs text-muted-foreground truncate w-full whitespace-nowrap">
+                                {/* TODO: Add timestamp */}
+                                {/* <span className="text-xs text-muted-foreground truncate w-full whitespace-nowrap">
                                   {new Date(
                                     chat.createdAt
                                   ).toLocaleDateString()}
-                                </span>
+                                </span> */}
                               </>
                             )}
                           </div>
