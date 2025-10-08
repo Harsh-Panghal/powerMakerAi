@@ -151,17 +151,17 @@ const Chat = () => {
 
   return (
     <div
-      className="flex-1 flex flex-col bg-layout-main h-[82%]"
+      className="flex flex-col bg-layout-main h-[91vh] overflow-hidden"
       data-tour="chat-area"
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex-1 flex flex-col h-full"
+        className="flex flex-col h-full"
       >
-        {/* Chat Header */}
-        <div className="p-2 border-b border-border bg-layout-main">
+        {/* Chat Header - Fixed at top */}
+        <div className="flex-shrink-0 p-2 border-b border-border bg-layout-main z-10">
           <div className="max-w-4xl px-4">
             <h2 className="text-md sm:text-md font-semibold text-brand break-words">
               {displayTitle()}
@@ -172,13 +172,13 @@ const Chat = () => {
           </div>
         </div>
 
-        {/* Scrollable Messages Area */}
-        <div className="flex-1 overflow-hidden">
+        {/* Messages Area - Scrollable with fixed height */}
+        <div className="flex-1 min-h-0 overflow-hidden">
           <MessageList />
         </div>
 
-        {/* Fixed Chat Input */}
-        <div className="bg-layout-main absolute w-full bottom-0">
+        {/* Chat Input - Fixed at bottom */}
+        <div className="flex-shrink-0 bg-layout-main border-t border-border">
           <ChatInput handleSend={handlePrompt} />
         </div>
       </motion.div>

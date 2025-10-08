@@ -1,5 +1,3 @@
-// Updated MessageList.tsx with thinking indicator
-
 import { useEffect, useRef, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
@@ -205,13 +203,13 @@ export function MessageList() {
 
   return (
     <div className="h-full relative">
-      {/* Messages Container */}
+      {/* Messages Container - Now takes full height of parent */}
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-2 sm:py-4"
+        className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-2 "
       >
-        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 ">
           <AnimatePresence initial={false}>
             {allMessages.map((message, index) => (
               <motion.div

@@ -35,7 +35,7 @@ export function EntityDetailsTable() {
         pluralName: entity.displaycollectionname || "",
         action: entity.pma_action || "",
         ownershipType: entity.ownershipType || "user owned",
-        description: entity.description || "",
+        description: entity.description || "(value not provided)",
       });
     }
   }, [crmActionData]);

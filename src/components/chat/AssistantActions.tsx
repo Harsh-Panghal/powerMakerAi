@@ -36,6 +36,7 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
   const [isLoadingTraceFilters, setIsLoadingTraceFilters] = useState(false);
   const [isLoadingTraceLogs, setIsLoadingTraceLogs] = useState(false);
   const [isLoadingTables, setIsLoadingTables] = useState(false);
+  const [hasOpenedTables, setHasOpenedTables] = useState(false);
 
   const { currentModel } = useSelector((state: RootState) => state.model);
   const { chatId, recentPrompt, previewClickedMap, showTables } = useSelector((state: RootState) => state.chat);
@@ -65,7 +66,6 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
   }, [crmActionData, recentPrompt, previewClickedMap, dispatch]);
 
   const handlePreview = () => {
-    
     dispatch(openPreview(message.content));
   };
 
@@ -104,6 +104,7 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     
+    setHasOpenedTables(true); // Mark that tables have been opened
     dispatch(setShowTables(true));
     setIsLoadingTables(false);
   };
@@ -112,15 +113,16 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
     dispatch(setShowTables(false));
   };
 
-  // Don't show preview button if already clicked
-  const shouldShowPreviewButton = !previewClickedMap[recentPrompt];
+  // Don't show preview button and quick prompts if tables were ever opened
+  const shouldShowContent = !showTables && !hasOpenedTables;
+  const shouldShowPreviewButton = !previewClickedMap[recentPrompt] && shouldShowContent;
 
   return (
     <>
-      <div className="space-y-3">
-        {/* Action Buttons */}
-        <div className="flex gap-2 flex-wrap">
-          
+      {shouldShowContent && (
+        <div className="space-y-3">
+          {/* Action Buttons */}
+          <div className="flex gap-2 flex-wrap">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -136,74 +138,75 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
                 Show Preview
               </Button>
             </motion.div>
-          
-          {currentModel === 0 && shouldShowPreviewButton && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Button
-                onClick={handleShowTables}
-                variant="outline"
-                size="sm"
-                disabled={isLoadingTables}
-                className="bg-background hover:bg-muted border-border text-foreground"
+            
+            {currentModel === 0 && shouldShowPreviewButton && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
               >
-                <Table2 className="w-4 h-4 mr-2" />
-                {isLoadingTables ? 'Loading...' : 'Show Tables'}
-              </Button>
-            </motion.div>
-          )}
-          
-          {currentModel === 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Button
-                onClick={handleShowTraceFilters}
-                variant="outline"
-                size="sm"
-                disabled={isLoadingTraceFilters}
-                className="bg-background hover:bg-muted border-border text-foreground"
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                {isLoadingTraceFilters ? 'Loading...' : 'Show Trace Logs'}
-              </Button>
-            </motion.div>
-          )}
-        </div>
-
-        {/* Quick Prompts */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-2"
-        >
-          <h4 className="text-sm font-medium text-muted-foreground mb-3">Quick Prompts</h4>
-          <div className="grid gap-2">
-            {items.map((prompt, index) => {
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + index * 0.05 }}
-                  className="w-full"
+                <Button
+                  onClick={handleShowTables}
+                  variant="outline"
+                  size="sm"
+                  disabled={isLoadingTables}
+                  className="bg-background hover:bg-muted border-border text-foreground"
                 >
-                  <FollowUpPromptCard
-                    title={prompt}
-                    onClick={() => handleQuickPrompt(prompt)}
-                  />
-                </motion.div>
-              );
-            })}
+                  <Table2 className="w-4 h-4 mr-2" />
+                  {isLoadingTables ? 'Loading...' : 'Show Tables'}
+                </Button>
+              </motion.div>
+            )}
+            
+            {currentModel === 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Button
+                  onClick={handleShowTraceFilters}
+                  variant="outline"
+                  size="sm"
+                  disabled={isLoadingTraceFilters}
+                  className="bg-background hover:bg-muted border-border text-foreground"
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  {isLoadingTraceFilters ? 'Loading...' : 'Show Trace Logs'}
+                </Button>
+              </motion.div>
+            )}
           </div>
-        </motion.div>
-      </div>
+
+          {/* Quick Prompts */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="space-y-2"
+          >
+            <h4 className="text-sm font-medium text-muted-foreground mb-3">Quick Prompts</h4>
+            <div className="grid gap-2">
+              {items.map((prompt, index) => {
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 + index * 0.05 }}
+                    className="w-full"
+                  >
+                    <FollowUpPromptCard
+                      title={prompt}
+                      onClick={() => handleQuickPrompt(prompt)}
+                    />
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+      )}
       
       {/* Conditional Modals */}
       {currentModel === 0 && (
