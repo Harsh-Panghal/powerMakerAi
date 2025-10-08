@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Sparkles, Plus, FileCode, Code, HelpCircle, Table2, Filter } from 'lucide-react';
+import { Eye, Table2, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingProgressBar } from '@/components/ui/loading-progress-bar';
 import { FollowUpPromptCard } from './FollowUpPromptCard';
@@ -9,7 +9,12 @@ import { TraceLogFilters } from './TraceLogFilters';
 import { PluginTraceLogs } from './PluginTraceLogs';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
-import { openPreview } from '@/redux/ChatSlice';
+import { 
+  openPreview, 
+  setShowTables,
+  updatePreviewClickedMap,
+  setCustomizationVisible 
+} from '@/redux/ChatSlice';
 import { useChat } from '@/redux/useChat';
 
 interface AssistantActionsProps {
@@ -26,7 +31,6 @@ interface AssistantActionsProps {
 
 export function AssistantActions({ message, items }: AssistantActionsProps) {
   const dispatch = useDispatch();
-  const [showTables, setShowTables] = useState(false);
   const [showTraceLogFilters, setShowTraceLogFilters] = useState(false);
   const [showPluginTraceLogs, setShowPluginTraceLogs] = useState(false);
   const [isLoadingTraceFilters, setIsLoadingTraceFilters] = useState(false);
@@ -34,10 +38,34 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
   const [isLoadingTables, setIsLoadingTables] = useState(false);
 
   const { currentModel } = useSelector((state: RootState) => state.model);
-  const { chatId } = useSelector((state: RootState) => state.chat);
+  const { chatId, recentPrompt, previewClickedMap, showTables } = useSelector((state: RootState) => state.chat);
+  const { crmActionData } = useSelector((state: RootState) => state.crm);
   const { onSent } = useChat();
 
+  // Check if preview was already clicked for this prompt
+  useEffect(() => {
+    if (recentPrompt && !(recentPrompt in previewClickedMap)) {
+      dispatch(updatePreviewClickedMap({ prompt: recentPrompt, clicked: false }));
+    }
+  }, [recentPrompt, previewClickedMap, dispatch]);
+
+  // Show customization button logic
+  useEffect(() => {
+    if (
+      crmActionData !== "" &&
+      recentPrompt &&
+      !previewClickedMap[recentPrompt]
+    ) {
+      dispatch(updatePreviewClickedMap({ prompt: recentPrompt, clicked: true }));
+    }
+
+    dispatch(setCustomizationVisible(
+      previewClickedMap[recentPrompt] && crmActionData !== ""
+    ));
+  }, [crmActionData, recentPrompt, previewClickedMap, dispatch]);
+
   const handlePreview = () => {
+    
     dispatch(openPreview(message.content));
   };
 
@@ -49,10 +77,7 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
 
   const handleShowTraceLogs = async () => {
     setIsLoadingTraceLogs(true);
-    
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
     setShowTraceLogFilters(false);
     setShowPluginTraceLogs(true);
     setIsLoadingTraceLogs(false);
@@ -60,10 +85,7 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
 
   const handleShowTraceFilters = async () => {
     setIsLoadingTraceFilters(true);
-    
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1200));
-    
     setShowTraceLogFilters(true);
     setIsLoadingTraceFilters(false);
   };
@@ -74,37 +96,48 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
   };
 
   const handleShowTables = async () => {
+    const predefinedPrompt = "No, Proceed with the customisation with the given details";
+    onSent(predefinedPrompt, chatId ?? "", 1, 0);
+    dispatch(updatePreviewClickedMap({ prompt: predefinedPrompt, clicked: true }));
     setIsLoadingTables(true);
     
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    setShowTables(true);
+    dispatch(setShowTables(true));
     setIsLoadingTables(false);
   };
+
+  const handleCloseTables = () => {
+    dispatch(setShowTables(false));
+  };
+
+  // Don't show preview button if already clicked
+  const shouldShowPreviewButton = !previewClickedMap[recentPrompt];
 
   return (
     <>
       <div className="space-y-3">
         {/* Action Buttons */}
         <div className="flex gap-2 flex-wrap">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Button
-              onClick={handlePreview}
-              variant="outline"
-              size="sm"
-              className="bg-background hover:bg-muted border-border text-foreground"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Show Preview
-            </Button>
-          </motion.div>
           
-          {currentModel === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Button
+                onClick={handlePreview}
+                variant="outline"
+                size="sm"
+                className="bg-background hover:bg-muted border-border text-foreground"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Show Preview
+              </Button>
+            </motion.div>
+          
+          {currentModel === 0 && shouldShowPreviewButton && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -177,11 +210,10 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
         <>
           <TablesView
             isOpen={showTables}
-            onClose={() => setShowTables(false)}
+            onClose={handleCloseTables}
             isLoadingTables={isLoadingTables}
           />
           
-          {/* Loading Progress Bar */}
           <LoadingProgressBar 
             isLoading={isLoadingTables}
             message="Loading CRM Entity Configuration..."
@@ -205,7 +237,6 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
             onBack={handleBackToFilters}
           />
           
-          {/* Loading Progress Bars */}
           <LoadingProgressBar 
             isLoading={isLoadingTraceFilters}
             message="Loading trace log filters..."

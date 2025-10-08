@@ -33,6 +33,12 @@ interface ChatState {
   // Preview state
   isPreviewOpen: boolean;
   previewContent: string;
+  // Tables state
+  showTables: boolean;
+  previewClickedMap: { [prompt: string]: boolean };
+  customizationVisible: boolean;
+  customizationResponse: string | null;
+  isLoadingCustomization: boolean;
 }
 
 const initialState: ChatState = {
@@ -53,9 +59,13 @@ const initialState: ChatState = {
   chatId: null,
   creditStatus: true,
   currentThread: null,
-  // Initialize preview state
   isPreviewOpen: false,
   previewContent: "",
+  showTables: false,
+  previewClickedMap: {},
+  customizationVisible: false,
+  customizationResponse: null,
+  isLoadingCustomization: false,
 };
 
 const chatSlice = createSlice({
@@ -114,6 +124,11 @@ const chatSlice = createSlice({
       state.currentThread = null;
       state.isPreviewOpen = false;
       state.previewContent = "";
+      state.showTables = false;
+      state.previewClickedMap = {};
+      state.customizationVisible = false;
+      state.customizationResponse = null;
+      state.isLoadingCustomization = false;
     },
     setConcatenatedPrompts: (state, action: PayloadAction<string>) => {
       state.concatenatedPrompts = action.payload;
@@ -142,6 +157,25 @@ const chatSlice = createSlice({
       state.isPreviewOpen = false;
       state.previewContent = "";
     },
+    // Tables actions
+    setShowTables: (state, action: PayloadAction<boolean>) => {
+      state.showTables = action.payload;
+    },
+    setPreviewClickedMap: (state, action: PayloadAction<{ [prompt: string]: boolean }>) => {
+      state.previewClickedMap = action.payload;
+    },
+    updatePreviewClickedMap: (state, action: PayloadAction<{ prompt: string; clicked: boolean }>) => {
+      state.previewClickedMap[action.payload.prompt] = action.payload.clicked;
+    },
+    setCustomizationVisible: (state, action: PayloadAction<boolean>) => {
+      state.customizationVisible = action.payload;
+    },
+    setCustomizationResponse: (state, action: PayloadAction<string | null>) => {
+      state.customizationResponse = action.payload;
+    },
+    setIsLoadingCustomization: (state, action: PayloadAction<boolean>) => {
+      state.isLoadingCustomization = action.payload;
+    },
   },
 });
 
@@ -167,6 +201,12 @@ export const {
   setCurrentThread,
   openPreview,
   closePreview,
+  setShowTables,
+  setPreviewClickedMap,
+  updatePreviewClickedMap,
+  setCustomizationVisible,
+  setCustomizationResponse,
+  setIsLoadingCustomization,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

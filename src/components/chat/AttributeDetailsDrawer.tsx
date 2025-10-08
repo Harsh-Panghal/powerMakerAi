@@ -1,11 +1,20 @@
-import { useState, useEffect } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useEffect, useState } from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface AttributeDetailsDrawerProps {
   isOpen: boolean;
@@ -13,153 +22,233 @@ interface AttributeDetailsDrawerProps {
   attribute: any;
 }
 
+const dataTypeOptions = [
+  { value: ['text', 'string', 'single line of text'], label: 'Single Line of Text' },
+  { value: ['picklist'], label: 'Option Set' },
+  { value: ['multiselectpicklist'], label: 'Multi Select Picklist' },
+  { value: ['boolean'], label: 'Two Options' },
+  { value: ['integer', 'wholenumber'], label: 'Whole Number' },
+  { value: ['decimal'], label: 'Decimal Number' },
+  { value: ['money', 'currency'], label: 'Currency' },
+  { value: ['memo', 'multilineoftext'], label: 'Multiple Lines of Text' },
+  { value: ['datetime'], label: 'Date and Time' },
+];
+
 export function AttributeDetailsDrawer({ isOpen, onClose, attribute }: AttributeDetailsDrawerProps) {
-  const [selectedDataType, setSelectedDataType] = useState(attribute?.dataType || '');
-  
-  // Update selectedDataType when attribute changes
+  const [selectedType, setSelectedType] = useState<{ value: string[]; label: string } | null>(null);
+
   useEffect(() => {
     if (attribute?.dataType) {
-      setSelectedDataType(attribute.dataType);
+      const matched = dataTypeOptions.find(opt =>
+        opt.value.map(v => v.toLowerCase()).includes(attribute.dataType.toLowerCase())
+      );
+      if (matched) {
+        setSelectedType(matched);
+      }
     }
-  }, [attribute?.dataType]);
-  
+  }, [attribute]);
+
+  const handleTypeChange = (value: string) => {
+    const selected = dataTypeOptions.find(opt => opt.label === value);
+    setSelectedType(selected || null);
+  };
+
   if (!attribute) return null;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:w-[400px] lg:w-[500px] max-w-[90vw] sm:max-w-none">
-        <SheetHeader className="flex flex-row items-center justify-between pb-4">
-          <SheetTitle className="text-base sm:text-lg font-semibold text-brand">Attribute Details</SheetTitle>
+      <SheetContent className="w-[400px] sm:w-[540px]">
+        <SheetHeader>
+          <SheetTitle>Attribute Details</SheetTitle>
         </SheetHeader>
         
-        <div className="space-y-4 sm:space-y-6 py-2 sm:py-6 overflow-y-auto max-h-[calc(100vh-120px)]">
+        <div className="mt-6 space-y-4">
           {/* Display Name */}
-          <div className="space-y-2">
-            <Label htmlFor="displayName" className="text-sm font-medium">
-              Display Name
-            </Label>
+          <div>
+            <Label htmlFor="display-name">Display Name</Label>
             <Input
-              id="displayName"
-              value={attribute.displayName}
-              className="bg-background"
+              id="display-name"
+              value={attribute.displayName || ''}
               readOnly
+              className="mt-1"
             />
           </div>
 
           {/* Checkboxes */}
-          <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6">
+          <div className="flex gap-4">
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="searchable" 
-                checked={attribute.isSearchable}
+                checked={attribute.isSearchable || false}
                 disabled
               />
-              <Label 
-                htmlFor="searchable" 
-                className="text-sm font-normal cursor-pointer"
-              >
+              <Label htmlFor="searchable" className="text-sm font-normal">
                 Is Searchable
               </Label>
             </div>
-            
             <div className="flex items-center space-x-2">
               <Checkbox 
-                id="auditEnabled" 
-                checked={attribute.isAuditEnabled}
+                id="audit" 
+                checked={attribute.isAuditEnabled || false}
                 disabled
               />
-              <Label 
-                htmlFor="auditEnabled" 
-                className="text-sm font-normal cursor-pointer"
-              >
+              <Label htmlFor="audit" className="text-sm font-normal">
                 Is Audit Enabled
               </Label>
             </div>
-            
             <div className="flex items-center space-x-2">
               <Checkbox 
-                id="primaryAttribute" 
-                checked={attribute.isPrimaryAttribute}
+                id="primary" 
+                checked={attribute.isPrimaryAttribute || false}
                 disabled
               />
-              <Label 
-                htmlFor="primaryAttribute" 
-                className="text-sm font-normal cursor-pointer"
-              >
+              <Label htmlFor="primary" className="text-sm font-normal">
                 Primary Attribute
               </Label>
             </div>
           </div>
 
-          {/* Type Section */}
-          <div className="space-y-4">
-            <h3 className="text-base font-medium text-brand">Type</h3>
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-semibold mb-4">Type</h3>
             
-            <div className="space-y-2">
-              <Label htmlFor="dataType" className="text-sm font-medium">
-                Data Type
-              </Label>
-              <Select value={selectedDataType} onValueChange={setSelectedDataType}>
-                <SelectTrigger className="cursor-pointer">
+            {/* Data Type Selector */}
+            <div className="mb-4">
+              <Label htmlFor="data-type">Data Type</Label>
+              <Select value={selectedType?.label || ''} onValueChange={handleTypeChange}>
+                <SelectTrigger id="data-type" className="mt-1">
                   <SelectValue placeholder="Select data type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Single Line of Text">Single Line of Text</SelectItem>
-                  <SelectItem value="Option Set">Option Set</SelectItem>
-                  <SelectItem value="Multi Select Picklist">Multi Select Picklist</SelectItem>
-                  <SelectItem value="Two Options">Two Options</SelectItem>
-                  <SelectItem value="Whole Number">Whole Number</SelectItem>
-                  <SelectItem value="Decimal Number">Decimal Number</SelectItem>
-                  <SelectItem value="Currency">Currency</SelectItem>
-                  <SelectItem value="Multiple Lines of Text">Multiple Lines of Text</SelectItem>
-                  <SelectItem value="Date and Time">Date and Time</SelectItem>
+                  {dataTypeOptions.map((option) => (
+                    <SelectItem key={option.label} value={option.label}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Conditional fields based on data type */}
-            {(selectedDataType === 'Single Line of Text' || 
-              selectedDataType === 'Multiple Lines of Text' || 
-              selectedDataType === 'Whole Number') && attribute.maxLength && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="maxLength" className="text-sm font-medium">
-                    Max Length
-                  </Label>
+            {/* Conditional Fields based on Data Type */}
+            {selectedType?.label === 'Single Line of Text' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="max-length">Max Length</Label>
                   <Input
-                    id="maxLength"
-                    value={attribute.maxLength}
-                    className="bg-background"
+                    id="max-length"
+                    value={attribute.maxLength || '100'}
                     readOnly
+                    className="mt-1"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="format" className="text-sm font-medium">
-                    Format
-                  </Label>
+                <div>
+                  <Label htmlFor="format">Format</Label>
                   <Input
                     id="format"
-                    value={attribute.format}
-                    className="bg-background"
+                    value={attribute.format || '(value not provided)'}
                     readOnly
+                    className="mt-1"
                   />
                 </div>
               </div>
             )}
 
-            {/* Format only for other types */}
-            {!(selectedDataType === 'Single Line of Text' || 
-               selectedDataType === 'Multiple Lines of Text' || 
-               selectedDataType === 'Whole Number') && (
-              <div className="space-y-2">
-                <Label htmlFor="format" className="text-sm font-medium">
-                  Format
-                </Label>
+            {selectedType?.label === 'Option Set' && (
+              <div className="space-y-3">
+                {(() => {
+                  let optionsArray: any[] = [];
+
+                  if (Array.isArray(attribute.options)) {
+                    optionsArray = attribute.options;
+                  } else if (typeof attribute.options === 'object' && attribute.options !== null) {
+                    const values = Object.values(attribute.options);
+                    optionsArray = values.map((item: any) => {
+                      return Object.values(item)[0] ?? item;
+                    });
+                  }
+
+                  return optionsArray.map((opt: any, index: number) => (
+                    <div key={opt?.Value ?? index} className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Option {index + 1}</Label>
+                        <Input
+                          value={opt?.Label || ''}
+                          readOnly
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Value {index + 1}</Label>
+                        <Input
+                          value={opt?.Value || ''}
+                          readOnly
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            )}
+
+            {(selectedType?.label === 'Whole Number' || 
+              selectedType?.label === 'Decimal Number' || 
+              selectedType?.label === 'Currency') && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Min Value</Label>
+                  <Input
+                    value={attribute.minValue || '10'}
+                    readOnly
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Max Value</Label>
+                  <Input
+                    value={attribute.maxValue || '100000'}
+                    readOnly
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Precision</Label>
+                  <Input
+                    value={attribute.precision || '2'}
+                    readOnly
+                    className="mt-1"
+                  />
+                </div>
+                {selectedType?.label === 'Whole Number' && (
+                  <div>
+                    <Label>Format</Label>
+                    <Input
+                      value={attribute.format || '(value not provided)'}
+                      readOnly
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {selectedType?.label === 'Multiple Lines of Text' && (
+              <div>
+                <Label>Max Length</Label>
                 <Input
-                  id="format"
-                  value={attribute.format}
-                  className="bg-background"
+                  value={attribute.maxLength || '100'}
                   readOnly
+                  className="mt-1"
+                />
+              </div>
+            )}
+
+            {selectedType?.label === 'Date and Time' && (
+              <div>
+                <Label>Format</Label>
+                <Input
+                  value={attribute.format || '(value not provided)'}
+                  readOnly
+                  className="mt-1"
                 />
               </div>
             )}

@@ -1,120 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AttributeDetailsDrawer } from './AttributeDetailsDrawer';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 
 export function AttributesTable() {
   const [selectedAttribute, setSelectedAttribute] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [attributes, setAttributes] = useState<any[]>([]);
+  
+  const { crmActionData } = useSelector((state: RootState) => state.crm);
 
-  const attributes = [
-    {
-      displayName: 'API Name',
-      schemaName: 'dev_api_name',
-      dataType: 'Single Line of Text',
-      format: 'Text',
-      description: 'The API name of the entity',
-      requiredLevel: 'Required',
-      maxLength: 100,
-      isSearchable: true,
-      isAuditEnabled: false,
-      isPrimaryAttribute: true
-    },
-    {
-      displayName: 'Status',
-      schemaName: 'dev_status',
-      dataType: 'Option Set',
-      format: 'Picklist',
-      description: 'Current status',
-      requiredLevel: 'Optional',
-      isSearchable: false,
-      isAuditEnabled: true,
-      isPrimaryAttribute: false
-    },
-    {
-      displayName: 'Categories',
-      schemaName: 'dev_categories',
-      dataType: 'Multi Select Picklist',
-      format: 'MultiPicklist',
-      description: 'Multiple categories',
-      requiredLevel: 'Optional',
-      isSearchable: true,
-      isAuditEnabled: false,
-      isPrimaryAttribute: false
-    },
-    {
-      displayName: 'Is Active',
-      schemaName: 'dev_isactive',
-      dataType: 'Two Options',
-      format: 'Boolean',
-      description: 'Active status',
-      requiredLevel: 'Optional',
-      isSearchable: false,
-      isAuditEnabled: true,
-      isPrimaryAttribute: false
-    },
-    {
-      displayName: 'Count',
-      schemaName: 'dev_count',
-      dataType: 'Whole Number',
-      format: 'Integer',
-      description: 'Item count',
-      requiredLevel: 'Optional',
-      maxLength: 10,
-      isSearchable: true,
-      isAuditEnabled: false,
-      isPrimaryAttribute: false
-    },
-    {
-      displayName: 'Price',
-      schemaName: 'dev_price',
-      dataType: 'Decimal Number',
-      format: 'Decimal',
-      description: 'Item price',
-      requiredLevel: 'Optional',
-      isSearchable: false,
-      isAuditEnabled: true,
-      isPrimaryAttribute: false
-    },
-    {
-      displayName: 'Amount',
-      schemaName: 'dev_amount',
-      dataType: 'Currency',
-      format: 'Money',
-      description: 'Total amount',
-      requiredLevel: 'Optional',
-      isSearchable: true,
-      isAuditEnabled: false,
-      isPrimaryAttribute: false
-    },
-    {
-      displayName: 'Description',
-      schemaName: 'dev_description',
-      dataType: 'Multiple Lines of Text',
-      format: 'TextArea',
-      description: 'Detailed description',
-      requiredLevel: 'Optional',
-      maxLength: 2000,
-      isSearchable: true,
-      isAuditEnabled: true,
-      isPrimaryAttribute: false
-    },
-    {
-      displayName: 'Created On',
-      schemaName: 'dev_createdon',
-      dataType: 'Date and Time',
-      format: 'DateTime',
-      description: 'Creation timestamp',
-      requiredLevel: 'System',
-      isSearchable: false,
-      isAuditEnabled: false,
-      isPrimaryAttribute: false
+  // Populate attributes from Redux
+  useEffect(() => {
+    if (crmActionData && crmActionData.entity && crmActionData.entity.attributes) {
+      const attrs = crmActionData.entity.attributes.map((attr: any) => ({
+        displayName: attr.displayName || '(not provided)',
+        schemaName: attr.schemaName || '(not provided)',
+        dataType: attr.dataType || 'text',
+        format: attr.format || 'Text',
+        description: attr.description || null,
+        requiredLevel: attr.requiredLevel || 'optional',
+        maxLength: attr.maxlength,
+        minValue: attr.minValue,
+        maxValue: attr.maxValue,
+        precision: attr.precision,
+        options: attr.options,
+        isSearchable: attr.IsSearchable,
+        isAuditEnabled: attr.isauditEnabled,
+        isPrimaryAttribute: attr.isprimary,
+      }));
+      setAttributes(attrs);
     }
-  ];
+  }, [crmActionData]);
 
   const handleDataTypeClick = (attribute: any) => {
     setSelectedAttribute(attribute);
     setIsDrawerOpen(true);
+  };
+
+  // Map dataType to display label
+  const getDataTypeLabel = (dataType: string) => {
+    const typeMap: { [key: string]: string } = {
+      'text': 'Single Line of Text',
+      'string': 'Single Line of Text',
+      'picklist': 'Option Set',
+      'multiselectpicklist': 'Multi Select Picklist',
+      'boolean': 'Two Options',
+      'integer': 'Whole Number',
+      'wholenumber': 'Whole Number',
+      'decimal': 'Decimal Number',
+      'money': 'Currency',
+      'currency': 'Currency',
+      'memo': 'Multiple Lines of Text',
+      'multilineoftext': 'Multiple Lines of Text',
+      'datetime': 'Date and Time',
+    };
+    return typeMap[dataType.toLowerCase()] || dataType;
   };
 
   return (
@@ -136,25 +79,36 @@ export function AttributesTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {attributes.map((attribute, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">{attribute.displayName}</TableCell>
-                  <TableCell className="text-muted-foreground">{attribute.schemaName}</TableCell>
-                  <TableCell>
-                    <button
-                      onClick={() => handleDataTypeClick(attribute)}
-                      className="text-blue-600 font-medium hover:text-blue-800 hover:underline cursor-pointer"
-                    >
-                      {attribute.dataType}
-                    </button>
+              {attributes.length === 0 ? (
+                <TableRow>
+                  <TableCell 
+                    colSpan={6} 
+                    className="text-center text-muted-foreground italic py-8"
+                  >
+                    No attribute data found
                   </TableCell>
-                  <TableCell>{attribute.format}</TableCell>
-                  <TableCell className="text-muted-foreground italic">
-                    {attribute.description}
-                  </TableCell>
-                  <TableCell>{attribute.requiredLevel}</TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                attributes.map((attribute, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{attribute.displayName}</TableCell>
+                    <TableCell className="text-muted-foreground">{attribute.schemaName}</TableCell>
+                    <TableCell>
+                      <button
+                        onClick={() => handleDataTypeClick(attribute)}
+                        className="text-blue-600 font-medium hover:text-blue-800 hover:underline cursor-pointer"
+                      >
+                        {getDataTypeLabel(attribute.dataType)}
+                      </button>
+                    </TableCell>
+                    <TableCell>{attribute.format}</TableCell>
+                    <TableCell className="text-muted-foreground italic">
+                      {attribute.description || '(null)'}
+                    </TableCell>
+                    <TableCell>{attribute.requiredLevel}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
