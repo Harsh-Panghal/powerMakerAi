@@ -7,13 +7,11 @@ import {
   User,
   UserPlus,
   LogOut,
-  X,
   Camera,
   Filter,
   Settings,
   Database,
   Key,
-  LogIn,
   HelpCircle,
   Loader2,
   AlertCircle,
@@ -79,7 +77,7 @@ import {
   increment,
 } from "firebase/firestore";
 import { setRetryTrigger } from "../redux/CrmSlice";
-import { setCurrentModel } from "../redux/ModelSlice"; // Adjust path
+import { setCurrentModel } from "../redux/ModelSlice";
 import { setChatId } from "../redux/ChatSlice";
 
 const modelOptions = [
@@ -102,11 +100,36 @@ const modelOptions = [
     icon: Key,
   },
 ];
-
-// const getFirstName = (displayName?: string): string => {
-//   if (!displayName) return "";
-//   return displayName.split(" ")[0];
-// };
+// Profile input component
+const ProfileInput = ({
+  id,
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+}) => {
+  const isFilled = value.trim() !== "";
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id} className={isFilled ? "text-foreground" : ""}>
+        {label}
+      </Label>
+      <Input
+        type={type}
+        id={id}
+        value={value}
+        onChange={onChange}
+        placeholder={`Enter ${label.toLowerCase()}`}
+      />
+    </div>
+  );
+};
 
 export function PowerMakerHeader() {
   const queryClient = useQueryClient();
@@ -127,6 +150,25 @@ export function PowerMakerHeader() {
 
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+
+  // Profile state
+  const [profileData, setProfileData] = useState({
+    Name: "",
+    Email: "",
+    CompanyName: "",
+    Position: "Manager",
+    CustomPosition: "",
+    AddressLine1: "",
+    AddressLine2: "",
+    City: "",
+    Zip: "",
+    Country: "",
+  });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileButtonText, setProfileButtonText] = useState("Update");
+  const [isExistingProfile, setIsExistingProfile] = useState(false);
+  const [credits, setCredits] = useState(0);
+
   // Invite form state
   const [inviteMode, setInviteMode] = useState<"email" | "link">("email");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -160,9 +202,102 @@ export function PowerMakerHeader() {
 
   const { hasCompletedTour, resetTour } = usePowerMakerTour();
 
-  // Connection status configuration based on Redux state from AppInitializer
+  // Fetch profile data when dialog opens
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!showProfileDialog || !user?.uid) return;
+
+      setProfileLoading(true);
+      try {
+        const userRef = doc(firestore, "users", user.uid);
+        const docSnap = await getDoc(userRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setProfileData({
+            Name: data.Name || "",
+            Email: data.Email || user.email || "",
+            CompanyName: data.CompanyName || "",
+            Position: data.Position || "Manager",
+            CustomPosition: data.CustomPosition || "",
+            AddressLine1: data.AddressLine1 || "",
+            AddressLine2: data.AddressLine2 || "",
+            City: data.City || "",
+            Zip: data.Zip || "",
+            Country: data.Country || "",
+          });
+          setCredits(data.credits || 0);
+          setIsExistingProfile(true);
+          setProfileButtonText("Update");
+        } else {
+          // Pre-fill email from auth if new user
+          setProfileData((prev) => ({
+            ...prev,
+            Email: user.email || "",
+          }));
+          setCredits(0);
+          setIsExistingProfile(false);
+          setProfileButtonText("Save");
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        toast({
+          title: "Error",
+          description: "Failed to load profile data",
+          variant: "destructive",
+        });
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [showProfileDialog, user?.uid, user?.email, toast]);
+
+  // Handle profile update
+  const handleProfileUpdate = async () => {
+    if (!user?.uid) {
+      toast({
+        title: "Error",
+        description: "User ID is missing. Cannot update profile.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const userRef = doc(firestore, "users", user.uid);
+      await setDoc(userRef, profileData, { merge: true });
+
+      setIsExistingProfile(true);
+      setProfileButtonText("Update Completed");
+
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+        className: "border-success bg-success/10 text-success-dark",
+      });
+
+      setTimeout(() => setProfileButtonText("Update"), 2000);
+    } catch (error) {
+      console.error("Profile update error:", error);
+      setProfileButtonText("❌ Failed");
+
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive",
+      });
+
+      setTimeout(
+        () => setProfileButtonText(isExistingProfile ? "Update" : "Save"),
+        2000
+      );
+    }
+  };
+
+  // Connection status configuration
   const getConnectionStatus = () => {
-    // No connections available
     if (!connections || connections.length === 0) {
       return {
         icon: <AlertCircle className="w-4 h-4 text-destructive" />,
@@ -172,7 +307,6 @@ export function PowerMakerHeader() {
       };
     }
 
-    // Find active connection
     const activeConnection = connections.find((c: any) => c.isActive);
 
     if (!activeConnection) {
@@ -184,7 +318,6 @@ export function PowerMakerHeader() {
       };
     }
 
-    // Check connection status
     if (isCrmConnected.connected === null) {
       return {
         icon: <Loader2 className="w-4 h-4 text-warning animate-spin" />,
@@ -200,7 +333,6 @@ export function PowerMakerHeader() {
         status: "failed",
       };
     } else {
-      // Successfully connected
       return {
         icon: (
           <img
@@ -236,7 +368,6 @@ export function PowerMakerHeader() {
     navigate("/");
   };
 
-  // Handle connection status click - retry connection if failed
   const handleConnectionClick = () => {
     if (
       currentConnection.status === "failed" ||
@@ -269,7 +400,6 @@ export function PowerMakerHeader() {
     fetchReferralLink();
   }, [user?.uid]);
 
-  // Invite handlers with link and email
   const handleInviteWithLink = () => {
     setInviteMode("link");
     setInviteEmail(inviteLink);
@@ -280,7 +410,6 @@ export function PowerMakerHeader() {
     setInviteEmail("");
   };
 
-  // Handle invite link copy
   const handleCopyLink = async () => {
     navigator.clipboard.writeText(inviteEmail);
     setCopied(true);
@@ -288,14 +417,12 @@ export function PowerMakerHeader() {
     timeoutRef.current = setTimeout(() => setCopied(false), 2000);
   };
 
-  // Handle invite send
   const handleSendInvite = async () => {
     if (inviteMode === "link") {
       handleCopyLink();
       return;
     }
 
-    // Validation for email mode
     if (!inviteEmail) {
       toast({
         title: "Email required",
@@ -323,7 +450,6 @@ export function PowerMakerHeader() {
       return;
     }
 
-    // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(inviteEmail)) {
       toast({
@@ -337,7 +463,6 @@ export function PowerMakerHeader() {
     setSending(true);
 
     try {
-      // 1. Get current user doc
       const userRef = doc(firestore, "users", user.uid);
       const userSnap = await getDoc(userRef);
 
@@ -347,7 +472,6 @@ export function PowerMakerHeader() {
         const userData = userSnap.data();
         referredTo = userData.referredTo || [];
 
-        // 2. Check if email is already invited
         if (referredTo.includes(inviteEmail)) {
           toast({
             title: "Already invited",
@@ -358,7 +482,6 @@ export function PowerMakerHeader() {
         }
       }
 
-      // 3. Send invite via backend
       const res = await fetch(
         `${import.meta.env.VITE_BACKEND_API}/users/send-invite`,
         {
@@ -383,7 +506,6 @@ export function PowerMakerHeader() {
           className: "border-success bg-success/10 text-success-dark",
         });
 
-        // 4. Update Firestore: add email to sentTo, increment credits
         if (userSnap.exists()) {
           await updateDoc(userRef, {
             referredTo: arrayUnion(inviteEmail.trim()),
@@ -423,12 +545,66 @@ export function PowerMakerHeader() {
     }
   };
 
-  const handleDeleteAccount = () => {
-    console.log("Deleting account...");
-    setShowDeleteDialog(false);
+  const handleDeleteAccount = async () => {
+    if (!user?.uid || !currentUser) {
+      toast({
+        title: "Error",
+        description: "User not found. Cannot delete account.",
+        variant: "destructive",
+      });
+      setShowDeleteDialog(false);
+      return;
+    }
+
+    try {
+      // First, delete user document from Firestore
+      const userRef = doc(firestore, "users", user.uid);
+      await setDoc(
+        userRef,
+        { deleted: true, deletedAt: new Date().toISOString() },
+        { merge: true }
+      );
+
+      // Delete the Firebase Authentication user
+      await currentUser.delete();
+
+      // Clear local state
+      queryClient.clear();
+
+      toast({
+        title: "Account Deleted",
+        description: "Your account has been successfully deleted.",
+        className: "border-success bg-success/10 text-success-dark",
+      });
+
+      // Navigate to home after a short delay
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
+    } catch (error: any) {
+      console.error("Delete account error:", error);
+
+      // Check if re-authentication is required
+      if (error.code === "auth/requires-recent-login") {
+        toast({
+          title: "Re-authentication Required",
+          description:
+            "Please log out and log in again before deleting your account.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description:
+            error.message || "Failed to delete account. Please try again.",
+          variant: "destructive",
+        });
+      }
+
+      setShowDeleteDialog(false);
+    }
   };
 
-  // Get user data with fallback logic
   const userData = currentUser || user;
   const userPhotoURL = currentUser?.photoURL;
   const userDisplayName = currentUser?.displayName || user?.displayName;
@@ -444,20 +620,15 @@ export function PowerMakerHeader() {
   );
 
   const handleModelSwitch = (newModel: number) => {
-    // Check if chatId is not null
     if (chatId !== null && newModel !== currentModel) {
       dispatch(setCurrentModel(newModel));
-      dispatch(setChatId(null)); // This is crucial!
-      // setIsOpen(false);
+      dispatch(setChatId(null));
       navigate("/");
     } else {
       dispatch(setCurrentModel(newModel));
-      // setIsOpen(false);
-      // If chatId is null, do not switch model
-      //console.log("No active chat to switch model.");
     }
   };
-  
+
   return (
     <>
       <header
@@ -475,7 +646,6 @@ export function PowerMakerHeader() {
           >
             <Menu className="w-5 h-5" />
           </Button>
-          {/* model selector */}
           <div
             className="flex items-center flex-1 justify-start px-2 max-w-[120px] sm:max-w-xs md:max-w-sm"
             data-tour="model-selector"
@@ -535,7 +705,6 @@ export function PowerMakerHeader() {
 
         {/* right section */}
         <div className="flex items-center space-x-1 sm:space-x-4">
-          {/* Connection Status - Now using data from AppInitializer */}
           {isAuthenticated && (
             <div
               className={`hidden md:flex items-center space-x-2 text-sm ${
@@ -576,7 +745,6 @@ export function PowerMakerHeader() {
             </div>
           )}
 
-          {/* Mobile Connection Status - Just icon, also clickable if failed */}
           <div
             className={`md:hidden ${
               currentConnection.status === "failed" ||
@@ -826,92 +994,175 @@ export function PowerMakerHeader() {
               <DrawerTitle className="text-center text-lg">Profile</DrawerTitle>
               <div className="flex justify-center">
                 <div className="flex items-center text-sm text-muted-foreground">
-                  <span>Tokens</span>
+                  <span>Credits</span>
                   <span className="ml-2 flex items-center">
                     <span className="w-2 h-2 bg-warning rounded-full mr-1"></span>
-                    569
+                    {credits}
                   </span>
                 </div>
               </div>
             </DrawerHeader>
 
-            <div className="p-4 space-y-6 overflow-y-auto">
-              {/* Profile Image */}
-              <div className="flex justify-center">
-                <div className="relative">
-                  <Avatar className="w-20 h-20 bg-muted">
-                    <AvatarFallback className="text-xl">H</AvatarFallback>
-                  </Avatar>
+            {profileLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="w-8 h-8 animate-spin text-brand" />
+              </div>
+            ) : (
+              <div className="p-4 space-y-6 overflow-y-auto">
+                {/* Profile Image */}
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <Avatar className="w-20 h-20 bg-muted">
+                      {userPhotoURL ? (
+                        <AvatarImage
+                          src={userPhotoURL}
+                          alt="Profile"
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : null}
+                      <AvatarFallback className="text-xl bg-blue-500 text-white">
+                        {firstName?.charAt(0)?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Button
+                      size="sm"
+                      className="absolute -bottom-1 -right-1 rounded-full w-7 h-7 p-0 bg-brand hover:bg-brand/90"
+                      title="Upload photo (coming soon)"
+                    >
+                      <Camera className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <ProfileInput
+                    id="name"
+                    label="Name"
+                    value={profileData.Name}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, Name: e.target.value })
+                    }
+                  />
+                  <ProfileInput
+                    id="email"
+                    label="E-Mail"
+                    value={profileData.Email}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, Email: e.target.value })
+                    }
+                    type="email"
+                  />
+                  <ProfileInput
+                    id="company"
+                    label="Company Name"
+                    value={profileData.CompanyName}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        CompanyName: e.target.value,
+                      })
+                    }
+                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="position">Position</Label>
+                    <Select
+                      value={profileData.Position}
+                      onValueChange={(value) =>
+                        setProfileData({ ...profileData, Position: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select position" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CEO">CEO</SelectItem>
+                        <SelectItem value="CTO">CTO</SelectItem>
+                        <SelectItem value="Manager">Manager</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {profileData.Position === "Other" && (
+                    <ProfileInput
+                      id="customPosition"
+                      label="Custom Position"
+                      value={profileData.CustomPosition}
+                      onChange={(e) =>
+                        setProfileData({
+                          ...profileData,
+                          CustomPosition: e.target.value,
+                        })
+                      }
+                    />
+                  )}
+                  <ProfileInput
+                    id="address1"
+                    label="Address Line 1"
+                    value={profileData.AddressLine1}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        AddressLine1: e.target.value,
+                      })
+                    }
+                  />
+                  <ProfileInput
+                    id="address2"
+                    label="Address Line 2"
+                    value={profileData.AddressLine2}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        AddressLine2: e.target.value,
+                      })
+                    }
+                  />
+                  <ProfileInput
+                    id="city"
+                    label="City"
+                    value={profileData.City}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, City: e.target.value })
+                    }
+                  />
+                  <ProfileInput
+                    id="zip"
+                    label="Zip Code"
+                    value={profileData.Zip}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, Zip: e.target.value })
+                    }
+                  />
+                  <ProfileInput
+                    id="country"
+                    label="Country"
+                    value={profileData.Country}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        Country: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="flex flex-col space-y-3 pb-4">
                   <Button
-                    size="sm"
-                    className="absolute -bottom-1 -right-1 rounded-full w-7 h-7 p-0 bg-brand hover:bg-brand/90"
+                    className="w-full h-12 bg-brand hover:bg-brand/90 text-white text-base"
+                    onClick={handleProfileUpdate}
                   >
-                    <Camera className="w-3 h-3" />
+                    {profileButtonText}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full h-12 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 text-base"
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    Delete Account
                   </Button>
                 </div>
               </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" defaultValue="Alessio" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-Mail</Label>
-                  <Input id="email" defaultValue="yoroka1002@gmail.com" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company Name</Label>
-                  <Input id="company" defaultValue="Lorem Ipsum is simpl" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="position">Position</Label>
-                  <Select defaultValue="manager">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select position" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="developer">Developer</SelectItem>
-                      <SelectItem value="analyst">Analyst</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address1">Address Line 1</Label>
-                  <Input id="address1" placeholder="Enter" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address2">Address Line 2</Label>
-                  <Input id="address2" placeholder="Enter" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" placeholder="Enter" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zip">Zip Code</Label>
-                  <Input id="zip" placeholder="Enter" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="country">Country</Label>
-                  <Input id="country" placeholder="Enter" />
-                </div>
-              </div>
-
-              <div className="flex flex-col space-y-3 pb-4">
-                <Button className="w-full h-12 bg-brand hover:bg-brand/90 text-white text-base">
-                  Update
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full h-12 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 text-base"
-                  onClick={() => setShowDeleteDialog(true)}
-                >
-                  Delete Account
-                </Button>
-              </div>
-            </div>
+            )}
           </DrawerContent>
         </Drawer>
       ) : (
@@ -921,92 +1172,179 @@ export function PowerMakerHeader() {
               <DialogTitle className="text-center text-lg">Profile</DialogTitle>
               <div className="flex justify-end">
                 <div className="flex items-center text-sm text-muted-foreground">
-                  <span>Tokens</span>
+                  <span>Credits</span>
                   <span className="ml-2 flex items-center">
                     <span className="w-2 h-2 bg-warning rounded-full mr-1"></span>
-                    569
+                    {credits}
                   </span>
                 </div>
               </div>
             </DialogHeader>
 
-            <div className="space-y-6">
-              {/* Profile Image */}
-              <div className="flex justify-center">
-                <div className="relative">
-                  <Avatar className="w-24 h-24 bg-muted">
-                    <AvatarFallback className="text-2xl">H</AvatarFallback>
-                  </Avatar>
+            {profileLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="w-8 h-8 animate-spin text-brand" />
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Profile Image */}
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <Avatar className="w-24 h-24 bg-muted">
+                      {userPhotoURL ? (
+                        <AvatarImage
+                          src={userPhotoURL}
+                          alt="Profile"
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : null}
+                      <AvatarFallback className="text-2xl bg-blue-500 text-white">
+                        {firstName?.charAt(0)?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Button
+                      size="sm"
+                      className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0 bg-brand hover:bg-brand/90"
+                      title="Upload photo (coming soon)"
+                    >
+                      <Camera className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <ProfileInput
+                    id="name"
+                    label="Name"
+                    value={profileData.Name}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, Name: e.target.value })
+                    }
+                  />
+                  <ProfileInput
+                    id="email"
+                    label="E-Mail"
+                    value={profileData.Email}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, Email: e.target.value })
+                    }
+                    type="email"
+                  />
+                  <ProfileInput
+                    id="company"
+                    label="Company Name"
+                    value={profileData.CompanyName}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        CompanyName: e.target.value,
+                      })
+                    }
+                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="position">Position</Label>
+                    <Select
+                      value={profileData.Position}
+                      onValueChange={(value) =>
+                        setProfileData({ ...profileData, Position: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select position" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CEO">CEO</SelectItem>
+                        <SelectItem value="CTO">CTO</SelectItem>
+                        <SelectItem value="Manager">Manager</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {profileData.Position === "Other" && (
+                    <div className="col-span-2">
+                      <ProfileInput
+                        id="customPosition"
+                        label="Custom Position"
+                        value={profileData.CustomPosition}
+                        onChange={(e) =>
+                          setProfileData({
+                            ...profileData,
+                            CustomPosition: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  )}
+                  <ProfileInput
+                    id="address1"
+                    label="Address Line 1"
+                    value={profileData.AddressLine1}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        AddressLine1: e.target.value,
+                      })
+                    }
+                  />
+                  <ProfileInput
+                    id="address2"
+                    label="Address Line 2"
+                    value={profileData.AddressLine2}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        AddressLine2: e.target.value,
+                      })
+                    }
+                  />
+                  <ProfileInput
+                    id="city"
+                    label="City"
+                    value={profileData.City}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, City: e.target.value })
+                    }
+                  />
+                  <ProfileInput
+                    id="zip"
+                    label="Zip Code"
+                    value={profileData.Zip}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, Zip: e.target.value })
+                    }
+                  />
+                  <div className="col-span-2">
+                    <ProfileInput
+                      id="country"
+                      label="Country"
+                      value={profileData.Country}
+                      onChange={(e) =>
+                        setProfileData({
+                          ...profileData,
+                          Country: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col space-y-2">
                   <Button
-                    size="sm"
-                    className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0 bg-brand hover:bg-brand/90"
+                    className="w-full bg-brand hover:bg-brand/90 text-white"
+                    onClick={handleProfileUpdate}
                   >
-                    <Camera className="w-4 h-4" />
+                    {profileButtonText}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200"
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    Delete Account
                   </Button>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" defaultValue="Alessio" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-Mail</Label>
-                  <Input id="email" defaultValue="yoroka1002@gmail.com" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company Name</Label>
-                  <Input id="company" defaultValue="Lorem Ipsum is simpl" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="position">Position</Label>
-                  <Select defaultValue="manager">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select position" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="developer">Developer</SelectItem>
-                      <SelectItem value="analyst">Analyst</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address1">Address Line 1</Label>
-                  <Input id="address1" placeholder="Enter" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address2">Address Line 2</Label>
-                  <Input id="address2" placeholder="Enter" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" placeholder="Enter" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zip">Zip Code</Label>
-                  <Input id="zip" placeholder="Enter" />
-                </div>
-                <div className="space-y-2 col-span-2">
-                  <Label htmlFor="country">Country</Label>
-                  <Input id="country" placeholder="Enter" />
-                </div>
-              </div>
-
-              <div className="flex flex-col space-y-2">
-                <Button className="w-full bg-brand hover:bg-brand/90 text-white">
-                  Update
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200"
-                  onClick={() => setShowDeleteDialog(true)}
-                >
-                  Delete Account
-                </Button>
-              </div>
-            </div>
+            )}
           </DialogContent>
         </Dialog>
       )}
@@ -1027,7 +1365,7 @@ export function PowerMakerHeader() {
             <DrawerHeader>
               <DrawerTitle>Invite people</DrawerTitle>
               <DrawerDescription>
-                Lorem Ipsum is simply dummy text of the printing
+                Share PowerMaker with your team and earn 10 credits for each successful invitation.
               </DrawerDescription>
             </DrawerHeader>
 
@@ -1099,7 +1437,7 @@ export function PowerMakerHeader() {
               </div>
 
               <p className="text-sm text-muted-foreground">
-                Lorem Ipsum is simply dummy text of the printing
+                When your invitee signs up using your link, you'll both receive bonus credits!
               </p>
             </div>
           </DrawerContent>
@@ -1119,7 +1457,7 @@ export function PowerMakerHeader() {
             <DialogHeader>
               <DialogTitle>Invite people</DialogTitle>
               <DialogDescription>
-                Lorem Ipsum is simply dummy text of the printing
+                Share PowerMaker with your team and earn 10 credits for each successful invitation.
               </DialogDescription>
             </DialogHeader>
 
@@ -1191,7 +1529,7 @@ export function PowerMakerHeader() {
               </div>
 
               <p className="text-sm text-muted-foreground">
-                Lorem Ipsum is simply dummy text of the printing
+                When your invitee signs up using your link, you'll both receive bonus credits!
               </p>
             </div>
           </DialogContent>
