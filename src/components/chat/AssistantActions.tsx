@@ -1,28 +1,32 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Eye, Table2, Filter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { LoadingProgressBar } from '@/components/ui/loading-progress-bar';
-import { FollowUpPromptCard } from './FollowUpPromptCard';
-import { TablesView } from './TablesView';
-import { TraceLogFilters } from './TraceLogFilters';
-import { PluginTraceLogs } from './PluginTraceLogs';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store/store';
-import { 
-  openPreview, 
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { Eye, Table2, Filter } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LoadingProgressBar } from "@/components/ui/loading-progress-bar";
+import { FollowUpPromptCard } from "./FollowUpPromptCard";
+import { TablesView } from "./TablesView";
+import { TraceLogFilters } from "./TraceLogFilters";
+import { PluginTraceLogs } from "./PluginTraceLogs";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store/store";
+import {
+  openPreview,
   setShowTables,
   updatePreviewClickedMap,
-  setCustomizationVisible 
-} from '@/redux/ChatSlice';
-import { setApiTraceLogs, setIsLoadingTraceLogs, setTraceData } from '@/redux/CrmSlice';
-import { useChat } from '@/redux/useChat';
+  setCustomizationVisible,
+} from "@/redux/ChatSlice";
+import {
+  setApiTraceLogs,
+  setIsLoadingTraceLogs,
+  setTraceData,
+} from "@/redux/CrmSlice";
+import { useChat } from "@/redux/useChat";
 
 interface AssistantActionsProps {
   message: {
     id: string;
     content: string;
-    type: 'user' | 'assistant';
+    type: "user" | "assistant";
     timestamp: Date;
     isStreaming?: boolean;
     images?: Array<{ data: string; name: string; size: number; type: string }>;
@@ -32,37 +36,37 @@ interface AssistantActionsProps {
 
 export function AssistantActions({ message, items }: AssistantActionsProps) {
   const dispatch = useDispatch();
-  
+
   // Dialog open/close states
   const [showTraceLogFilters, setShowTraceLogFilters] = useState(false);
   const [showPluginTraceLogs, setShowPluginTraceLogs] = useState(false);
-  
+
   // Loading states
   const [isLoadingTraceFilters, setIsLoadingTraceFilters] = useState(false);
   const [isLoadingTables, setIsLoadingTables] = useState(false);
-  
+
   // UI state
   const [hasOpenedTables, setHasOpenedTables] = useState(false);
   const [traceFiltersData, setTraceFiltersData] = useState<any>(null);
-  
+
   // Track if we're waiting for trace data
   const waitingForTraceDataRef = useRef(false);
 
   const { currentModel } = useSelector((state: RootState) => state.model);
-  
-  const { chatId, recentPrompt, previewClickedMap, showTables, loading } = useSelector(
-    (state: RootState) => state.chat
-  );
-  const { crmActionData, traceData, apiTraceLogs, isLoadingTraceLogs } = useSelector(
-    (state: RootState) => state.crm
-  );
+
+  const { chatId, recentPrompt, previewClickedMap, showTables, loading } =
+    useSelector((state: RootState) => state.chat);
+  const { crmActionData, traceData, apiTraceLogs, isLoadingTraceLogs } =
+    useSelector((state: RootState) => state.crm);
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { onSent } = useChat();
 
   // Check if preview was already clicked for this prompt
   useEffect(() => {
     if (recentPrompt && !(recentPrompt in previewClickedMap)) {
-      dispatch(updatePreviewClickedMap({ prompt: recentPrompt, clicked: false }));
+      dispatch(
+        updatePreviewClickedMap({ prompt: recentPrompt, clicked: false })
+      );
     }
   }, [recentPrompt, previewClickedMap, dispatch]);
 
@@ -73,46 +77,58 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
       recentPrompt &&
       !previewClickedMap[recentPrompt]
     ) {
-      dispatch(updatePreviewClickedMap({ prompt: recentPrompt, clicked: true }));
+      dispatch(
+        updatePreviewClickedMap({ prompt: recentPrompt, clicked: true })
+      );
     }
 
-    dispatch(setCustomizationVisible(
-      previewClickedMap[recentPrompt] && crmActionData !== ""
-    ));
+    dispatch(
+      setCustomizationVisible(
+        previewClickedMap[recentPrompt] && crmActionData !== ""
+      )
+    );
   }, [crmActionData, recentPrompt, previewClickedMap, dispatch]);
 
   // ⭐ FIXED: Handle trace data changes - open dialog when data arrives
   useEffect(() => {
     console.log("=== TraceData useEffect triggered ===");
-    console.log("waitingForTraceDataRef.current:", waitingForTraceDataRef.current);
+    console.log(
+      "waitingForTraceDataRef.current:",
+      waitingForTraceDataRef.current
+    );
     console.log("traceData:", traceData);
     console.log("traceData type:", typeof traceData);
     console.log("loading:", loading);
     console.log("isLoadingTraceFilters:", isLoadingTraceFilters);
-    
+
     // Only proceed if we're waiting for trace data AND not currently loading
     if (!isLoadingTraceFilters || loading) {
-      console.log("❌ Not loading trace filters or still loading chat, skipping");
+      console.log(
+        "❌ Not loading trace filters or still loading chat, skipping"
+      );
       return;
     }
-    
+
     // Check if we have valid trace data
     if (traceData && traceData !== "") {
       console.log("✅ Valid trace data received, attempting to open dialog");
-      
+
       try {
         // Handle both string and object formats
         let parsedData;
-        if (typeof traceData === 'string') {
+        if (typeof traceData === "string") {
           parsedData = JSON.parse(traceData);
         } else {
           parsedData = traceData;
         }
-        
+
         console.log("Parsed trace data:", parsedData);
-        
+
         // Check if it's valid data (has pluginfilter property)
-        if (parsedData && (parsedData.pluginfilter || parsedData.pluginFilter)) {
+        if (
+          parsedData &&
+          (parsedData.pluginfilter || parsedData.pluginFilter)
+        ) {
           setTraceFiltersData(parsedData);
           setShowTraceLogFilters(true);
           setIsLoadingTraceFilters(false);
@@ -155,55 +171,63 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
     console.log("🔵 Start Analysis clicked");
     console.log("🔵 Current traceData:", traceData);
     console.log("🔵 traceData type:", typeof traceData);
-    
+
     // ⭐ CRITICAL FIX: Check if we already have valid trace data
     if (traceData && traceData !== "") {
       console.log("✅ Trace data already exists in Redux, using it directly");
-      
+
       try {
         let parsedData;
-        if (typeof traceData === 'string') {
+        if (typeof traceData === "string") {
           console.log("🔵 Parsing string trace data");
           parsedData = JSON.parse(traceData);
         } else {
           console.log("🔵 Using object trace data directly");
           parsedData = traceData;
         }
-        
+
         console.log("🔵 Parsed data:", parsedData);
-        
+
         // Validate the data structure
-        if (parsedData && (parsedData.pluginfilter || parsedData.pluginFilter)) {
+        if (
+          parsedData &&
+          (parsedData.pluginfilter || parsedData.pluginFilter)
+        ) {
           console.log("✅ Valid trace data found, opening dialog immediately");
           setTraceFiltersData(parsedData);
           setShowTraceLogFilters(true);
           return; // Exit early - no need to fetch new data
         } else {
-          console.warn("⚠️ Trace data exists but has invalid structure:", parsedData);
+          console.warn(
+            "⚠️ Trace data exists but has invalid structure:",
+            parsedData
+          );
         }
       } catch (error) {
         console.error("❌ Error parsing existing trace data:", error);
         // Fall through to fetch new data
       }
     }
-    
+
     // ⭐ If we reach here, we need to fetch fresh data
     console.log("🔵 No valid trace data found, fetching from API...");
-    
+
     // Set loading state and waiting flag
     setIsLoadingTraceFilters(true);
     waitingForTraceDataRef.current = true;
-    
+
     console.log("🔵 Set waitingForTraceDataRef to true");
     console.log("🔵 Set loading state to true");
-    
+
     // Send the predefined prompt to extract filter details
     const predefinedPrompt = "extract all the collected plugin filter details";
-    
+
     try {
       console.log("🔵 Sending trace filter extraction prompt");
       await onSent(predefinedPrompt, chatId ?? "", 1, 1);
-      console.log("🔵 Prompt sent successfully, waiting for response via useEffect");
+      console.log(
+        "🔵 Prompt sent successfully, waiting for response via useEffect"
+      );
       // Don't set loading to false here - the useEffect will handle it when data arrives
     } catch (error) {
       console.error("❌ Error sending trace filter prompt:", error);
@@ -221,13 +245,16 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
     }
 
     dispatch(setIsLoadingTraceLogs(true));
-    
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/users/api/plugintrace`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedFilters),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_API}/users/api/plugintrace`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedFilters),
+        }
+      );
 
       const result = await response.json();
 
@@ -255,13 +282,16 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
 
   // Open tables view logic
   const handleShowTables = async () => {
-    const predefinedPrompt = "No, Proceed with the customisation with the given details";
+    const predefinedPrompt =
+      "No, Proceed with the customisation with the given details";
     onSent(predefinedPrompt, chatId ?? "", 1, 0);
-    dispatch(updatePreviewClickedMap({ prompt: predefinedPrompt, clicked: true }));
+    dispatch(
+      updatePreviewClickedMap({ prompt: predefinedPrompt, clicked: true })
+    );
     setIsLoadingTables(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
     setHasOpenedTables(true);
     dispatch(setShowTables(true));
     setIsLoadingTables(false);
@@ -283,7 +313,8 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
 
   // Don't show preview button and quick prompts if tables were ever opened
   const shouldShowContent = !showTables && !hasOpenedTables;
-  const shouldShowPreviewButton = !previewClickedMap[recentPrompt] && shouldShowContent;
+  const shouldShowPreviewButton =
+    !previewClickedMap[recentPrompt] && shouldShowContent;
 
   return (
     <>
@@ -306,7 +337,7 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
                 Show Preview
               </Button>
             </motion.div>
-            
+
             {currentModel === 0 && shouldShowPreviewButton && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -321,29 +352,39 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
                   className="bg-background hover:bg-muted border-border text-foreground"
                 >
                   <Table2 className="w-4 h-4 mr-2" />
-                  {isLoadingTables ? 'Loading...' : 'Show Tables'}
+                  {isLoadingTables ? "Loading..." : "Show Tables"}
                 </Button>
               </motion.div>
             )}
-            
-            {currentModel === 1 && !showTraceLogFilters && !showPluginTraceLogs && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Button
-                  onClick={handleShowTraceFilters}
-                  variant="outline"
-                  size="sm"
-                  disabled={isLoadingTraceFilters}
-                  className="bg-background hover:bg-muted border-border text-foreground"
+
+            {currentModel === 1 &&
+              !showTraceLogFilters &&
+              !showPluginTraceLogs && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
                 >
-                  <Filter className="w-4 h-4 mr-2" />
-                  {isLoadingTraceFilters ? 'Loading...' : 'Start Analysis'}
-                </Button>
-              </motion.div>
-            )}
+                  <Button
+                    onClick={handleShowTraceFilters}
+                    variant="outline"
+                    size="sm"
+                    disabled={isLoadingTraceFilters}
+                    className={`${
+                      traceData && traceData !== ""
+                        ? "bg-green-50 hover:bg-green-100 border-green-300 text-green-700 dark:bg-green-950 dark:hover:bg-green-900 dark:border-green-700 dark:text-green-300"
+                        : "bg-background hover:bg-muted border-border text-foreground"
+                    }`}
+                  >
+                    <Filter className="w-4 h-4 mr-2" />
+                    {isLoadingTraceFilters
+                      ? "Loading..."
+                      : traceData && traceData !== ""
+                      ? "View Analysis ✓"
+                      : "Start Analysis"}
+                  </Button>
+                </motion.div>
+              )}
           </div>
 
           {/* Quick Prompts */}
@@ -353,7 +394,9 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
             transition={{ delay: 0.4 }}
             className="space-y-2"
           >
-            <h4 className="text-sm font-medium text-muted-foreground mb-3">Quick Prompts</h4>
+            <h4 className="text-sm font-medium text-muted-foreground mb-3">
+              Quick Prompts
+            </h4>
             <div className="grid gap-2">
               {items.map((prompt, index) => {
                 return (
@@ -375,7 +418,7 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
           </motion.div>
         </div>
       )}
-      
+
       {/* Conditional Modals */}
       {currentModel === 0 && (
         <>
@@ -384,8 +427,8 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
             onClose={handleCloseTables}
             isLoadingTables={isLoadingTables}
           />
-          
-          <LoadingProgressBar 
+
+          <LoadingProgressBar
             isLoading={isLoadingTables}
             message="Loading CRM Entity Configuration..."
             position="overlay"
@@ -393,7 +436,7 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
           />
         </>
       )}
-      
+
       {currentModel === 1 && (
         <>
           <TraceLogFilters
@@ -403,22 +446,22 @@ export function AssistantActions({ message, items }: AssistantActionsProps) {
             isLoadingTraceLogs={isLoadingTraceLogs}
             initialFilters={traceFiltersData}
           />
-          
+
           <PluginTraceLogs
             isOpen={showPluginTraceLogs}
             onClose={handleCloseTraceLogs}
             onBack={handleBackToFilters}
             traceLogsData={apiTraceLogs}
           />
-          
-          <LoadingProgressBar 
+
+          <LoadingProgressBar
             isLoading={isLoadingTraceFilters}
             message="Loading trace log filters..."
             position="overlay"
             colorScheme="primary"
           />
-          
-          <LoadingProgressBar 
+
+          <LoadingProgressBar
             isLoading={isLoadingTraceLogs}
             message="Fetching plugin trace logs..."
             position="overlay"
