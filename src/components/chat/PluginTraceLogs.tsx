@@ -40,17 +40,27 @@ interface PluginTraceLogsProps {
   isOpen: boolean;
   onClose: () => void;
   onBack: () => void;
+  traceLogsData: any[];
 }
 
 interface TraceRecord {
-  id: number;
   createdOn: string;
-  executionStart: string;
-  duration: string;
-  pluginName: string;
-  stepName: string;
-  correlationId: string;
   typeName: string;
+  executionStart: string;
+  traceLogId: string;
+  messageName: string;
+  executionDuration: number;
+  stepId: string;
+  depth: number;
+  primaryEntity: string;
+  messageBlock: string;
+  exceptionDetails: string;
+  correlationId: string;
+  stepRank: number;
+  createdBy: string;
+  stepMode: string;
+  stepName: string;
+  stepStage: string;
 }
 
 interface GroupedDataItem {
@@ -64,138 +74,47 @@ export function PluginTraceLogs({
   isOpen,
   onClose,
   onBack,
+  traceLogsData = [],
 }: PluginTraceLogsProps) {
   const [groupBy, setGroupBy] = useState("none");
   const [recordsPerPage, setRecordsPerPage] = useState("5");
   const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [selectedRecord, setSelectedRecord] = useState<TraceRecord | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(true);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  // Enhanced mock data for demonstration - moved outside component to prevent re-creation
-  const mockData = useMemo(() => {
-    const plugins = [
-      "CRM Entity Processor Plugin",
-      "Data Validation Plugin",
-      "Workflow Automation Plugin",
-      "Email Notification Plugin",
-      "Report Generator Plugin",
-      "Integration Manager Plugin",
-      "Security Audit Plugin",
-      "Performance Monitor Plugin",
-    ];
-
-    const stepNames = [
-      "Entity Creation",
-      "Data Validation",
-      "Workflow Trigger",
-      "Email Send",
-      "Report Generation",
-      "API Integration",
-      "Security Check",
-      "Performance Analysis",
-    ];
-
-    const typeNames = [
-      "ProcessingStep",
-      "ValidationStep",
-      "CompletionStep",
-      "IntegrationStep",
-      "SecurityStep",
-      "AnalysisStep",
-    ];
-
-    const correlationIds = [
-      "corr-12345-abc",
-      "corr-67890-def",
-      "corr-11111-ghi",
-      "corr-22222-jkl",
-      "corr-33333-mno",
-      "corr-44444-pqr",
-    ];
-
-    const data = [];
-    for (let i = 1; i <= 52; i++) {
-      const baseDate = new Date(2024, 0, 15, 10, 0, 0); // Jan 15, 2024
-      const createdDate = new Date(baseDate.getTime() + i * 3 * 60 * 1000); // 3 min intervals
-      const executionDate = new Date(createdDate.getTime() + 1000); // 1 sec after creation
-
-      data.push({
-        id: i,
-        createdOn: createdDate.toLocaleString("en-US", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        }),
-        executionStart: executionDate.toLocaleString("en-US", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        }),
-        duration: `00:00:0${Math.floor(Math.random() * 5) + 1}.${
-          Math.floor(Math.random() * 900) + 100
-        }`,
-        pluginName: plugins[Math.floor(Math.random() * plugins.length)],
-        stepName: stepNames[Math.floor(Math.random() * stepNames.length)],
-        correlationId:
-          correlationIds[Math.floor(Math.random() * correlationIds.length)],
-        typeName: typeNames[Math.floor(Math.random() * typeNames.length)],
-      });
-    }
-    return data;
-  }, []);
-
-  // Simulate initial data loading
+  // Reset state when modal opens with new data
   useEffect(() => {
-    if (isOpen && isLoadingData) {
-      const timer = setTimeout(() => {
-        setIsLoadingData(false);
-      }, 2000);
-      return () => clearTimeout(timer);
+    if (isOpen && traceLogsData.length > 0) {
+      setCurrentPage(1);
+      setExpandedGroups(new Set());
     }
-  }, [isOpen, isLoadingData]);
-
-  // Reset loading state when component opens
-  useEffect(() => {
-    if (isOpen) {
-      setIsLoadingData(true);
-    }
-  }, [isOpen]);
+  }, [isOpen, traceLogsData]);
 
   // Filter and group data
   const { groupedData, totalRecords } = useMemo(() => {
-    let filtered = [...mockData];
+    let filtered = [...traceLogsData];
 
     // Apply search filter
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (record) =>
-          record.pluginName.toLowerCase().includes(search) ||
-          record.stepName.toLowerCase().includes(search) ||
-          record.correlationId.toLowerCase().includes(search) ||
-          record.typeName.toLowerCase().includes(search) ||
-          record.createdOn.toLowerCase().includes(search) ||
-          record.executionStart.toLowerCase().includes(search)
+          record.typeName?.toLowerCase().includes(search) ||
+          record.stepName?.toLowerCase().includes(search) ||
+          record.correlationId?.toLowerCase().includes(search) ||
+          record.createdOn?.toLowerCase().includes(search) ||
+          record.executionStart?.toLowerCase().includes(search) ||
+          record.primaryEntity?.toLowerCase().includes(search)
       );
     }
 
     if (groupBy === "none") {
-      // No grouping - return flat structure
       return {
         groupedData: filtered.map((record) => ({
-          type: "record",
+          type: "record" as const,
           data: record,
         })),
         totalRecords: filtered.length,
@@ -215,20 +134,12 @@ export function PluginTraceLogs({
     });
 
     // Convert to array with headers and records
-    const result: Array<{
-      type: "header" | "record";
-      data: any;
-      groupKey?: string;
-      count?: number;
-    }> = [];
-
-    // Sort groups by key
+    const result: GroupedDataItem[] = [];
     const sortedGroups = Array.from(groupMap.entries()).sort(([a], [b]) =>
       a.localeCompare(b)
     );
 
     sortedGroups.forEach(([key, records]) => {
-      // Add group header
       result.push({
         type: "header",
         data: key,
@@ -236,7 +147,6 @@ export function PluginTraceLogs({
         count: records.length,
       });
 
-      // Add records if group is expanded
       if (expandedGroups.has(key)) {
         records.forEach((record) => {
           result.push({
@@ -252,7 +162,7 @@ export function PluginTraceLogs({
       groupedData: result,
       totalRecords: filtered.length,
     };
-  }, [mockData, searchTerm, groupBy, expandedGroups]);
+  }, [traceLogsData, searchTerm, groupBy, expandedGroups]);
 
   // Pagination calculations
   const recordsPerPageNum = parseInt(recordsPerPage);
@@ -266,7 +176,7 @@ export function PluginTraceLogs({
     setCurrentPage(1);
   }, [searchTerm, groupBy, recordsPerPage]);
 
-  const handleViewDetails = (record: any) => {
+  const handleViewDetails = (record: TraceRecord) => {
     setSelectedRecord(record);
     setIsDetailsDrawerOpen(true);
   };
@@ -299,19 +209,22 @@ export function PluginTraceLogs({
   };
 
   const handleExportCSV = () => {
-    // Get all records for export (not just the current page)
-    const allRecords = mockData.filter((record) => {
+    const allRecords = traceLogsData.filter((record) => {
       if (!searchTerm.trim()) return true;
       const search = searchTerm.toLowerCase();
       return (
-        record.pluginName.toLowerCase().includes(search) ||
-        record.stepName.toLowerCase().includes(search) ||
-        record.correlationId.toLowerCase().includes(search) ||
-        record.typeName.toLowerCase().includes(search) ||
-        record.createdOn.toLowerCase().includes(search) ||
-        record.executionStart.toLowerCase().includes(search)
+        record.typeName?.toLowerCase().includes(search) ||
+        record.stepName?.toLowerCase().includes(search) ||
+        record.correlationId?.toLowerCase().includes(search) ||
+        record.createdOn?.toLowerCase().includes(search) ||
+        record.executionStart?.toLowerCase().includes(search)
       );
     });
+
+    if (allRecords.length === 0) {
+      alert("No records to export");
+      return;
+    }
 
     const headers = [
       "Created On",
@@ -326,13 +239,13 @@ export function PluginTraceLogs({
       headers.join(","),
       ...allRecords.map((record) =>
         [
-          `"${record.createdOn}"`,
-          `"${record.executionStart}"`,
-          `"${record.duration}"`,
-          `"${record.pluginName}"`,
-          `"${record.stepName}"`,
-          `"${record.correlationId}"`,
-          `"${record.typeName}"`,
+          `"${record.createdOn || ''}"`,
+          `"${record.executionStart || ''}"`,
+          `"${record.executionDuration || ''}"`,
+          `"${record.typeName || ''}"`,
+          `"${record.stepName || ''}"`,
+          `"${record.correlationId || ''}"`,
+          `"${record.typeName || ''}"`,
         ].join(",")
       ),
     ].join("\n");
@@ -352,6 +265,8 @@ export function PluginTraceLogs({
   };
 
   if (!isOpen) return null;
+
+  const hasData = traceLogsData && traceLogsData.length > 0;
 
   return (
     <motion.div
@@ -398,17 +313,7 @@ export function PluginTraceLogs({
           </CardHeader>
 
           <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
-            {/* Loading State */}
-            {isLoadingData ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <LoadingProgressBar
-                  isLoading={true}
-                  message="Loading plugin trace logs..."
-                  position="inline"
-                  colorScheme="primary"
-                />
-              </div>
-            ) : (
+            {hasData ? (
               <>
                 {/* Controls */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-x-8 gap-y-2 flex-wrap">
@@ -423,7 +328,7 @@ export function PluginTraceLogs({
                           : ""
                       }`}
                     >
-                      <span className="inline">No Grouping</span>
+                      No Grouping
                     </Button>
                     <Button
                       variant={
@@ -437,7 +342,7 @@ export function PluginTraceLogs({
                           : ""
                       }`}
                     >
-                      <span className="inline">Group by Correlation ID</span>
+                      Group by Correlation ID
                     </Button>
                     <Button
                       variant={groupBy === "type" ? "default" : "outline"}
@@ -449,7 +354,7 @@ export function PluginTraceLogs({
                           : ""
                       }`}
                     >
-                      <span className="inline">Group by Type Name</span>
+                      Group by Type Name
                     </Button>
                   </div>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
@@ -470,7 +375,7 @@ export function PluginTraceLogs({
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                           <Input
-                            placeholder="Search by plugin name, step name, correlation ID, type..."
+                            placeholder="Search by plugin name, step name, correlation ID..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full"
@@ -499,7 +404,7 @@ export function PluginTraceLogs({
                       className="text-xs sm:text-sm w-full xs:w-auto"
                     >
                       <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                      <span className="inline">Export CSV</span>
+                      Export CSV
                     </Button>
                   </div>
                 </div>
@@ -525,18 +430,11 @@ export function PluginTraceLogs({
                           <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                             Step Name
                           </TableHead>
-                          <TableHead className="text-xs sm:text-sm whitespace-nowrap">
-                            Correlation ID
-                          </TableHead>
-                          <TableHead className="text-xs sm:text-sm whitespace-nowrap">
-                            Type Name
-                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {currentPageData.map((item: GroupedDataItem, index) => {
                           if (item.type === "header") {
-                            // Group header row
                             const isExpanded = expandedGroups.has(
                               item.groupKey!
                             );
@@ -552,7 +450,7 @@ export function PluginTraceLogs({
                                 onClick={() => toggleGroup(item.groupKey!)}
                               >
                                 <TableCell
-                                  colSpan={7}
+                                  colSpan={5}
                                   className="text-xs sm:text-sm font-medium"
                                 >
                                   <div className="flex items-center gap-2">
@@ -570,11 +468,10 @@ export function PluginTraceLogs({
                               </TableRow>
                             );
                           } else {
-                            // Regular record row
                             const record = item.data as TraceRecord;
                             return (
                               <TableRow
-                                key={`record-${record.id}-${index}`}
+                                key={`record-${record.traceLogId || index}`}
                                 className="bg-background/50"
                               >
                                 <TableCell
@@ -582,24 +479,24 @@ export function PluginTraceLogs({
                                     groupBy !== "none" ? "pl-8" : ""
                                   }`}
                                 >
-                                  {record.createdOn}
+                                  {record.createdOn || "N/A"}
                                 </TableCell>
                                 <TableCell className="text-xs sm:text-sm">
-                                  {record.executionStart}
+                                  {record.executionStart || "N/A"}
                                 </TableCell>
                                 <TableCell className="text-xs sm:text-sm">
-                                  {record.duration}
+                                  {record.executionDuration || "N/A"}
                                 </TableCell>
                                 <TableCell
                                   className="text-xs sm:text-sm max-w-[200px] truncate"
-                                  title={record.pluginName}
+                                  title={record.typeName}
                                 >
-                                  {record.pluginName}
+                                  {record.typeName || "N/A"}
                                 </TableCell>
                                 <TableCell className="text-xs sm:text-sm">
                                   <div className="flex items-center gap-2">
                                     <span className="truncate">
-                                      {record.stepName}
+                                      {record.stepName || "N/A"}
                                     </span>
                                     <Button
                                       variant="outline"
@@ -611,26 +508,6 @@ export function PluginTraceLogs({
                                     </Button>
                                   </div>
                                 </TableCell>
-                                <TableCell
-                                  className={`text-xs sm:text-sm ${
-                                    groupBy === "correlation"
-                                      ? "text-muted-foreground"
-                                      : ""
-                                  }`}
-                                >
-                                  {groupBy === "correlation"
-                                    ? "—"
-                                    : record.correlationId}
-                                </TableCell>
-                                <TableCell
-                                  className={`text-xs sm:text-sm ${
-                                    groupBy === "type"
-                                      ? "text-muted-foreground"
-                                      : ""
-                                  }`}
-                                >
-                                  {groupBy === "type" ? "—" : record.typeName}
-                                </TableCell>
                               </TableRow>
                             );
                           }
@@ -638,12 +515,12 @@ export function PluginTraceLogs({
                         {currentPageData.length === 0 && (
                           <TableRow>
                             <TableCell
-                              colSpan={7}
+                              colSpan={5}
                               className="text-center py-6 sm:py-8 text-muted-foreground text-xs sm:text-sm"
                             >
                               {searchTerm
                                 ? "No matching records found."
-                                : 'No trace logs found. Apply filters and click "Show Trace Logs" to view data.'}
+                                : "No trace logs available."}
                             </TableCell>
                           </TableRow>
                         )}
@@ -655,9 +532,9 @@ export function PluginTraceLogs({
                 {/* Pagination */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="text-xs sm:text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages} (Showing {startIndex + 1}
-                    -{Math.min(endIndex, groupedData.length)} of{" "}
-                    {groupedData.length}{" "}
+                    Page {currentPage} of {totalPages || 1} (Showing{" "}
+                    {startIndex + 1}-{Math.min(endIndex, groupedData.length)}{" "}
+                    of {groupedData.length}{" "}
                     {groupBy !== "none" ? "items" : "records"})
                   </div>
                   <div className="flex flex-col xs:flex-row items-start xs:items-center gap-4 w-full sm:w-auto">
@@ -703,6 +580,13 @@ export function PluginTraceLogs({
                   </div>
                 </div>
               </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                <p className="text-muted-foreground text-sm">
+                  No trace logs found. Apply filters and click "Show Trace Logs"
+                  to view data.
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>

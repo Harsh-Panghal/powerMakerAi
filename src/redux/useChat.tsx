@@ -196,12 +196,12 @@ export const useChat = () => {
         console.log("Response validation passed");
         console.log("Response text length:", responseData.response.length);
 
-        // ⭐ UPDATED: Handle response with streaming (loading will be set to false after streaming)
+        // Handle response with streaming (loading will be set to false after streaming)
         console.log("Handling response with streaming...");
         await handleResponse(responseData);
         console.log("Response handled successfully");
 
-        // ⭐ UPDATED: Add to history AFTER streaming completes
+        // Add to history AFTER streaming completes
         if (prompt.trim() && responseData.response.trim()) {
           console.log("Adding to history...");
           dispatch(
