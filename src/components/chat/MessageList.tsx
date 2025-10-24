@@ -14,7 +14,6 @@ export function MessageList() {
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const dispatch = useDispatch();
-  // Get data from Redux store - use proper selectors to avoid unnecessary rerenders
 
   const chatId = useSelector((state: RootState) => state.chat.chatId);
   const recentPrompt = useSelector(
@@ -23,13 +22,11 @@ export function MessageList() {
   const resultData = useSelector((state: RootState) => state.chat.resultData);
   const loading = useSelector((state: RootState) => state.chat.loading);
 
-  // Memoize history selector to prevent unnecessary rerenders
   const history = useSelector((state: RootState) => {
     if (!chatId) return [];
     return state.chatHistory[chatId] || [];
   });
 
-  // Fetch chat history from backend
   const {
     data,
     refetch,
@@ -67,14 +64,13 @@ export function MessageList() {
     staleTime: Infinity,
     retry: 1,
   });
-  // Log fetch errors
+
   useEffect(() => {
     if (fetchError) {
       console.error("Chat history fetch error:", fetchError);
     }
   }, [fetchError]);
 
-  // Parse and store chat history in Redux
   useEffect(() => {
     if (data?.history && data?.history.length !== 0 && chatId) {
       const parsed = [];
@@ -93,7 +89,6 @@ export function MessageList() {
     }
   }, [data, chatId, dispatch]);
 
-  // Clear prompt/result when chatId changes
   const prevChatIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (chatId && prevChatIdRef.current !== chatId && history.length > 0) {
@@ -102,7 +97,6 @@ export function MessageList() {
     }
   }, [chatId, history.length, refetch]);
 
-  // Helper to create proper message objects
   const createMessage = (
     id: string,
     content: string,
@@ -122,16 +116,13 @@ export function MessageList() {
     }>,
   });
 
-  // Convert chat history to message format
   const historyMessages = history.flatMap((item, index) => [
     createMessage(`user-${chatId}-${index}`, item.prompt, "user"),
     createMessage(`assistant-${chatId}-${index}`, item.response, "assistant"),
   ]);
 
-  // Add current conversation (if exists and not duplicate)
   const currentMessages: any[] = [];
 
-  // FIXED: Better deduplication logic with null safety
   const isCurrentInHistory =
     recentPrompt &&
     resultData &&
@@ -141,20 +132,16 @@ export function MessageList() {
         item.response?.trim() === resultData?.trim()
     );
 
-  // Only show current messages if they're not already saved in history
   if (!isCurrentInHistory) {
     if (recentPrompt && recentPrompt.trim()) {
       currentMessages.push(createMessage(`current-user`, recentPrompt, "user"));
     }
 
-    // UPDATED: Show thinking indicator when loading with no content
     if (loading) {
-      // Show streaming message (empty or partial content)
       currentMessages.push(
         createMessage(`current-assistant`, resultData || "", "assistant", true)
       );
     } else if (resultData && resultData.trim()) {
-      // Show completed message
       currentMessages.push(
         createMessage(`current-assistant`, resultData, "assistant", false)
       );
@@ -163,7 +150,6 @@ export function MessageList() {
 
   const allMessages = [...historyMessages, ...currentMessages];
 
-  // Find the last assistant message index
   let lastAssistantIndex = -1;
   for (let i = allMessages.length - 1; i >= 0; i--) {
     if (allMessages[i].type === "assistant") {
@@ -175,6 +161,7 @@ export function MessageList() {
   const scrollToBottom = (smooth = true) => {
     messagesEndRef.current?.scrollIntoView({
       behavior: smooth ? "smooth" : "auto",
+      block: "end",
     });
   };
 
@@ -185,15 +172,32 @@ export function MessageList() {
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
 
     setShowScrollToBottom(!isAtBottom);
-    setIsUserScrolling(!isAtBottom);
+    
+    // Only set isUserScrolling if we're scrolling up
+    if (!isAtBottom && scrollTop < containerRef.current.scrollTop) {
+      setIsUserScrolling(true);
+    }
   };
 
-  // Auto-scroll when messages change (unless user is manually scrolling)
+  // FIXED: Immediate scroll when new prompt is sent
   useEffect(() => {
-    if (!isUserScrolling) {
+    if (recentPrompt && recentPrompt.trim()) {
+      // Instantly scroll when user sends a prompt
+      setIsUserScrolling(false);
+      // Use requestAnimationFrame for immediate effect
+      requestAnimationFrame(() => {
+        scrollToBottom(false);
+      });
+    }
+  }, [recentPrompt]);
+
+  // FIXED: Smooth scroll during streaming (content updates)
+  useEffect(() => {
+    if (!isUserScrolling && resultData) {
+      // Use smooth scroll for content updates during streaming
       scrollToBottom(true);
     }
-  }, [allMessages.length, resultData, isUserScrolling]);
+  }, [resultData, isUserScrolling]);
 
   // Reset scrolling state when chat changes
   useEffect(() => {
@@ -203,13 +207,12 @@ export function MessageList() {
 
   return (
     <div className="h-full relative">
-      {/* Messages Container - Now takes full height of parent */}
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-2 "
+        className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-2"
       >
-        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 ">
+        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
           <AnimatePresence initial={false}>
             {allMessages.map((message, index) => (
               <motion.div
@@ -227,11 +230,10 @@ export function MessageList() {
               </motion.div>
             ))}
           </AnimatePresence>
-          {/* Invisible element to scroll to */}
           <div ref={messagesEndRef} />
         </div>
       </div>
-      {/* Scroll to Bottom Button */}
+
       <AnimatePresence>
         {showScrollToBottom && (
           <motion.div
