@@ -65,13 +65,18 @@ export function MessageBubble({ message, isLast }: MessageBubbleProps) {
           {/* Message Content */}
           <div className="flex-1 min-w-0 overflow-hidden">
             <motion.div
+              initial={{ height: 'auto' }}
+              animate={{ 
+                height: 'auto',
+                transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+              }}
               onHoverStart={() => setShowTimestamp(true)}
               onHoverEnd={() => setShowTimestamp(false)}
               className={`relative rounded-2xl px-3 py-2 sm:px-4 sm:py-3 break-words hyphens-auto overflow-hidden ${
                 isUser
                   ? 'bg-primary text-primary-foreground ml-2 sm:ml-4'
                   : 'bg-muted text-foreground mr-2 sm:mr-4'
-              }`}
+              } ${isLast ? 'shadow-lg shadow-primary/5' : ''}`}
             >
               {/* Message Content */}
               {isStreaming ? (

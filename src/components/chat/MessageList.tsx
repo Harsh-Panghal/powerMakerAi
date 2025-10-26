@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef, useState, useLayoutEffect } from 'react';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useChatStore } from '@/store/chatStore';
@@ -11,12 +11,18 @@ export function MessageList() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const previousMessageCountRef = useRef(0);
+  const listControls = useAnimation();
 
   const messages = currentThread?.messages || [];
+  const isAtBottom = useRef(true);
 
   const scrollToBottom = (smooth = true) => {
-    messagesEndRef.current?.scrollIntoView({ 
-      behavior: smooth ? 'smooth' : 'auto' 
+    if (!containerRef.current) return;
+    
+    containerRef.current.scrollTo({
+      top: containerRef.current.scrollHeight,
+      behavior: smooth ? 'smooth' : 'auto'
     });
   };
 
@@ -24,22 +30,47 @@ export function MessageList() {
     if (!containerRef.current) return;
     
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
     
-    setShowScrollToBottom(!isAtBottom);
-    setIsUserScrolling(!isAtBottom);
+    isAtBottom.current = isNearBottom;
+    setShowScrollToBottom(!isNearBottom);
+    setIsUserScrolling(!isNearBottom);
   };
 
-  useEffect(() => {
-    // Auto-scroll to bottom when new messages are added, unless user is scrolling
-    if (!isUserScrolling) {
-      scrollToBottom(true);
+  // Smooth upward push animation when new messages appear
+  useLayoutEffect(() => {
+    const messageCount = messages.length;
+    const previousCount = previousMessageCountRef.current;
+
+    if (messageCount > previousCount && previousCount > 0) {
+      // New message added - trigger upward push animation
+      listControls.start({
+        y: [20, 0],
+        transition: { 
+          duration: 0.4, 
+          ease: [0.4, 0, 0.2, 1] // cubic-bezier ease-out
+        }
+      });
+
+      // Auto-scroll to bottom if user was already at bottom
+      if (isAtBottom.current) {
+        // Use RAF for smoother scroll timing
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            scrollToBottom(true);
+          });
+        });
+      }
     }
-  }, [messages, isUserScrolling]);
+
+    previousMessageCountRef.current = messageCount;
+  }, [messages.length, listControls]);
 
   useEffect(() => {
     // Reset user scrolling when new chat starts
     setIsUserScrolling(false);
+    isAtBottom.current = true;
+    previousMessageCountRef.current = 0;
     scrollToBottom(false);
   }, [currentThread?.id]);
 
@@ -51,29 +82,53 @@ export function MessageList() {
       <div 
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-2 sm:py-4"
+        className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-2 sm:py-4 scroll-smooth"
       >
-        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-          <AnimatePresence initial={false}>
-            {messages.map((message, index) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <MessageBubble 
-                  message={message} 
-                  isLast={index === messages.length - 1}
-                />
-              </motion.div>
-            ))}
+        <motion.div 
+          className="max-w-4xl mx-auto space-y-4 sm:space-y-6"
+          animate={listControls}
+        >
+          <AnimatePresence mode="popLayout">
+            {messages.map((message, index) => {
+              const isLatest = index === messages.length - 1;
+              const isSecondLatest = index === messages.length - 2;
+              const isOlder = index < messages.length - 2;
+              
+              return (
+                <motion.div
+                  key={message.id}
+                  layout
+                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                  animate={{ 
+                    opacity: isOlder ? 0.75 : 1,
+                    y: 0,
+                    scale: isOlder ? 0.98 : 1,
+                    filter: isOlder ? 'blur(0px)' : 'blur(0px)'
+                  }}
+                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                  transition={{ 
+                    duration: 0.4,
+                    ease: [0.4, 0, 0.2, 1],
+                    layout: { duration: 0.3 }
+                  }}
+                  className={`${
+                    isLatest || isSecondLatest 
+                      ? 'ring-2 ring-primary/10 rounded-3xl' 
+                      : ''
+                  } transition-all duration-300`}
+                >
+                  <MessageBubble 
+                    message={message} 
+                    isLast={isLatest}
+                  />
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
           
           {/* Invisible element to scroll to */}
-          <div ref={messagesEndRef} />
-        </div>
+          <div ref={messagesEndRef} className="h-4" />
+        </motion.div>
       </div>
 
       {/* Scroll to Bottom Button */}
