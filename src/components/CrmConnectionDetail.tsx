@@ -277,13 +277,13 @@ export const CrmConnectionDetail: React.FC<CrmConnectionDetailProps> = ({
         //   break;
         case "enviromentUrl":
           // Updated Environment URL pattern to handle various Dynamics 365 URL formats
-          const urlPattern =
-            /^https:\/\/[a-zA-Z0-9-]+\.crm\d*\.dynamics\.com$/i;
-          if (!urlPattern.test(value.trim())) {
-            hasError = true;
-            message =
-              "Environment URL must be a valid Dynamics 365 URL (e.g., https://example.crm.dynamics.com or https://example.crm11.dynamics.com)";
-          }
+          // const urlPattern =
+          //   /^https:\/\/[a-zA-Z0-9-]+\.crm\d*\.dynamics\.com$/i;
+          // if (!urlPattern.test(value.trim())) {
+          //   hasError = true;
+          //   message =
+          //     "Environment URL must be a valid Dynamics 365 URL (e.g., https://example.crm.dynamics.com or https://example.crm11.dynamics.com)";
+          // }
           break;
       }
     }

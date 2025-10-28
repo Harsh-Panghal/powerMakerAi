@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence, useSpring, useTransform } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSelector, useDispatch } from "react-redux";
@@ -13,6 +13,10 @@ export function MessageList() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const [previousMessageCount, setPreviousMessageCount] = useState(0);
+  const lastScrollTopRef = useRef(0);
+  const scrollVelocityRef = useRef(0);
   const dispatch = useDispatch();
 
   const chatId = useSelector((state: RootState) => state.chat.chatId);
@@ -158,69 +162,181 @@ export function MessageList() {
     }
   }
 
-  const scrollToBottom = (smooth = true) => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: smooth ? "smooth" : "auto",
-      block: "end",
-    });
+  // Enhanced scroll with spring animation
+  const scrollToBottom = (smooth = true, withSpring = false) => {
+    if (!messagesEndRef.current) return;
+
+    if (withSpring && containerRef.current) {
+      // Smooth spring animation for button clicks
+      const container = containerRef.current;
+      const targetScroll = container.scrollHeight - container.clientHeight;
+      const currentScroll = container.scrollTop;
+      const distance = targetScroll - currentScroll;
+
+      let start: number | null = null;
+      const duration = 600;
+
+      const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+      const animate = (timestamp: number) => {
+        if (!start) start = timestamp;
+        const progress = Math.min((timestamp - start) / duration, 1);
+        const eased = easeOutCubic(progress);
+
+        container.scrollTop = currentScroll + distance * eased;
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+
+      requestAnimationFrame(animate);
+    } else {
+      messagesEndRef.current.scrollIntoView({
+        behavior: smooth ? "smooth" : "auto",
+        block: "end",
+      });
+    }
   };
 
+  // Calculate scroll velocity
   const handleScroll = () => {
     if (!containerRef.current) return;
 
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
 
+    // Calculate velocity
+    const velocity = scrollTop - lastScrollTopRef.current;
+    scrollVelocityRef.current = velocity;
+    lastScrollTopRef.current = scrollTop;
+
     setShowScrollToBottom(!isAtBottom);
-    
-    // Only set isUserScrolling if we're scrolling up
-    if (!isAtBottom && scrollTop < containerRef.current.scrollTop) {
+
+    // Only set isUserScrolling if we're scrolling up with intent
+    if (!isAtBottom && velocity < -5) {
+      // Negative velocity = scrolling up
       setIsUserScrolling(true);
+    } else if (isAtBottom) {
+      setIsUserScrolling(false);
+      setNewMessageCount(0); // Reset count when at bottom
     }
   };
 
-  // FIXED: Immediate scroll when new prompt is sent
+  // Track new messages while scrolled up
+  useEffect(() => {
+    const currentCount = allMessages.length;
+    if (currentCount > previousMessageCount && isUserScrolling) {
+      setNewMessageCount((prev) => prev + (currentCount - previousMessageCount));
+    }
+    setPreviousMessageCount(currentCount);
+  }, [allMessages.length, isUserScrolling, previousMessageCount]);
+
+  // ENHANCED: Smooth upward push animation on new prompt
   useEffect(() => {
     if (recentPrompt && recentPrompt.trim()) {
-      // Instantly scroll when user sends a prompt
       setIsUserScrolling(false);
-      // Use requestAnimationFrame for immediate effect
-      requestAnimationFrame(() => {
-        scrollToBottom(false);
-      });
+      setNewMessageCount(0);
+
+      // Prepare for smooth push animation
+      if (containerRef.current) {
+        const container = containerRef.current;
+        const wasAtBottom =
+          container.scrollHeight - container.scrollTop - container.clientHeight <
+          100;
+
+        if (wasAtBottom) {
+          // Instant scroll for new messages when already at bottom
+          requestAnimationFrame(() => {
+            scrollToBottom(false);
+          });
+        } else {
+          // Smooth scroll if user was viewing history
+          setTimeout(() => {
+            scrollToBottom(true);
+          }, 100);
+        }
+      }
     }
   }, [recentPrompt]);
 
-  // FIXED: Smooth scroll during streaming (content updates)
+  // ENHANCED: Smooth scroll during streaming with better control
   useEffect(() => {
-    if (!isUserScrolling && resultData) {
-      // Use smooth scroll for content updates during streaming
-      scrollToBottom(true);
-    }
-  }, [resultData, isUserScrolling]);
+    if (!isUserScrolling && resultData && loading) {
+      // During streaming, use smooth scroll
+      const container = containerRef.current;
+      if (container) {
+        const isNearBottom =
+          container.scrollHeight - container.scrollTop - container.clientHeight <
+          200;
 
-  // Reset scrolling state when chat changes
+        if (isNearBottom) {
+          requestAnimationFrame(() => {
+            scrollToBottom(true);
+          });
+        }
+      }
+    }
+  }, [resultData, isUserScrolling, loading]);
+
+  // Reset scrolling state when chat changes with smooth transition
   useEffect(() => {
     setIsUserScrolling(false);
-    scrollToBottom(false);
+    setNewMessageCount(0);
+    setPreviousMessageCount(0);
+    
+    // Smooth scroll to bottom when switching chats
+    setTimeout(() => {
+      scrollToBottom(true);
+    }, 100);
   }, [chatId]);
+
+  // Auto-pause scroll detection (when user hovers over a message)
+  const [isHoveringMessage, setIsHoveringMessage] = useState(false);
 
   return (
     <div className="h-full relative">
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-2"
+        className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-2 scroll-smooth"
+        style={{
+          scrollBehavior: isUserScrolling ? "auto" : "smooth",
+        }}
       >
         <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-          <AnimatePresence initial={false}>
+          <AnimatePresence mode="popLayout" initial={false}>
             {allMessages.map((message, index) => (
               <motion.div
                 key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
+                layout // Enable layout animations for smooth push effect
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0, 
+                  scale: 1,
+                  transition: {
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                    mass: 0.5
+                  }
+                }}
+                exit={{ 
+                  opacity: 0, 
+                  y: -20, 
+                  scale: 0.95,
+                  transition: { duration: 0.2 }
+                }}
+                transition={{
+                  layout: {
+                    type: "spring",
+                    stiffness: 350,
+                    damping: 25,
+                  },
+                }}
+                onHoverStart={() => setIsHoveringMessage(true)}
+                onHoverEnd={() => setIsHoveringMessage(false)}
               >
                 <MessageBubble
                   message={message}
@@ -234,29 +350,92 @@ export function MessageList() {
         </div>
       </div>
 
+      {/* Enhanced Scroll to Bottom Button with Badge */}
       <AnimatePresence>
         {showScrollToBottom && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1, 
+              y: 0,
+              transition: {
+                type: "spring",
+                stiffness: 400,
+                damping: 20
+              }
+            }}
+            exit={{ 
+              opacity: 0, 
+              scale: 0.8, 
+              y: 20,
+              transition: { duration: 0.2 }
+            }}
             className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 z-10"
           >
-            <Button
-              onClick={() => {
-                setIsUserScrolling(false);
-                scrollToBottom(true);
-              }}
-              size="sm"
-              className="rounded-full bg-background border border-border shadow-lg hover:bg-muted text-xs sm:text-sm px-2 sm:px-4"
-              variant="outline"
-            >
-              <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-              <span className="hidden sm:inline">Scroll to latest</span>
-              <span className="sm:hidden">Latest</span>
-            </Button>
+            <div className="relative">
+              {/* New message badge */}
+              {newMessageCount > 0 && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ 
+                    scale: 1,
+                    transition: {
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 15
+                    }
+                  }}
+                  className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-background z-10"
+                >
+                  {newMessageCount > 9 ? "9+" : newMessageCount}
+                </motion.div>
+              )}
+              
+              <Button
+                onClick={() => {
+                  setIsUserScrolling(false);
+                  setNewMessageCount(0);
+                  scrollToBottom(true, true); // Enable spring animation
+                }}
+                size="sm"
+                className="rounded-full bg-background border border-border shadow-lg hover:bg-muted text-xs sm:text-sm px-2 sm:px-4 hover:shadow-xl transition-all duration-200 hover:scale-105"
+                variant="outline"
+              >
+                <motion.div
+                  animate={{ 
+                    y: [0, -3, 0],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="flex items-center"
+                >
+                  <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                </motion.div>
+                <span className="hidden sm:inline">
+                  {newMessageCount > 0 ? "New messages" : "Scroll to latest"}
+                </span>
+                <span className="sm:hidden">
+                  {newMessageCount > 0 ? "New" : "Latest"}
+                </span>
+              </Button>
+            </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Smooth gradient overlay at top when scrolled */}
+      <AnimatePresence>
+        {showScrollToBottom && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-layout-main to-transparent pointer-events-none z-5"
+          />
         )}
       </AnimatePresence>
     </div>
