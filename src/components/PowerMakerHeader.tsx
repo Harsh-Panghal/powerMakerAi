@@ -990,51 +990,70 @@ export function PowerMakerHeader() {
       {isMobile ? (
         <Drawer open={showProfileDialog} onOpenChange={setShowProfileDialog}>
           <DrawerContent className="max-h-[95vh]">
-            <DrawerHeader>
-              <DrawerTitle className="text-center text-lg">Profile</DrawerTitle>
-              <div className="flex justify-center">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <span>Credits</span>
-                  <span className="ml-2 flex items-center">
-                    <span className="w-2 h-2 bg-warning rounded-full mr-1"></span>
-                    {credits}
-                  </span>
-                </div>
-              </div>
-            </DrawerHeader>
-
             {profileLoading ? (
               <div className="flex items-center justify-center p-8">
                 <Loader2 className="w-8 h-8 animate-spin text-brand" />
               </div>
             ) : (
-              <div className="p-4 space-y-6 overflow-y-auto">
-                {/* Profile Image */}
-                <div className="flex justify-center">
-                  <div className="relative">
-                    <Avatar className="w-20 h-20 bg-muted">
-                      {userPhotoURL ? (
-                        <AvatarImage
-                          src={userPhotoURL}
-                          alt="Profile"
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : null}
-                      <AvatarFallback className="text-xl bg-blue-500 text-white">
-                        {firstName?.charAt(0)?.toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button
-                      size="sm"
-                      className="absolute -bottom-1 -right-1 rounded-full w-7 h-7 p-0 bg-brand hover:bg-brand/90"
-                      title="Upload photo (coming soon)"
-                    >
-                      <Camera className="w-3 h-3" />
-                    </Button>
+              <div className="overflow-y-auto">
+                {/* Hero Section with Gradient Background */}
+                <div className="relative bg-gradient-to-br from-brand/20 via-brand/10 to-background pt-8 pb-6 px-4">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(var(--brand-rgb),0.15),transparent_50%)]"></div>
+
+                  <div className="relative flex flex-col items-center space-y-4">
+                    {/* Profile Image with Ring */}
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-tr from-brand to-brand/60 rounded-full blur-md group-hover:blur-lg transition-all duration-300"></div>
+                      <Avatar className="relative w-24 h-24 bg-muted border-4 border-background shadow-xl">
+                        {userPhotoURL ? (
+                          <AvatarImage
+                            src={userPhotoURL}
+                            alt="Profile"
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : null}
+                        <AvatarFallback className="text-2xl bg-gradient-to-br from-brand to-brand/80 text-white font-bold">
+                          {firstName?.charAt(0)?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <Button
+                        size="sm"
+                        className="absolute -bottom-1 -right-1 rounded-full w-9 h-9 p-0 bg-gradient-to-tr from-brand to-brand/80 hover:from-brand/90 hover:to-brand/70 shadow-lg border-2 border-background"
+                        title="Upload photo (coming soon)"
+                      >
+                        <Camera className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    {/* User Info */}
+                    <div className="text-center space-y-1">
+                      <h3 className="text-xl font-bold text-foreground">
+                        {profileData.Name || "Complete Your Profile"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {profileData.Email || userData?.email}
+                      </p>
+                    </div>
+
+                    {/* Credits Badge */}
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30 backdrop-blur-sm">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                        {credits} Credits
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                {/* Form Section */}
+                <div className="p-4 space-y-4">
+                  <div className="space-y-1 pb-2">
+                    <h4 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide">
+                      Personal Information
+                    </h4>
+                    <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-transparent"></div>
+                  </div>
+
                   <ProfileInput
                     id="name"
                     label="Name"
@@ -1052,6 +1071,14 @@ export function PowerMakerHeader() {
                     }
                     type="email"
                   />
+
+                  <div className="space-y-1 pb-2 pt-4">
+                    <h4 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide">
+                      Professional Details
+                    </h4>
+                    <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-transparent"></div>
+                  </div>
+
                   <ProfileInput
                     id="company"
                     label="Company Name"
@@ -1071,7 +1098,7 @@ export function PowerMakerHeader() {
                         setProfileData({ ...profileData, Position: value })
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-background/50 border-border/60 focus:border-brand focus:ring-1 focus:ring-brand">
                         <SelectValue placeholder="Select position" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1095,6 +1122,14 @@ export function PowerMakerHeader() {
                       }
                     />
                   )}
+
+                  <div className="space-y-1 pb-2 pt-4">
+                    <h4 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide">
+                      Address
+                    </h4>
+                    <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-transparent"></div>
+                  </div>
+
                   <ProfileInput
                     id="address1"
                     label="Address Line 1"
@@ -1117,22 +1152,24 @@ export function PowerMakerHeader() {
                       })
                     }
                   />
-                  <ProfileInput
-                    id="city"
-                    label="City"
-                    value={profileData.City}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, City: e.target.value })
-                    }
-                  />
-                  <ProfileInput
-                    id="zip"
-                    label="Zip Code"
-                    value={profileData.Zip}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, Zip: e.target.value })
-                    }
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <ProfileInput
+                      id="city"
+                      label="City"
+                      value={profileData.City}
+                      onChange={(e) =>
+                        setProfileData({ ...profileData, City: e.target.value })
+                      }
+                    />
+                    <ProfileInput
+                      id="zip"
+                      label="Zip Code"
+                      value={profileData.Zip}
+                      onChange={(e) =>
+                        setProfileData({ ...profileData, Zip: e.target.value })
+                      }
+                    />
+                  </div>
                   <ProfileInput
                     id="country"
                     label="Country"
@@ -1144,22 +1181,30 @@ export function PowerMakerHeader() {
                       })
                     }
                   />
-                </div>
 
-                <div className="flex flex-col space-y-3 pb-4">
-                  <Button
-                    className="w-full h-12 bg-brand hover:bg-brand/90 text-white text-base"
-                    onClick={handleProfileUpdate}
-                  >
-                    {profileButtonText}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full h-12 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 text-base"
-                    onClick={() => setShowDeleteDialog(true)}
-                  >
-                    Delete Account
-                  </Button>
+                  {/* Action Buttons */}
+                  <div className="flex flex-col space-y-3 pt-6 pb-4">
+                    <Button
+                      className="w-full h-12 bg-gradient-to-r from-brand to-brand/80 hover:from-brand/90 hover:to-brand/70 text-white text-base font-semibold shadow-lg shadow-brand/20"
+                      onClick={handleProfileUpdate}
+                    >
+                      {profileButtonText === "Update Completed" ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          {profileButtonText}
+                        </>
+                      ) : (
+                        profileButtonText
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full h-12 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 text-base"
+                      onClick={() => setShowDeleteDialog(true)}
+                    >
+                      Delete Account
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1167,181 +1212,267 @@ export function PowerMakerHeader() {
         </Drawer>
       ) : (
         <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-          <DialogContent className="profile-dialog sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-center text-lg">Profile</DialogTitle>
-              <div className="flex justify-end">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <span>Credits</span>
-                  <span className="ml-2 flex items-center">
-                    <span className="w-2 h-2 bg-warning rounded-full mr-1"></span>
-                    {credits}
-                  </span>
-                </div>
-              </div>
-            </DialogHeader>
-
+          <DialogContent className="profile-dialog sm:max-w-[600px] max-h-[90vh] overflow-hidden p-0">
             {profileLoading ? (
               <div className="flex items-center justify-center p-8">
                 <Loader2 className="w-8 h-8 animate-spin text-brand" />
               </div>
             ) : (
-              <div className="space-y-6">
-                {/* Profile Image */}
-                <div className="flex justify-center">
-                  <div className="relative">
-                    <Avatar className="w-24 h-24 bg-muted">
-                      {userPhotoURL ? (
-                        <AvatarImage
-                          src={userPhotoURL}
-                          alt="Profile"
-                          className="w-full h-full rounded-full object-cover"
+              <div className="flex flex-col max-h-[90vh]">
+                {/* Hero Section with Gradient Background */}
+                <div className="relative bg-gradient-to-br from-brand/20 via-brand/10 to-background pt-8 pb-8 px-6 flex-shrink-0">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(var(--brand-rgb),0.15),transparent_50%)]"></div>
+                  <div className="absolute top-4 right-12">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30 backdrop-blur-sm">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                        {credits} Credits
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="relative flex items-center gap-6">
+                    {/* Profile Image with Ring */}
+                    <div className="relative group flex-shrink-0">
+                      <div className="absolute inset-0 bg-gradient-to-tr from-brand to-brand/60 rounded-full blur-md group-hover:blur-lg transition-all duration-300"></div>
+                      <Avatar className="relative w-28 h-28 bg-muted border-4 border-background shadow-xl">
+                        {userPhotoURL ? (
+                          <AvatarImage
+                            src={userPhotoURL}
+                            alt="Profile"
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : null}
+                        <AvatarFallback className="text-3xl bg-gradient-to-br from-brand to-brand/80 text-white font-bold">
+                          {firstName?.charAt(0)?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <Button
+                        size="sm"
+                        className="absolute -bottom-1 -right-1 rounded-full w-10 h-10 p-0 bg-gradient-to-tr from-brand to-brand/80 hover:from-brand/90 hover:to-brand/70 shadow-lg border-2 border-background"
+                        title="Upload photo (coming soon)"
+                      >
+                        <Camera className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    {/* User Info */}
+                    <div className="flex-1 space-y-2">
+                      <h3 className="text-2xl font-bold text-foreground">
+                        {profileData.Name || "Complete Your Profile"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {profileData.Email || userData?.email}
+                      </p>
+                      {profileData.CompanyName && (
+                        <p className="text-sm text-muted-foreground/80">
+                          {profileData.CompanyName}{" "}
+                          {profileData.Position && `• ${profileData.Position}`}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Scrollable Form Section */}
+                <div className="overflow-y-auto flex-1 px-6 py-6">
+                  <div className="space-y-6">
+                    {/* Personal Information Section */}
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          Personal Information
+                        </h4>
+                        <div className="h-0.5 w-16 bg-gradient-to-r from-brand to-transparent"></div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <ProfileInput
+                          id="name"
+                          label="Name"
+                          value={profileData.Name}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              Name: e.target.value,
+                            })
+                          }
                         />
-                      ) : null}
-                      <AvatarFallback className="text-2xl bg-blue-500 text-white">
-                        {firstName?.charAt(0)?.toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
+                        <ProfileInput
+                          id="email"
+                          label="E-Mail"
+                          value={profileData.Email}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              Email: e.target.value,
+                            })
+                          }
+                          type="email"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Professional Details Section */}
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide flex items-center gap-2">
+                          <Settings className="w-4 h-4" />
+                          Professional Details
+                        </h4>
+                        <div className="h-0.5 w-16 bg-gradient-to-r from-brand to-transparent"></div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <ProfileInput
+                          id="company"
+                          label="Company Name"
+                          value={profileData.CompanyName}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              CompanyName: e.target.value,
+                            })
+                          }
+                        />
+                        <div className="space-y-2">
+                          <Label htmlFor="position">Position</Label>
+                          <Select
+                            value={profileData.Position}
+                            onValueChange={(value) =>
+                              setProfileData({
+                                ...profileData,
+                                Position: value,
+                              })
+                            }
+                          >
+                            <SelectTrigger className="bg-background/50 border-border/60 focus:border-brand focus:ring-1 focus:ring-brand">
+                              <SelectValue placeholder="Select position" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="CEO">CEO</SelectItem>
+                              <SelectItem value="CTO">CTO</SelectItem>
+                              <SelectItem value="Manager">Manager</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {profileData.Position === "Other" && (
+                        <ProfileInput
+                          id="customPosition"
+                          label="Custom Position"
+                          value={profileData.CustomPosition}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              CustomPosition: e.target.value,
+                            })
+                          }
+                        />
+                      )}
+                    </div>
+
+                    {/* Address Section */}
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide">
+                          Address
+                        </h4>
+                        <div className="h-0.5 w-16 bg-gradient-to-r from-brand to-transparent"></div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <ProfileInput
+                          id="address1"
+                          label="Address Line 1"
+                          value={profileData.AddressLine1}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              AddressLine1: e.target.value,
+                            })
+                          }
+                        />
+                        <ProfileInput
+                          id="address2"
+                          label="Address Line 2"
+                          value={profileData.AddressLine2}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              AddressLine2: e.target.value,
+                            })
+                          }
+                        />
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="col-span-2">
+                            <ProfileInput
+                              id="city"
+                              label="City"
+                              value={profileData.City}
+                              onChange={(e) =>
+                                setProfileData({
+                                  ...profileData,
+                                  City: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <ProfileInput
+                            id="zip"
+                            label="Zip Code"
+                            value={profileData.Zip}
+                            onChange={(e) =>
+                              setProfileData({
+                                ...profileData,
+                                Zip: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <ProfileInput
+                          id="country"
+                          label="Country"
+                          value={profileData.Country}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              Country: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons - Fixed at bottom */}
+                <div className="flex-shrink-0 px-6 py-4 border-t border-border/40 bg-background/80 backdrop-blur-sm">
+                  <div className="flex flex-col space-y-2">
                     <Button
-                      size="sm"
-                      className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0 bg-brand hover:bg-brand/90"
-                      title="Upload photo (coming soon)"
+                      className="w-full h-11 bg-gradient-to-r from-brand to-brand/80 hover:from-brand/90 hover:to-brand/70 text-white font-semibold shadow-lg shadow-brand/20 transition-all duration-200"
+                      onClick={handleProfileUpdate}
                     >
-                      <Camera className="w-4 h-4" />
+                      {profileButtonText === "Update Completed" ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          {profileButtonText}
+                        </>
+                      ) : (
+                        profileButtonText
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200"
+                      onClick={() => setShowDeleteDialog(true)}
+                    >
+                      Delete Account
                     </Button>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <ProfileInput
-                    id="name"
-                    label="Name"
-                    value={profileData.Name}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, Name: e.target.value })
-                    }
-                  />
-                  <ProfileInput
-                    id="email"
-                    label="E-Mail"
-                    value={profileData.Email}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, Email: e.target.value })
-                    }
-                    type="email"
-                  />
-                  <ProfileInput
-                    id="company"
-                    label="Company Name"
-                    value={profileData.CompanyName}
-                    onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        CompanyName: e.target.value,
-                      })
-                    }
-                  />
-                  <div className="space-y-2">
-                    <Label htmlFor="position">Position</Label>
-                    <Select
-                      value={profileData.Position}
-                      onValueChange={(value) =>
-                        setProfileData({ ...profileData, Position: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select position" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="CEO">CEO</SelectItem>
-                        <SelectItem value="CTO">CTO</SelectItem>
-                        <SelectItem value="Manager">Manager</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {profileData.Position === "Other" && (
-                    <div className="col-span-2">
-                      <ProfileInput
-                        id="customPosition"
-                        label="Custom Position"
-                        value={profileData.CustomPosition}
-                        onChange={(e) =>
-                          setProfileData({
-                            ...profileData,
-                            CustomPosition: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  <ProfileInput
-                    id="address1"
-                    label="Address Line 1"
-                    value={profileData.AddressLine1}
-                    onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        AddressLine1: e.target.value,
-                      })
-                    }
-                  />
-                  <ProfileInput
-                    id="address2"
-                    label="Address Line 2"
-                    value={profileData.AddressLine2}
-                    onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        AddressLine2: e.target.value,
-                      })
-                    }
-                  />
-                  <ProfileInput
-                    id="city"
-                    label="City"
-                    value={profileData.City}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, City: e.target.value })
-                    }
-                  />
-                  <ProfileInput
-                    id="zip"
-                    label="Zip Code"
-                    value={profileData.Zip}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, Zip: e.target.value })
-                    }
-                  />
-                  <div className="col-span-2">
-                    <ProfileInput
-                      id="country"
-                      label="Country"
-                      value={profileData.Country}
-                      onChange={(e) =>
-                        setProfileData({
-                          ...profileData,
-                          Country: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col space-y-2">
-                  <Button
-                    className="w-full bg-brand hover:bg-brand/90 text-white"
-                    onClick={handleProfileUpdate}
-                  >
-                    {profileButtonText}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200"
-                    onClick={() => setShowDeleteDialog(true)}
-                  >
-                    Delete Account
-                  </Button>
                 </div>
               </div>
             )}
@@ -1365,7 +1496,8 @@ export function PowerMakerHeader() {
             <DrawerHeader>
               <DrawerTitle>Invite people</DrawerTitle>
               <DrawerDescription>
-                Share PowerMaker with your team and earn 10 credits for each successful invitation.
+                Share PowerMaker with your team and earn 10 credits for each
+                successful invitation.
               </DrawerDescription>
             </DrawerHeader>
 
@@ -1437,7 +1569,8 @@ export function PowerMakerHeader() {
               </div>
 
               <p className="text-sm text-muted-foreground">
-                When your invitee signs up using your link, you'll both receive bonus credits!
+                When your invitee signs up using your link, you'll both receive
+                bonus credits!
               </p>
             </div>
           </DrawerContent>
@@ -1457,7 +1590,8 @@ export function PowerMakerHeader() {
             <DialogHeader>
               <DialogTitle>Invite people</DialogTitle>
               <DialogDescription>
-                Share PowerMaker with your team and earn 10 credits for each successful invitation.
+                Share PowerMaker with your team and earn 10 credits for each
+                successful invitation.
               </DialogDescription>
             </DialogHeader>
 
@@ -1529,7 +1663,8 @@ export function PowerMakerHeader() {
               </div>
 
               <p className="text-sm text-muted-foreground">
-                When your invitee signs up using your link, you'll both receive bonus credits!
+                When your invitee signs up using your link, you'll both receive
+                bonus credits!
               </p>
             </div>
           </DialogContent>
