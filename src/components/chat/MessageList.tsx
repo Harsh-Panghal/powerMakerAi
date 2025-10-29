@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, useSpring, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSelector, useDispatch } from "react-redux";
@@ -18,6 +18,9 @@ export function MessageList() {
   const lastScrollTopRef = useRef(0);
   const scrollVelocityRef = useRef(0);
   const dispatch = useDispatch();
+
+  // Track if we just sent a new message
+  const hasScrolledForNewMessage = useRef(false);
 
   const chatId = useSelector((state: RootState) => state.chat.chatId);
   const recentPrompt = useSelector(
@@ -232,58 +235,59 @@ export function MessageList() {
     setPreviousMessageCount(currentCount);
   }, [allMessages.length, isUserScrolling, previousMessageCount]);
 
-  // ENHANCED: Smooth upward push animation on new prompt
+  // 🔥 KEY FIX: Instantly scroll to bottom when new prompt is sent
   useEffect(() => {
     if (recentPrompt && recentPrompt.trim()) {
+      // Reset user scrolling state
       setIsUserScrolling(false);
       setNewMessageCount(0);
 
-      // Prepare for smooth push animation
+      // INSTANT scroll to bottom - no animation, no delay
       if (containerRef.current) {
-        const container = containerRef.current;
-        const wasAtBottom =
-          container.scrollHeight - container.scrollTop - container.clientHeight <
-          100;
-
-        if (wasAtBottom) {
-          // Instant scroll for new messages when already at bottom
-          requestAnimationFrame(() => {
-            scrollToBottom(false);
-          });
-        } else {
-          // Smooth scroll if user was viewing history
-          setTimeout(() => {
-            scrollToBottom(true);
-          }, 100);
-        }
+        // Use setTimeout with 0 to ensure DOM has updated
+        setTimeout(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollTop = containerRef.current.scrollHeight;
+            hasScrolledForNewMessage.current = true;
+          }
+        }, 0);
       }
     }
   }, [recentPrompt]);
 
-  // ENHANCED: Smooth scroll during streaming with better control
+  // 🔥 ENHANCED: Keep scrolling to bottom during streaming (only if we're already at bottom)
   useEffect(() => {
-    if (!isUserScrolling && resultData && loading) {
-      // During streaming, use smooth scroll
-      const container = containerRef.current;
-      if (container) {
-        const isNearBottom =
-          container.scrollHeight - container.scrollTop - container.clientHeight <
-          200;
-
-        if (isNearBottom) {
-          requestAnimationFrame(() => {
-            scrollToBottom(true);
-          });
-        }
+    if (loading && resultData) {
+      // During streaming, continuously scroll to bottom
+      if (containerRef.current) {
+        requestAnimationFrame(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollTop = containerRef.current.scrollHeight;
+            hasScrolledForNewMessage.current = true; // Ensure it's set during streaming
+          }
+        });
       }
     }
-  }, [resultData, isUserScrolling, loading]);
+  }, [resultData, loading]);
+
+  // 🔥 NEW FIX: Scroll to bottom when loading completes (for buttons/quick prompts)
+  useEffect(() => {
+    if (!loading && resultData) {
+      // Response is complete, scroll to show buttons/quick prompts
+      setTimeout(() => {
+        if (containerRef.current) {
+          containerRef.current.scrollTop = containerRef.current.scrollHeight;
+        }
+      }, 100); // Small delay to let buttons render
+    }
+  }, [loading, resultData]);
 
   // Reset scrolling state when chat changes with smooth transition
   useEffect(() => {
     setIsUserScrolling(false);
     setNewMessageCount(0);
     setPreviousMessageCount(0);
+    hasScrolledForNewMessage.current = false;
     
     // Smooth scroll to bottom when switching chats
     setTimeout(() => {
@@ -299,9 +303,9 @@ export function MessageList() {
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-2 scroll-smooth"
+        className="h-full overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-2"
         style={{
-          scrollBehavior: isUserScrolling ? "auto" : "smooth",
+          scrollBehavior: "auto", // Changed to auto for instant scroll
         }}
       >
         <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
@@ -309,7 +313,7 @@ export function MessageList() {
             {allMessages.map((message, index) => (
               <motion.div
                 key={message.id}
-                layout // Enable layout animations for smooth push effect
+                layout={false} // Disable layout animations to prevent push effect
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ 
                   opacity: 1, 
@@ -327,13 +331,6 @@ export function MessageList() {
                   y: -20, 
                   scale: 0.95,
                   transition: { duration: 0.2 }
-                }}
-                transition={{
-                  layout: {
-                    type: "spring",
-                    stiffness: 350,
-                    damping: 25,
-                  },
                 }}
                 onHoverStart={() => setIsHoveringMessage(true)}
                 onHoverEnd={() => setIsHoveringMessage(false)}
