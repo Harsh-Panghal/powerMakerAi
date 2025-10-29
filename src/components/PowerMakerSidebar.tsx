@@ -233,7 +233,7 @@ export function PowerMakerSidebar() {
   };
 
   const handleHelpClick = () => {
-    window.open("https://powermakerai.com/Documentation/", "_blank");
+    window.open("https://power-maker-ai-portfolio.web.app/docs", "_blank");
   };
 
   const handleSettingsClick = () => {
@@ -556,7 +556,7 @@ export function PowerMakerSidebar() {
         className="w-full justify-start"
         onClick={() =>
           window.open(
-            "https://powermakerai.com/src/privacyPolicy.html",
+            "https://power-maker-ai-portfolio.web.app/privacy-policy",
             "_blank"
           )
         }
@@ -569,7 +569,7 @@ export function PowerMakerSidebar() {
         variant="ghost"
         className="w-full justify-start"
         onClick={() =>
-          window.open("https://powermakerai.com/src/terms.html", "_blank")
+          window.open("https://power-maker-ai-portfolio.web.app/term-of-use", "_blank")
         }
       >
         <span className="mr-2">📋</span>
