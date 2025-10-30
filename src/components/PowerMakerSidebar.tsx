@@ -1088,9 +1088,9 @@ export function PowerMakerSidebar() {
                 We'd love to hear your thoughts about our application.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <Label htmlFor="feedback-type">Feedback Type</Label>
+                <Label htmlFor="feedback-type" className="mb-2 inline-block">Feedback Type</Label>
                 <Select
                   value={feedbackType}
                   onValueChange={(value) =>
@@ -1117,7 +1117,7 @@ export function PowerMakerSidebar() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="feedback-text">Your Feedback</Label>
+                <Label htmlFor="feedback-text" className="mb-2 inline-block">Your Feedback</Label>
                 <Textarea
                   id="feedback-text"
                   placeholder="Tell us what you think..."
@@ -1127,11 +1127,11 @@ export function PowerMakerSidebar() {
                 />
               </div>
               <div>
-                <Label>Rating</Label>
+                <Label className="mb-2 inline-block">Rating</Label>
                 {renderStarRating()}
               </div>
               <div>
-                <Label>Upload Image (optional)</Label>
+                <Label className="mb-2 inline-block">Upload Image (optional)</Label>
                 <div className="mt-1 feedback-img-area max-w-full min-h-[135px] border border-[#1FA2D0] border-dashed rounded-md flex items-center justify-center flex-col relative p-4">
                   <input
                     type="file"

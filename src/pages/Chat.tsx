@@ -161,7 +161,7 @@ const Chat = () => {
         className="flex flex-col h-full"
       >
         {/* Chat Header - Fixed at top */}
-        <div className="flex-shrink-0 p-2 border-b border-border bg-layout-main z-10">
+        {/* <div className="flex-shrink-0 p-2 border-b border-border bg-layout-main z-10">
           <div className="max-w-4xl px-4">
             <h2 className="text-md sm:text-md font-semibold text-brand break-words">
               {displayTitle()}
@@ -170,7 +170,7 @@ const Chat = () => {
               {getModelDisplayName(currentModel)}
             </p>
           </div>
-        </div>
+        </div> */}
 
         {/* Messages Area - Scrollable with fixed height */}
         <div className="flex-1 min-h-0 overflow-hidden">

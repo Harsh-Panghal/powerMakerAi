@@ -769,7 +769,7 @@ export function PowerMakerHeader() {
           </div>
 
           {/* Notification Bell */}
-          <Sheet
+          {/* <Sheet
             open={isNotificationOpen}
             onOpenChange={(open) =>
               open ? openNotifications() : closeNotifications()
@@ -922,7 +922,7 @@ export function PowerMakerHeader() {
                 </TabsContent>
               </Tabs>
             </SheetContent>
-          </Sheet>
+          </Sheet> */}
 
           {/* User Menu */}
           <DropdownMenu>

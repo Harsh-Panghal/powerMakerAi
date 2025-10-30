@@ -145,7 +145,7 @@ export function ChatInput({ handleSend }: PromptSearchBarProps) {
 
   return (
     <div
-      className="p-2 sm:p-4 bg-layout-main border-t border-border"
+      className="p-2 bg-layout-main border-t border-border"
       data-tour="input-area"
     >
       <div className="max-w-4xl mx-auto px-2 sm:px-4">
@@ -219,7 +219,7 @@ export function ChatInput({ handleSend }: PromptSearchBarProps) {
             onChange={(e) => dispatch(setInput(e.target.value))}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
-            className="w-full min-h-[80px] sm:min-h-[100px] pr-28 sm:pr-32 pb-12 sm:pb-14 resize-none border-brand-light focus:ring-brand-light text-sm sm:text-base align-top"
+            className="w-full min-h-[80px] sm:min-h-[80px] pr-28 sm:pr-22 pb-12 sm:pb-8 resize-none border-brand-light focus:ring-brand-light text-sm sm:text-base align-top"
             aria-label="Message input with multiple image paste support"
             disabled={isProcessingImage}
           />
