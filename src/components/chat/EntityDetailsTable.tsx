@@ -40,13 +40,6 @@ export function EntityDetailsTable() {
     }
   }, [crmActionData]);
 
-  const handleInputChange = (field: string, value: string) => {
-    setEntityData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
   const toggleSection = (section: string) => {
     setExpandedSections((prev) =>
       prev.includes(section)
@@ -116,7 +109,7 @@ export function EntityDetailsTable() {
     Process: ["isbusinessprocessenabled"],
   };
 
-  console.log("crm Action DATA", crmActionData);
+  // console.log("crm Action DATA", crmActionData);
 
   return (
     <Card className="w-full">

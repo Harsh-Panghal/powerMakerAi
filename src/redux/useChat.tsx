@@ -46,7 +46,7 @@ export const useChat = () => {
   );
   const { currentModel } = useSelector((state: RootState) => state.model);
 
-  // ⭐ NEW: Streaming function for smooth word-by-word animation
+  //Streaming function for smooth word-by-word animation
   const streamText = useCallback(
     async (text: string, onUpdate: (chunk: string) => void) => {
       let displayedText = '';
@@ -81,12 +81,12 @@ export const useChat = () => {
       // Set chat title
       dispatch(setChatTitle(title));
       
-      // ⭐ UPDATED: Stream the response instead of setting it all at once
-      console.log("Starting response streaming...");
+      // Stream the response instead of setting it all at once
+      // console.log("Starting response streaming...");
       await streamText(response, (chunk) => {
         dispatch(setResultData(chunk));
       });
-      console.log("Response streaming completed");
+      // console.log("Response streaming completed");
 
       // Set recommendations after streaming completes
       dispatch(setRecommendation(next_user_responses || []));
@@ -99,7 +99,7 @@ export const useChat = () => {
             dispatch(setDeveloperModeEnable(true));
             dispatch(setRecommendationVisible(false));
           } catch (error) {
-            console.error("Error parsing crm_action:", error);
+            // console.error("Error parsing crm_action:", error);
             dispatch(setRecommendationVisible(true));
             dispatch(setDeveloperModeEnable(false));
           }
@@ -114,7 +114,7 @@ export const useChat = () => {
             dispatch(setTraceData(traceData));
             dispatch(setRecommendationVisible(false));
           } catch (error) {
-            console.error("Error parsing tracing_filters:", error);
+            // console.error("Error parsing tracing_filters:", error);
             dispatch(setRecommendationVisible(true));
           }
         } else {
@@ -136,11 +136,11 @@ export const useChat = () => {
       action: number = 0,
       model: number = 0
     ) => {
-      console.log("=== onSent called ===");
-      console.log("Prompt:", prompt);
-      console.log("ChatId:", chatId);
-      console.log("Action:", action);
-      console.log("Model:", model);
+      // console.log("=== onSent called ===");
+      // console.log("Prompt:", prompt);
+      // console.log("ChatId:", chatId);
+      // console.log("Action:", action);
+      // console.log("Model:", model);
 
       if (!prompt.trim()) {
         console.warn("Empty prompt provided");
@@ -148,18 +148,18 @@ export const useChat = () => {
       }
 
       // Set loading states
-      console.log("Setting loading state to true...");
+      // console.log("Setting loading state to true...");
       dispatch(setLoading(true));
       dispatch(setShowResult(true));
       dispatch(setRecentPrompt(prompt));
       dispatch(setCreditStatus(true));
       
-      // ⭐ IMPORTANT: Clear previous result data to show "thinking" indicator
+      // Clear previous result data to show "thinking" indicator
       dispatch(setResultData(""));
       dispatch(setRecommendationVisible(false));
 
       try {
-        console.log("Calling API mutation...");
+        // console.log("Calling API mutation...");
         
         // Call the chat API
         const responseData = await runChatMutation.mutateAsync({
@@ -169,13 +169,13 @@ export const useChat = () => {
           model,
         });
         
-        console.log("Response received:", responseData);
-        console.log("Response type:", typeof responseData);
-        console.log("Response keys:", Object.keys(responseData || {}));
+        // console.log("Response received:", responseData);
+        // console.log("Response type:", typeof responseData);
+        // console.log("Response keys:", Object.keys(responseData || {}));
 
         // Check for credit status
         if ("status" in responseData && responseData.status === false) {
-          console.warn("Credit status is false");
+          // console.warn("Credit status is false");
           dispatch(setCreditStatus(false));
           dispatch(setLoading(false));
           return;
@@ -183,27 +183,27 @@ export const useChat = () => {
 
         // Validate response data
         if (!responseData || typeof responseData !== "object") {
-          console.error("Invalid response format:", responseData);
+          // console.error("Invalid response format:", responseData);
           throw new Error("Invalid response format");
         }
 
         if (!responseData.response) {
-          console.error("No response text in API response");
-          console.error("Response data:", JSON.stringify(responseData, null, 2));
+          // console.error("No response text in API response");
+          // console.error("Response data:", JSON.stringify(responseData, null, 2));
           throw new Error("No response text in API response");
         }
 
-        console.log("Response validation passed");
-        console.log("Response text length:", responseData.response.length);
+        // console.log("Response validation passed");
+        // console.log("Response text length:", responseData.response.length);
 
         // Handle response with streaming (loading will be set to false after streaming)
-        console.log("Handling response with streaming...");
+        // console.log("Handling response with streaming...");
         await handleResponse(responseData);
-        console.log("Response handled successfully");
+        // console.log("Response handled successfully");
 
         // Add to history AFTER streaming completes
         if (prompt.trim() && responseData.response.trim()) {
-          console.log("Adding to history...");
+          // console.log("Adding to history...");
           dispatch(
             addToHistory({
               chatId: chatId ?? "",
@@ -213,29 +213,29 @@ export const useChat = () => {
               },
             })
           );
-          console.log("Added to history");
+          // console.log("Added to history");
         }
         
       } catch (error) {
-        console.error("Error in onSent:");
-        console.error("Error object:", error);
-        console.error("Error message:", error instanceof Error ? error.message : "Unknown error");
-        console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+        // console.error("Error in onSent:");
+        // console.error("Error object:", error);
+        // console.error("Error message:", error instanceof Error ? error.message : "Unknown error");
+        // console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
         
-        // ⭐ UPDATED: Stream error message as well
+        // Stream error message as well
         const errorMessage = error instanceof Error 
           ? `Error: ${error.message}` 
           : "Something went wrong. Please try again.";
         
-        console.log("Streaming error message:", errorMessage);
+        // console.log("Streaming error message:", errorMessage);
         await streamText(errorMessage, (chunk) => {
           dispatch(setResultData(chunk));
         });
         dispatch(setRecommendationVisible(false));
       } finally {
-        console.log("Setting loading to false");
+        // console.log("Setting loading to false");
         dispatch(setLoading(false));
-        console.log("=== onSent completed ===\n");
+        // console.log("=== onSent completed ===\n");
       }
     },
     [dispatch, handleResponse, runChatMutation, streamText]

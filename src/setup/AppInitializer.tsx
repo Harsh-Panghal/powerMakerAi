@@ -7,7 +7,7 @@ import { setConnections, setIsCrmConnected } from "../redux/CrmSlice";
 import { RootState } from "../store/store";
 import { useToast } from "@/hooks/use-toast";
 
-// ✅ Setup secureAxios interceptors once
+// Setup secureAxios interceptors once
 secureAxios.interceptors.request.use(async (config) => {
   const user = auth.currentUser;
   if (user) {
@@ -39,7 +39,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
   const { retryTrigger, connections, isCrmConnected } = useSelector((state: RootState) => state.crm);
 
-  // 🔑 1) Run auth and fetch connections only once on login
+  // 1) Run auth and fetch connections only once on login
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -50,7 +50,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
 
       try {
         const token = await user.getIdToken(true);
-        console.log("User logged in, fetching connections...");
+        // console.log("User logged in, fetching connections...");
         
         // verify user
         const verifyRes = await fetch(
@@ -89,14 +89,14 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
-        console.log("Connections fetched:", data.connections);
+        // console.log("Connections fetched:", data.connections);
         dispatch(setConnections(data.connections));
         
         // Immediately try to connect to active connection
         await attemptCrmConnection(data.connections);
         
       } catch (err) {
-        console.error("Auth init error:", err);
+        // console.error("Auth init error:", err);
         dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
       }
     });
@@ -109,14 +109,14 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
     const connectionsData = connectionsToUse || connections;
     
     if (!connectionsData?.length) {
-      console.log("No connections available for CRM connection");
+      // console.log("No connections available for CRM connection");
       return;
     }
 
     const activeConnection = connectionsData.find((c: any) => c.isActive);
     
     if (!activeConnection) {
-      console.log("No active connection found");
+      // console.log("No active connection found");
       dispatch(setIsCrmConnected({ connected: false, connectionName: "" }));
       toast({
         variant: "destructive",
@@ -126,7 +126,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    console.log("Attempting to connect to:", activeConnection.connectionName);
+    // console.log("Attempting to connect to:", activeConnection.connectionName);
     
     // Set connecting state
     dispatch(setIsCrmConnected({ 
@@ -150,7 +150,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
       const crmData = await crmRes.json();
       
       if (crmData.success) {
-        console.log("CRM connection successful:", activeConnection.connectionName);
+        // console.log("CRM connection successful:", activeConnection.connectionName);
         dispatch(setIsCrmConnected({
           connected: true,
           connectionName: activeConnection.connectionName,
@@ -161,7 +161,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
           className: "border-success bg-success/10 text-success-dark",
         });
       } else {
-        console.log("CRM connection failed:", crmData.message);
+        // console.log("CRM connection failed:", crmData.message);
         dispatch(setIsCrmConnected({
           connected: false,
           connectionName: activeConnection.connectionName,
@@ -173,7 +173,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
         });
       }
     } catch (err) {
-      console.error("CRM connection error:", err);
+      // console.error("CRM connection error:", err);
       dispatch(setIsCrmConnected({ 
         connected: false, 
         connectionName: activeConnection.connectionName 
@@ -189,7 +189,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
   // 🔁 2) Handle retry trigger separately
   useEffect(() => {
     if (retryTrigger && connections?.length) {
-      console.log("Retry triggered, attempting reconnection...");
+      // console.log("Retry triggered, attempting reconnection...");
       attemptCrmConnection();
     }
   }, [retryTrigger]); // Only depend on retryTrigger, not connections

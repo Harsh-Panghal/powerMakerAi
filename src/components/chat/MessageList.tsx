@@ -46,23 +46,23 @@ export function MessageList() {
       const url = `${
         import.meta.env.VITE_BACKEND_API
       }/chat/chats/:id?chatId=${chatId}`;
-      console.log("Fetching chat history from:", url);
+      // console.log("Fetching chat history from:", url);
 
       const res = await fetch(url, {
         credentials: "include",
       });
 
       if (!res.ok) {
-        console.error(
-          "Failed to fetch chat history:",
-          res.status,
-          res.statusText
-        );
+        // console.error(
+        //   "Failed to fetch chat history:",
+        //   res.status,
+        //   res.statusText
+        // );
         throw new Error(`Failed to fetch: ${res.status}`);
       }
 
       const data = await res.json();
-      console.log("Chat history fetched:", data);
+      // console.log("Chat history fetched:", data);
       return data;
     },
     enabled: !!chatId,
@@ -74,7 +74,7 @@ export function MessageList() {
 
   useEffect(() => {
     if (fetchError) {
-      console.error("Chat history fetch error:", fetchError);
+      // console.error("Chat history fetch error:", fetchError);
     }
   }, [fetchError]);
 
@@ -235,7 +235,7 @@ export function MessageList() {
     setPreviousMessageCount(currentCount);
   }, [allMessages.length, isUserScrolling, previousMessageCount]);
 
-  // 🔥 KEY FIX: Instantly scroll to bottom when new prompt is sent
+  // Instantly scroll to bottom when new prompt is sent
   useEffect(() => {
     if (recentPrompt && recentPrompt.trim()) {
       // Reset user scrolling state
@@ -255,7 +255,7 @@ export function MessageList() {
     }
   }, [recentPrompt]);
 
-  // 🔥 ENHANCED: Keep scrolling to bottom during streaming (only if we're already at bottom)
+  // Keep scrolling to bottom during streaming (only if we're already at bottom)
   useEffect(() => {
     if (loading && resultData) {
       // During streaming, continuously scroll to bottom
@@ -270,7 +270,7 @@ export function MessageList() {
     }
   }, [resultData, loading]);
 
-  // 🔥 NEW FIX: Scroll to bottom when loading completes (for buttons/quick prompts)
+  // Scroll to bottom when loading completes (for buttons/quick prompts)
   useEffect(() => {
     if (!loading && resultData) {
       // Response is complete, scroll to show buttons/quick prompts
