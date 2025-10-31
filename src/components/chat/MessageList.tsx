@@ -15,8 +15,10 @@ export function MessageList() {
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const [previousMessageCount, setPreviousMessageCount] = useState(0);
+  const [isActivelyScrolling, setIsActivelyScrolling] = useState(false);
   const lastScrollTopRef = useRef(0);
   const scrollVelocityRef = useRef(0);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const dispatch = useDispatch();
 
   // Track if we just sent a new message
@@ -46,23 +48,16 @@ export function MessageList() {
       const url = `${
         import.meta.env.VITE_BACKEND_API
       }/chat/chats/:id?chatId=${chatId}`;
-      // console.log("Fetching chat history from:", url);
 
       const res = await fetch(url, {
         credentials: "include",
       });
 
       if (!res.ok) {
-        // console.error(
-        //   "Failed to fetch chat history:",
-        //   res.status,
-        //   res.statusText
-        // );
         throw new Error(`Failed to fetch: ${res.status}`);
       }
 
       const data = await res.json();
-      // console.log("Chat history fetched:", data);
       return data;
     },
     enabled: !!chatId,
@@ -209,6 +204,19 @@ export function MessageList() {
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
 
+    // Set actively scrolling state
+    setIsActivelyScrolling(true);
+
+    // Clear previous timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    // Set timeout to hide blur after scrolling stops
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsActivelyScrolling(false);
+    }, 150); // Hide blur 150ms after scroll stops
+
     // Calculate velocity
     const velocity = scrollTop - lastScrollTopRef.current;
     scrollVelocityRef.current = velocity;
@@ -287,7 +295,13 @@ export function MessageList() {
     setIsUserScrolling(false);
     setNewMessageCount(0);
     setPreviousMessageCount(0);
+    setIsActivelyScrolling(false);
     hasScrolledForNewMessage.current = false;
+    
+    // Clear any pending scroll timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
     
     // Smooth scroll to bottom when switching chats
     setTimeout(() => {
@@ -424,13 +438,14 @@ export function MessageList() {
         )}
       </AnimatePresence>
 
-      {/* Smooth gradient overlay at top when scrolled */}
+      {/* Smooth gradient overlay at top when scrolled - Only visible during active scrolling */}
       <AnimatePresence>
-        {showScrollToBottom && (
+        {showScrollToBottom && isActivelyScrolling && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-layout-main to-transparent pointer-events-none z-5"
           />
         )}
