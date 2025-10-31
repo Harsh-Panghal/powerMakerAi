@@ -207,7 +207,13 @@ export function ChatInput({ handleSend }: PromptSearchBarProps) {
           <div className="absolute -inset-0.5 bg-gradient-to-r from-brand/30 via-brand-medium/10 to-brand-light/20 rounded-3xl opacity-60 blur-sm hover:opacity-80 transition duration-300" />
           
           <div className={`relative backdrop-blur-xl bg-white/95 rounded-3xl transition-all duration-300 ${
-            isFocused ? 'shadow-2xl ring-2 ring-brand-light' : 'shadow-lg'
+            isFocused 
+              ? input.length >= maxLength 
+                ? 'shadow-2xl ring-2 ring-error/60' 
+                : 'shadow-2xl ring-2 ring-brand-light'
+              : input.length >= maxLength
+                ? 'ring-1 ring-error/40 shadow-lg'
+                : 'shadow-lg'
           }`}>
             {/* Shimmer Effect */}
             {isFocused && (
@@ -267,7 +273,11 @@ export function ChatInput({ handleSend }: PromptSearchBarProps) {
                   placeholder="Ask anything..."
                   rows={1}
                   disabled={isProcessingImage}
-                  className="w-full resize-none bg-transparent border-none focus:outline-none text-brand placeholder:text-slate-400 text-[15px] leading-6 py-1 px-1 overflow-y-auto caret-brand-light disabled:opacity-50 break-words"
+                  className={`w-full resize-none bg-transparent border-none focus:outline-none placeholder:text-slate-400 text-[15px] leading-6 py-1 px-1 overflow-y-auto disabled:opacity-50 break-words ${
+                    input.length >= maxLength 
+                      ? 'text-error caret-error' 
+                      : 'text-brand caret-brand-light'
+                  }`}
                   style={{ 
                     height: "24px",
                     maxHeight: "200px",
@@ -280,46 +290,30 @@ export function ChatInput({ handleSend }: PromptSearchBarProps) {
                 />
                 
                 {/* AI Sparkle Indicator */}
-                {isFocused && !input && (
+                {/* {isFocused && !input && (
                   <div className="absolute left-0 top-0 flex items-center gap-1 text-brand-light animate-pulse pointer-events-none">
                     <Sparkles className="w-3.5 h-3.5" />
                   </div>
-                )}
+                )} */}
               </div>
 
               {/* Right Actions */}
               <div className="flex items-end gap-1.5 flex-shrink-0 pb-1">
-                {/* Circular Progress for Character Count */}
+                {/* Character Count Display */}
                 {input.length > 0 && (
-                  <div className="relative w-8 h-8 flex items-center justify-center">
-                    <svg className="w-8 h-8 transform -rotate-90">
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="14"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        fill="none"
-                        className="text-border"
-                      />
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="14"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        fill="none"
-                        strokeDasharray={`${2 * Math.PI * 14}`}
-                        strokeDashoffset={`${2 * Math.PI * 14 * (1 - input.length / maxLength)}`}
-                        className={input.length > maxLength * 0.9 ? 'text-error' : 'text-success'}
-                        style={{ transition: 'stroke-dashoffset 0.3s' }}
-                      />
-                    </svg>
-                    <span className="absolute text-[9px] font-bold text-brand">
-                      {Math.round((input.length / maxLength) * 100)}
+                  <div className="flex items-center justify-center px-2 py-1">
+                    <span className={`text-[11px] font-semibold transition-colors ${
+                      input.length >= maxLength 
+                        ? 'text-error animate-pulse' 
+                        : input.length > maxLength * 0.9 
+                          ? 'text-warning' 
+                          : 'text-brand-light'
+                    }`}>
+                      {input.length}/{maxLength}
                     </span>
                   </div>
                 )}
+                    
 
                 {/* Voice Button - COMMENTED FOR FUTURE USE */}
                 {/* {!input.trim() && pastedImages.length === 0 && !isProcessingImage && (
@@ -358,28 +352,42 @@ export function ChatInput({ handleSend }: PromptSearchBarProps) {
 
         {/* Bottom Hints with Brand Colors */}
         <div className="mt-3 flex items-center justify-between px-2 text-xs">
-          <div className="flex items-center gap-2 text-slate-500">
+          {/* <div className="flex items-center gap-2 text-slate-500">
             <kbd className="px-2 py-0.5 bg-white/80 backdrop-blur-sm rounded border border-border font-mono text-brand">↵</kbd>
             <span>send</span>
             <span className="text-slate-300">•</span>
             <kbd className="px-2 py-0.5 bg-white/80 backdrop-blur-sm rounded border border-border font-mono text-brand">⇧↵</kbd>
             <span>new line</span>
+          </div> */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {input.length >= maxLength && (
+              <span className="text-error font-medium animate-pulse flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-error"></span>
+                Character limit reached
+              </span>
+            )}
+            {pastedImages.length > 0 && (
+              <span className="text-brand-light font-medium">
+                {pastedImages.length}/{maxImages} images
+              </span>
+            )}
           </div>
-          {pastedImages.length > 0 && (
-            <span className="text-brand-light font-medium">
-              {pastedImages.length}/{maxImages} images
-            </span>
-          )}
+        </div>
+        {/* Copyright Text */}
+        <div className=" text-center">
+          <p className="text-xs text-slate-400">
+            © 2025 PowerMaker AI. All rights reserved.
+          </p>
         </div>
       </div>
 
-      <style>{`
+      {/* <style>{`
         @keyframes shimmer {
           100% {
             transform: translateX(100%);
           }
         }
-      `}</style>
+      `}</style> */}
     </div>
   );
 }

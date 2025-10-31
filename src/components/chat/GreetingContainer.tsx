@@ -1,8 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Send } from "lucide-react";
+import { Send, ImagePlus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -26,7 +25,6 @@ import {
   FileText,
 } from "lucide-react";
 import { useChatStore } from "@/store/chatStore";
-import { ImagePreview } from "./ImagePreview";
 import { processImage, getImagesFromClipboard, type ImageData } from "@/utils/imageUtils";
 import { useToast } from "@/hooks/use-toast";
 import { useSelector } from "react-redux";
@@ -34,9 +32,8 @@ import { RootState } from "../../store/store";
 import { useChat } from "../../redux/useChat";
 import { useDispatch } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { setChatId } from "../../redux/ChatSlice";
+import { setChatId, setInput } from "../../redux/ChatSlice";
 import { setCurrentModel } from "../../redux/ModelSlice";
-
 
 const promptSuggestionsByModel = {
   0: [
@@ -98,39 +95,18 @@ const promptSuggestionsByModel = {
   ],
 };
 
-// const modelOptions = [
-//   {
-//     value: "model-0-1",
-//     title: "Model 0.1",
-//     subtitle: "CRM Customization",
-//     icon: Settings,
-//   },
-//   {
-//     value: "model-0-2",
-//     title: "Model 0.2",
-//     subtitle: "Plugin Tracing",
-//     icon: Database,
-//   },
-//   {
-//     value: "model-0-3",
-//     title: "Model 0.3",
-//     subtitle: "CRM Expert",
-//     icon: Key,
-//   },
-// ];
-
 export function GreetingContainer() {
-  // const [prompt, setPrompt] = useState("");
-  const [pastedImages, setPastedImages] = useState<ImageData[]>([]); // Changed to array
+  const [pastedImages, setPastedImages] = useState<ImageData[]>([]);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
-  // const { selectedModel, setModel, startChat } = useChatStore();
   const { toast } = useToast();
   const { user } = useSelector((state: RootState) => state.auth);
   const maxLength = 1000;
-  const maxImages = 10; // Set maximum number of images allowed
+  const maxImages = 10;
 
-  const { input, setInput, onSent } = useChat();
+  const { input, onSent } = useChat();
   const { chatId: routeChatId } = useParams<{ chatId?: string }>();
   const storeChatId = useSelector((state: RootState) => state.chat.chatId);
   const chatId = routeChatId || storeChatId;
@@ -151,6 +127,16 @@ export function GreetingContainer() {
     }
   }, [routeChatId]);
 
+  // Auto-resize textarea
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "24px";
+      const newHeight = Math.min(textarea.scrollHeight, 200);
+      textarea.style.height = `${newHeight}px`;
+    }
+  }, [input]);
+
   const currentPromptSuggestions = useMemo(() => {
     return (
       promptSuggestionsByModel[
@@ -159,16 +145,12 @@ export function GreetingContainer() {
     );
   }, [currentModel]);
 
-
-
   const handlePromptCardClick = (prompt: string) => {
     if (!prompt.trim()) return;
 
-    // Create a new chat, then send prompt
     newChatMutation
       .mutateAsync()
       .then(async (data) => {
-        // //console.log("Card click - new chat:", data);
         navigate(`/c/${data.chatId}`);
         await onSent(prompt, data.chatId, 0, currentModel);
         queryClient.invalidateQueries({ queryKey: ["recentChats"] });
@@ -178,7 +160,6 @@ export function GreetingContainer() {
       });
   };
 
-   //handle newchat api
   const newChatMutation = useMutation({
     mutationFn: async () => {
       return await fetch(`${import.meta.env.VITE_BACKEND_API}/chat/newchat`, {
@@ -191,19 +172,11 @@ export function GreetingContainer() {
       }).then((res) => res.json());
     },
     onSuccess: async (data) => {
-      //console.log("New chat created with ID:", data);
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ["chats"] });
-      // navigate(`/c/${data.chatId}`);
-      // send the prompt using the new chatId
       queryClient.invalidateQueries({ queryKey: ["recentChats"] });
-      queryClient.invalidateQueries({ queryKey: ["recentChats"] });
-
-      // REMOVE THIS: becoz it tigger twice, once when onSuccess mutation and once from handleprompt
-      // await onSent(input, data.chatId, 0, currentModel); // Send the prompt to the chat      
     },
   });
-  
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -236,9 +209,8 @@ export function GreetingContainer() {
     if (!clipboardData) return;
 
     const images = getImagesFromClipboard(clipboardData);
-    
+
     if (images.length > 0) {
-      // Check if adding new images would exceed the limit
       if (pastedImages.length + images.length > maxImages) {
         toast({
           variant: "destructive",
@@ -249,27 +221,27 @@ export function GreetingContainer() {
       }
 
       setIsProcessingImage(true);
-      
+
       try {
-        const processedImages: ImageData[] = [];
-        
-        // Process all images
-        for (const imageFile of images) {
-          const processedImage = await processImage(imageFile);
-          processedImages.push(processedImage);
-        }
-        
-        // Add to existing images
-        setPastedImages(prev => [...prev, ...processedImages]);
-        
+        const processedImages = await Promise.all(
+          images.map((image) => processImage(image))
+        );
+        setPastedImages((prev) => [...prev, ...processedImages]);
+
         toast({
-          title: `${processedImages.length} image${processedImages.length > 1 ? 's' : ''} pasted successfully`,
-          description: `${processedImages.length} image${processedImages.length > 1 ? 's' : ''} ready to send. Total: ${pastedImages.length + processedImages.length}`,
+          title: `${processedImages.length} image${
+            processedImages.length > 1 ? "s" : ""
+          } pasted successfully`,
+          description: `${processedImages.length} image${
+            processedImages.length > 1 ? "s" : ""
+          } ready to send. Total: ${
+            pastedImages.length + processedImages.length
+          }`,
         });
-        
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to process image';
-        
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to process image";
+
         toast({
           variant: "destructive",
           title: "Error processing images",
@@ -281,9 +253,8 @@ export function GreetingContainer() {
     }
   };
 
-  const handleRemoveImage = (indexToRemove: number) => {
-    setPastedImages(prev => prev.filter((_, index) => index !== indexToRemove));
-    
+  const handleRemoveImage = (index: number) => {
+    setPastedImages((prev) => prev.filter((_, i) => i !== index));
     toast({
       title: "Image removed",
       description: `Image has been removed. Remaining: ${pastedImages.length - 1}`,
@@ -292,11 +263,50 @@ export function GreetingContainer() {
 
   const handleRemoveAllImages = () => {
     setPastedImages([]);
-    
     toast({
       title: "All images removed",
       description: "All pasted images have been removed",
     });
+  };
+
+  const handleImageUpload = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.multiple = true;
+    input.onchange = async (e: any) => {
+      const files = Array.from(e.target.files || []) as File[];
+      if (files.length === 0) return;
+
+      if (pastedImages.length + files.length > maxImages) {
+        toast({
+          variant: "destructive",
+          title: "Too many images",
+          description: `Maximum ${maxImages} images allowed.`,
+        });
+        return;
+      }
+
+      setIsProcessingImage(true);
+      try {
+        const processedImages = await Promise.all(
+          files.map((file) => processImage(file))
+        );
+        setPastedImages((prev) => [...prev, ...processedImages]);
+        toast({
+          title: `${processedImages.length} image${processedImages.length > 1 ? "s" : ""} uploaded`,
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error uploading images",
+          description: error instanceof Error ? error.message : "Failed to upload",
+        });
+      } finally {
+        setIsProcessingImage(false);
+      }
+    };
+    input.click();
   };
 
   const firstName = ((fullName: string = "") => {
@@ -311,7 +321,7 @@ export function GreetingContainer() {
         <div className="max-w-4xl w-full text-center space-y-8">
           {/* Greeting */}
           <div className="space-y-2">
-            <h1 className="text-4xl font-semibold text-brand">Hello, {firstName} !</h1>
+            <h1 className="text-4xl font-semibold text-brand">Hello, {firstName}!</h1>
             <h2 className="text-2xl text-brand">
               What would you like to make?
             </h2>
@@ -334,109 +344,157 @@ export function GreetingContainer() {
         </div>
       </div>
 
-      {/* Input Area */}
-      <div className="p-6 bg-layout-main" data-tour="input-area">
-        <div className="max-w-4xl mx-auto">
-          {/* Multiple Images Preview */}
+      {/* Input Area - Matching ChatInput Style */}
+      <div className="p-2 bg-layout-main" data-tour="input-area">
+        <div className="max-w-4xl mx-auto px-2 sm:px-4">
+          {/* Image Previews with Brand Colors */}
           {pastedImages.length > 0 && (
-            <div className="mb-4 animate-fade-in">
-              {/* Images counter and clear all button */}
-              {pastedImages.length > 1 && (
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-sm text-muted-foreground">
-                    {pastedImages.length} image{pastedImages.length > 1 ? 's' : ''} attached
+            <div className="mb-3">
+              <div className="backdrop-blur-xl bg-white/60 rounded-2xl p-3 border border-border shadow-xl">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-brand flex items-center gap-1">
+                    <ImagePlus className="w-3.5 h-3.5" />
+                    {pastedImages.length} attached
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
                     onClick={handleRemoveAllImages}
-                    className="text-xs h-7"
+                    className="text-xs text-brand-light hover:text-brand font-semibold transition-colors"
                   >
-                    Remove All
-                  </Button>
+                    Clear
+                  </button>
                 </div>
-              )}
-              
-              {/* Compact Images grid */}
-              <div className="flex flex-wrap gap-2">
-                {pastedImages.map((image, index) => (
-                  <div key={index} className="relative group">
-                    {/* Compact Image Preview */}
-                    <div className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors">
-                      <img
-                        src={image.data}
-                        alt={`Image ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      
-                      {/* Remove button overlay */}
+                <div className="flex flex-wrap gap-2">
+                  {pastedImages.map((image, index) => (
+                    <div key={`${image.name}-${index}`} className="relative group">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-white shadow-lg hover:shadow-xl hover:scale-105 transition-all">
+                        <img
+                          src={image.data}
+                          alt={`Image ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                       <button
                         onClick={() => handleRemoveImage(index)}
-                        className="absolute top-0 right-0 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-bl-lg flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-error hover:bg-error-dark text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
                         aria-label={`Remove image ${index + 1}`}
                       >
-                        ×
+                        <X className="w-3 h-3" />
                       </button>
-                      
-                      {/* Image index badge */}
-                      <div className="absolute bottom-0 left-0 bg-black/70 text-white text-xs rounded-tr-lg px-1.5 py-0.5 min-w-[16px] text-center">
-                        {index + 1}
-                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Images limit indicator */}
-              {pastedImages.length >= maxImages - 2 && (
-                <div className="mt-2 text-xs text-muted-foreground text-center">
-                  {pastedImages.length}/{maxImages} images
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
           )}
-          
+
+          {/* Main Input Container with Brand Colors */}
           <div className="relative">
-            {/* Textarea */}
-            <Textarea
-              placeholder={`Type your message or paste ${pastedImages.length === 0 ? 'images' : 'more images'}... (${pastedImages.length}/${maxImages} images)`}
-              value={input}
-              onChange={(e) => dispatch(setInput(e.target.value))}
-              onKeyDown={handleKeyDown}
-              onPaste={handlePaste}
-              className="w-full min-h-[100px] pr-28 lg:pr-30 pb-14 resize-none border-brand-light focus:ring-brand-light leading-[1.4] align-top"
-              aria-label="Message input with multiple image paste support"
-              disabled={isProcessingImage}
-            />
-
-            {/* Bottom Controls - Character Counter & Send Button */}
-            <div className="absolute right-3 bottom-3 flex items-center space-x-3">
-              {/* Character Counter */}
-              <span className="text-xs text-muted-foreground">
-                {input.length}/{maxLength}
-              </span>
-
-              {/* Images Counter */}
-              {pastedImages.length > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {pastedImages.length} img
-                </span>
+            {/* Animated Brand Gradient Border */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-brand/30 via-brand-medium/10 to-brand-light/20 rounded-3xl opacity-60 blur-sm hover:opacity-80 transition duration-300" />
+            
+            <div className={`relative backdrop-blur-xl bg-white/95 rounded-3xl transition-all duration-300 ${
+              isFocused 
+                ? input.length >= maxLength 
+                  ? 'shadow-lg ring-2 ring-error/60' 
+                  : 'shadow-lg ring-2 ring-brand-light'
+                : input.length >= maxLength
+                  ? 'ring-1 ring-error/40 shadow-lg'
+                  : 'shadow-lg'
+            }`}>
+              {/* Shimmer Effect */}
+              {isFocused && (
+                <div className="absolute inset-0 rounded-3xl overflow-hidden">
+                  <div className="absolute inset-0 translate-x-[-100%] animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-brand-light/10 to-transparent" />
+                </div>
               )}
 
-              {/* Send Button */}
-              <Button
-                onClick={handleSend}
-                disabled={(!input.trim() && pastedImages.length === 0) || isProcessingImage}
-                size="sm"
-                className="w-8 h-8 p-0 rounded-full bg-success-light hover:bg-success text-success-dark"
-                aria-label="Send message"
-              >
-                {isProcessingImage ? (
-                  <div className="w-4 h-4 animate-spin border-2 border-current border-t-transparent rounded-full" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </Button>
+              <div className="relative flex items-end gap-2 px-4 py-2.5">
+                {/* Textarea */}
+                <div className="flex-1 relative min-w-0">
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => dispatch(setInput(e.target.value.slice(0, maxLength)))}
+                    onKeyDown={handleKeyDown}
+                    onPaste={handlePaste}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    placeholder="Ask anything..."
+                    rows={1}
+                    disabled={isProcessingImage}
+                    className={`w-full resize-none bg-transparent border-none focus:outline-none placeholder:text-slate-400 text-[15px] leading-6 py-1 px-1 overflow-y-auto disabled:opacity-50 break-words ${
+                      input.length >= maxLength 
+                        ? 'text-error caret-error' 
+                        : 'text-brand caret-brand-light'
+                    }`}
+                    style={{ 
+                      height: "24px",
+                      maxHeight: "200px",
+                      scrollbarWidth: 'thin',
+                      scrollbarColor: 'hsl(215,58%,55%) transparent',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word'
+                    }}
+                    aria-label="Message input with multiple image paste support"
+                  />
+                </div>
+
+                {/* Right Actions */}
+                <div className="flex items-end gap-1.5 flex-shrink-0 pb-1">
+                  {/* Character Count Display */}
+                  {input.length > 0 && (
+                    <div className="flex items-center justify-center px-2 py-1">
+                      <span className={`text-[11px] font-semibold transition-colors ${
+                        input.length >= maxLength 
+                          ? 'text-error animate-pulse' 
+                          : input.length > maxLength * 0.9 
+                            ? 'text-warning' 
+                            : 'text-brand-light'
+                      }`}>
+                        {input.length}/{maxLength}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Processing Indicator */}
+                  {isProcessingImage && (
+                    <div className="w-9 h-9 flex items-center justify-center">
+                      <div className="w-5 h-5 animate-spin border-2 border-brand-light border-t-transparent rounded-full" />
+                    </div>
+                  )}
+
+                  {/* Send Button */}
+                  <button
+                    onClick={handleSend}
+                    disabled={!input.trim() && pastedImages.length === 0 || isProcessingImage}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center transition-all text-white shadow-lg ${
+                      (input.trim() || pastedImages.length > 0) && !isProcessingImage
+                        ? 'bg-gradient-to-r from-brand via-brand-medium to-brand-light hover:from-brand-dark hover:via-brand hover:to-brand-medium hover:shadow-xl'
+                        : 'bg-gray-300 cursor-not-allowed opacity-60'
+                    }`}
+                    title={(!input.trim() && pastedImages.length === 0) ? "Type a message or add an image" : "Send message"}
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Hints */}
+          <div className="mt-3 flex items-center justify-between px-2 text-xs">
+            <div className="flex items-center gap-3 flex-wrap">
+              {input.length >= maxLength && (
+                <span className="text-error font-medium animate-pulse flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-error"></span>
+                  Character limit reached
+                </span>
+              )}
+              {pastedImages.length > 0 && (
+                <span className="text-brand-light font-medium">
+                  {pastedImages.length}/{maxImages} images
+                </span>
+              )}
             </div>
           </div>
         </div>
