@@ -204,7 +204,7 @@ export function ChatInput({ handleSend }: PromptSearchBarProps) {
         {/* Main Input Container with Brand Colors */}
         <div className="relative">
           {/* Animated Brand Gradient Border */}
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-brand via-brand-medium to-brand-light rounded-3xl opacity-60 blur-sm hover:opacity-80 transition duration-300" />
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-brand/30 via-brand-medium/10 to-brand-light/20 rounded-3xl opacity-60 blur-sm hover:opacity-80 transition duration-300" />
           
           <div className={`relative backdrop-blur-xl bg-white/95 rounded-3xl transition-all duration-300 ${
             isFocused ? 'shadow-2xl ring-2 ring-brand-light' : 'shadow-lg'
@@ -212,7 +212,7 @@ export function ChatInput({ handleSend }: PromptSearchBarProps) {
             {/* Shimmer Effect */}
             {isFocused && (
               <div className="absolute inset-0 rounded-3xl overflow-hidden">
-                <div className="absolute inset-0 translate-x-[-100%] animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-brand-light/20 to-transparent" />
+                <div className="absolute inset-0 translate-x-[-100%] animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-brand-light/10 to-transparent" />
               </div>
             )}
 
@@ -344,7 +344,7 @@ export function ChatInput({ handleSend }: PromptSearchBarProps) {
                   disabled={!input.trim() && pastedImages.length === 0 || isProcessingImage}
                   className={`w-9 h-9 rounded-full flex items-center justify-center transition-all text-white shadow-lg ${
                     (input.trim() || pastedImages.length > 0) && !isProcessingImage
-                      ? 'bg-gradient-to-r from-brand via-brand-medium to-brand-light hover:from-brand-dark hover:via-brand hover:to-brand-medium hover:scale-110 hover:shadow-xl'
+                      ? 'bg-gradient-to-r from-brand via-brand-medium to-brand-light hover:from-brand-dark hover:via-brand hover:to-brand-medium hover:shadow-xl'
                       : 'bg-gray-300 cursor-not-allowed opacity-60'
                   }`}
                   title={(!input.trim() && pastedImages.length === 0) ? "Type a message or add an image" : "Send message"}
