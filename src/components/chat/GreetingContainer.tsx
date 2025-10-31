@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+// UPDATED: Added useRef and useEffect for auto-resize functionality
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -113,13 +114,25 @@ const modelOptions = [
 
 export function GreetingContainer() {
   const [prompt, setPrompt] = useState("");
-  const [pastedImages, setPastedImages] = useState<ImageData[]>([]); // Changed to array
+  const [pastedImages, setPastedImages] = useState<ImageData[]>([]);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const navigate = useNavigate();
   const { selectedModel, setModel, startChat } = useChatStore();
   const { toast } = useToast();
   const maxLength = 1000;
-  const maxImages = 10; // Set maximum number of images allowed
+  const maxImages = 10;
+  
+  // UPDATED: Added ref for auto-resize functionality
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // UPDATED: Auto-resize textarea functionality
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    }
+  }, [prompt]);
 
   const currentPromptSuggestions = useMemo(() => {
     return (
@@ -247,7 +260,7 @@ export function GreetingContainer() {
         </div>
       </div>
 
-      {/* Input Area */}
+      {/* UPDATED: Input Area with Grok-style layout */}
       <div className="p-6 bg-layout-main" data-tour="input-area">
         <div className="max-w-4xl mx-auto">
           {/* Multiple Images Preview */}
@@ -274,27 +287,21 @@ export function GreetingContainer() {
               <div className="flex flex-wrap gap-2">
                 {pastedImages.map((image, index) => (
                   <div key={index} className="relative group">
-                    {/* Compact Image Preview */}
-                    <div className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors">
+                    <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-border hover:border-brand-light transition-colors">
                       <img
                         src={image.data}
                         alt={`Image ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
                       
-                      {/* Remove button overlay */}
+                      {/* Remove button */}
                       <button
                         onClick={() => handleRemoveImage(index)}
-                        className="absolute top-0 right-0 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-bl-lg flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-error hover:bg-error-dark text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                         aria-label={`Remove image ${index + 1}`}
                       >
                         ×
                       </button>
-                      
-                      {/* Image index badge */}
-                      <div className="absolute bottom-0 left-0 bg-black/70 text-white text-xs rounded-tr-lg px-1.5 py-0.5 min-w-[16px] text-center">
-                        {index + 1}
-                      </div>
                     </div>
                   </div>
                 ))}
@@ -302,55 +309,60 @@ export function GreetingContainer() {
               
               {/* Images limit indicator */}
               {pastedImages.length >= maxImages - 2 && (
-                <div className="mt-2 text-xs text-muted-foreground text-center">
+                <div className="mt-2 text-xs text-muted-foreground">
                   {pastedImages.length}/{maxImages} images
                 </div>
               )}
             </div>
           )}
           
-          <div className="relative">
-            {/* Textarea */}
-            <Textarea
-              placeholder={`Type your message or paste ${pastedImages.length === 0 ? 'images' : 'more images'}... (${pastedImages.length}/${maxImages} images)`}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value.slice(0, maxLength))}
-              onKeyDown={handleKeyDown}
-              onPaste={handlePaste}
-              className="w-full min-h-[100px] pr-28 lg:pr-30 pb-14 resize-none border-brand-light focus:ring-brand-light leading-[1.4] align-top"
-              aria-label="Message input with multiple image paste support"
-              disabled={isProcessingImage}
-            />
-
-            {/* Bottom Controls - Character Counter & Send Button */}
-            <div className="absolute right-3 bottom-3 flex items-center space-x-3">
-              {/* Character Counter */}
-              <span className="text-xs text-muted-foreground">
-                {prompt.length}/{maxLength}
-              </span>
-
-              {/* Images Counter */}
-              {pastedImages.length > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {pastedImages.length} img
+          {/* UPDATED: Grok-style input container with flex layout */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+            <div className="relative flex-1">
+              {/* UPDATED: Auto-resizing textarea with ref */}
+              <textarea
+                ref={textareaRef}
+                placeholder="Type your message or paste images..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value.slice(0, maxLength))}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                className="w-full min-h-[44px] max-h-[200px] p-3 pr-20 rounded-lg border border-input bg-background resize-none focus:outline-none focus:border-brand-light focus:ring-2 focus:ring-brand-light/20 transition-all"
+                aria-label="Chat input field"
+                disabled={isProcessingImage}
+                rows={1}
+              />
+              
+              {/* UPDATED: Character counter positioned bottom-right inside textarea border */}
+              <div className="absolute right-3 bottom-2 flex items-center gap-2">
+                <span className={`text-xs ${prompt.length > maxLength * 0.9 ? 'text-warning' : 'text-success'}`}>
+                  {prompt.length}/{maxLength}
                 </span>
-              )}
-
-              {/* Send Button */}
+                {pastedImages.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    ({pastedImages.length}/{maxImages})
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            {/* UPDATED: Conditional Send button - pill-shaped when content present */}
+            {(prompt.trim() || pastedImages.length > 0) && !isProcessingImage && (
               <Button
                 onClick={handleSend}
-                disabled={(!prompt.trim() && pastedImages.length === 0) || isProcessingImage}
-                size="sm"
-                className="w-8 h-8 p-0 rounded-full bg-success-light hover:bg-success text-success-dark"
+                className="self-end sm:self-auto h-11 px-6 rounded-full bg-brand hover:bg-brand-medium text-white font-semibold transition-all animate-scale-in"
                 aria-label="Send message"
               >
-                {isProcessingImage ? (
-                  <div className="w-4 h-4 animate-spin border-2 border-current border-t-transparent rounded-full" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
+                Send
               </Button>
-            </div>
+            )}
+            
+            {/* Processing indicator */}
+            {isProcessingImage && (
+              <div className="self-end sm:self-auto h-11 px-6 flex items-center">
+                <div className="w-5 h-5 animate-spin border-2 border-brand border-t-transparent rounded-full" />
+              </div>
+            )}
           </div>
         </div>
       </div>

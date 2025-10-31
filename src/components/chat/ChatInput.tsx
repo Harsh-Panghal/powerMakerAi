@@ -1,4 +1,5 @@
-import { useState } from 'react';
+// UPDATED: Added useRef and useEffect for auto-resize functionality
+import { useState, useRef, useEffect } from 'react';
 import { Send, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -40,6 +41,18 @@ export function ChatInput() {
   const { toast } = useToast();
   const maxLength = 1000;
   const maxImages = 10;
+  
+  // UPDATED: Added ref for auto-resize functionality
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // UPDATED: Auto-resize textarea functionality
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    }
+  }, [message]);
 
   const handleModelChange = (newModel: string) => {
     setModel(newModel);
@@ -54,6 +67,7 @@ export function ChatInput() {
     }
   };
 
+  // UPDATED: Enter sends, Shift+Enter for newline
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -147,12 +161,13 @@ export function ChatInput() {
     });
   };
 
+  // UPDATED: Bottom-fixed container with Grok-style layout
   return (
-    <div className="p-2 sm:p-4 bg-layout-main border-t border-border" data-tour="input-area">
-      <div className="max-w-4xl mx-auto px-2 sm:px-4">
+    <div className="fixed bottom-0 left-0 right-0 z-10 bg-background border-t border-border shadow-lg" data-tour="input-area">
+      <div className="max-w-4xl mx-auto p-3 sm:p-4">
         {/* Compact Image Previews */}
         {pastedImages.length > 0 && (
-          <div className="mb-2 animate-fade-in">
+          <div className="mb-3 animate-fade-in">
             {/* Images counter and clear all button */}
             {pastedImages.length > 1 && (
               <div className="flex justify-between items-center mb-2">
@@ -170,31 +185,25 @@ export function ChatInput() {
               </div>
             )}
             
-            {/* Compact Images */}
-            <div className="flex flex-wrap gap-2">
+            {/* Compact Images - Horizontal scrollable */}
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {pastedImages.map((image, index) => (
-                <div key={`${image.name}-${index}`} className="relative group">
-                  {/* Compact Image Preview */}
-                  <div className="relative w-12 h-12 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors">
+                <div key={`${image.name}-${index}`} className="relative group flex-shrink-0">
+                  <div className="relative w-12 h-12 rounded-lg overflow-hidden border-2 border-border hover:border-brand-light transition-colors">
                     <img
                       src={image.data}
                       alt={`Image ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                     
-                    {/* Remove button overlay */}
+                    {/* Remove button */}
                     <button
                       onClick={() => handleRemoveImage(index)}
-                      className="absolute top-0 right-0 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 hover:bg-red-600 text-white rounded-bl-lg flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-error hover:bg-error-dark text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                       aria-label={`Remove image ${index + 1}`}
                     >
                       ×
                     </button>
-                    
-                    {/* Image index badge */}
-                    <div className="absolute bottom-0 left-0 bg-black/70 text-white text-xs rounded-tr-lg px-1 py-0.5 min-w-[14px] sm:min-w-[16px] text-center">
-                      {index + 1}
-                    </div>
                   </div>
                 </div>
               ))}
@@ -202,55 +211,60 @@ export function ChatInput() {
             
             {/* Images limit indicator */}
             {pastedImages.length >= maxImages - 2 && (
-              <div className="mt-2 text-xs text-muted-foreground text-center">
+              <div className="mt-1 text-xs text-muted-foreground">
                 {pastedImages.length}/{maxImages} images
               </div>
             )}
           </div>
         )}
         
-        <div className="relative">
-          {/* Textarea */}
-          <Textarea
-            placeholder={`Type your message or paste ${pastedImages.length === 0 ? 'images' : 'more images'}... (${pastedImages.length}/${maxImages} images)`}
-            value={message}
-            onChange={(e) => setMessage(e.target.value.slice(0, maxLength))}
-            onKeyDown={handleKeyDown}
-            onPaste={handlePaste}
-            className="w-full min-h-[80px] sm:min-h-[100px] pr-28 sm:pr-32 pb-12 sm:pb-14 resize-none border-brand-light focus:ring-brand-light text-sm sm:text-base align-top"
-            aria-label="Message input with multiple image paste support"
-            disabled={isProcessingImage}
-          />
-
-          {/* Bottom Controls - Character Counter & Send Button */}
-          <div className="absolute right-2 sm:right-3 bottom-2 sm:bottom-3 flex items-center space-x-2 sm:space-x-3">
-            {/* Character Counter */}
-            <span className="text-xs text-muted-foreground inline">
-              {message.length}/{maxLength}
-            </span>
-
-            {/* Images Counter */}
-            {pastedImages.length > 0 && (
-              <span className="text-xs text-muted-foreground">
-                {pastedImages.length} img
+        {/* UPDATED: Grok-style input container with flex layout */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+          <div className="relative flex-1">
+            {/* UPDATED: Auto-resizing textarea with ref */}
+            <textarea
+              ref={textareaRef}
+              placeholder="Type your message or paste images..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value.slice(0, maxLength))}
+              onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
+              className="w-full min-h-[44px] max-h-[200px] p-3 pr-20 rounded-lg border border-input bg-background resize-none focus:outline-none focus:border-brand-light focus:ring-2 focus:ring-brand-light/20 transition-all text-sm sm:text-base"
+              aria-label="Chat input field"
+              disabled={isProcessingImage}
+              rows={1}
+            />
+            
+            {/* UPDATED: Character counter positioned bottom-right inside textarea border */}
+            <div className="absolute right-3 bottom-2 flex items-center gap-2">
+              <span className={`text-xs ${message.length > maxLength * 0.9 ? 'text-warning' : 'text-success'}`}>
+                {message.length}/{maxLength}
               </span>
-            )}
-
-            {/* Send Button */}
+              {pastedImages.length > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  ({pastedImages.length}/{maxImages})
+                </span>
+              )}
+            </div>
+          </div>
+          
+          {/* UPDATED: Conditional Send button - pill-shaped when content present */}
+          {(message.trim() || pastedImages.length > 0) && !isProcessingImage && (
             <Button
               onClick={handleSend}
-              disabled={(!message.trim() && pastedImages.length === 0) || isProcessingImage}
-              size="sm"
-              className="w-7 h-7 sm:w-8 sm:h-8 p-0 rounded-full bg-success-light hover:bg-success text-success-dark flex-shrink-0"
+              className="self-end sm:self-auto h-11 px-6 rounded-full bg-brand hover:bg-brand-medium text-white font-semibold transition-all animate-scale-in"
               aria-label="Send message"
             >
-              {isProcessingImage ? (
-                <div className="w-3 h-3 sm:w-4 sm:h-4 animate-spin border-2 border-current border-t-transparent rounded-full" />
-              ) : (
-                <Send className="w-3 h-3 sm:w-4 sm:h-4" />
-              )}
+              Send
             </Button>
-          </div>
+          )}
+          
+          {/* Processing indicator */}
+          {isProcessingImage && (
+            <div className="self-end sm:self-auto h-11 px-6 flex items-center">
+              <div className="w-5 h-5 animate-spin border-2 border-brand border-t-transparent rounded-full" />
+            </div>
+          )}
         </div>
       </div>
     </div>

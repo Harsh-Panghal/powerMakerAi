@@ -16,7 +16,7 @@ const Chat = () => {
         className="flex-1 flex flex-col h-full"
       >
         {/* Chat Header */}
-        <div className="p-2  border-b border-border bg-layout-main">
+        <div className="p-2 border-b border-border bg-layout-main">
           <div className="max-w-4xl px-4">
             <h2 className="text-md sm:text-md font-semibold text-brand break-words">
               {currentThread?.title || 'New Conversation'}
@@ -29,16 +29,14 @@ const Chat = () => {
           </div>
         </div>
         
-        {/* Scrollable Messages Area */}
-        <div className="flex-1 overflow-hidden">
+        {/* UPDATED: Scrollable Messages Area with padding for fixed input */}
+        <div className="flex-1 overflow-hidden pb-32">
           <MessageList />
         </div>
-        
-        {/* Fixed Chat Input */}
-        <div className="bg-layout-main absolute w-full bottom-0">
-          <ChatInput />
-        </div>
       </motion.div>
+      
+      {/* UPDATED: Fixed Chat Input (now handles positioning internally) */}
+      <ChatInput />
       
       {/* Preview Drawer */}
       <PreviewDrawer />

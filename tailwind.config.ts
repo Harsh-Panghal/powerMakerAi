@@ -147,13 +147,26 @@ export default {
 					'100%': {
 						transform: 'translateX(-100%)'
 					}
+				},
+				// UPDATED: Added scale-in animation for send button
+				'scale-in': {
+					'0%': {
+						transform: 'scale(0.8)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'scale(1)',
+						opacity: '1'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'flow-smooth': 'flow-smooth 10s ease-in-out infinite',
-				'slide': 'slide 2s ease-in-out infinite'
+				'slide': 'slide 2s ease-in-out infinite',
+				// UPDATED: Added scale-in animation
+				'scale-in': 'scale-in 0.2s ease-out'
 			}
 		}
 	},
